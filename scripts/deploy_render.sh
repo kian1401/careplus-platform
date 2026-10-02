@@ -52,7 +52,6 @@ print(json.dumps({
     {"key": "CP_ENV", "value": "demo"},
     {"key": "CP_DATABASE_URL", "value": "sqlite:////tmp/careplus.sqlite"},
     {"key": "CP_ESCROW_HOLD_HOURS", "value": "48"},
-    {"key": "PYTHON_VERSION", "value": "3.13.0"},
     {"key": "CP_SECRET_KEY", "generateValue": True}
   ],
 }, ensure_ascii=False))
