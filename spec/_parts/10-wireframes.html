@@ -1,0 +1,107 @@
+<section id="s10">
+<h2><span class="num">۱۰</span>وایرفریم‌ها و نمونه اولیه تعاملی</h2>
+<p class="lead">فایل نمونه اولیه: <code>achareh-plus/prototype/index.html</code> — ۲۲ صفحه کلیک‌پذیر در سه نقش (مشتری، متخصص، پشتیبانی/عملیات). فهرست کامل صفحات وایرفریم (شامل صفحاتی که در پروتوتایپ شبیه‌سازی نشده‌اند) در جدول زیر آمده است.</p>
+
+<h3>۱۰.۱ سیستم طراحی (Design System)</h3>
+<table class="tbl">
+<thead><tr><th>مؤلفه</th><th>تصمیم</th><th>نکته RTL/دسترس‌پذیری</th></tr></thead>
+<tbody>
+<tr><td>شبکه و فاصله‌گذاری</td><td>Grid 4pt؛ حاشیه صفحه ۱۶، فاصله کارت ۱۲، شعاع گوشه ۱۲–۱۶</td><td>راست‌چین کامل، آیکون‌های جهت‌دار آینه‌ای (فلش، پیکان بازگشت)</td></tr>
+<tr><td>تایپوگرافی</td><td>Vazirmatn؛ مقیاس ۱۱/۱۲.۵/۱۴/۱۷/۲۲؛ ارتفاع خط ۱.۹ (فارسی نیاز به خط بازتر دارد)</td><td>اعداد فارسی در متن؛ اعداد لاتین فقط در کد/شناسه‌ها</td></tr>
+<tr><td>رنگ</td><td>اصلی: سبز-تیل #0F7A6C (اعتماد و آرامش)، هشدار #B45309، خطر #BE123C، موفقیت #15803D</td><td>کنتراست AA حداقل؛ رنگ هرگز تنها حامل معنا نباشد (همراه آیکون/متن)</td></tr>
+<tr><td>حالت‌ها</td><td>هر صفحه: Loading، Empty، Error، Offline، «نیازمند اقدام»</td><td>متن خطا با راه‌حل عملی، نه پیام فنی</td></tr>
+<tr><td>تم تاریک</td><td>پشتیبانی از Dark Mode برای متخصصان شب‌کار</td><td>حفظ کنتراست در نقشه و وضعیت‌ها</td></tr>
+<tr><td>دسترس‌پذیری</td><td>هدف لمسی ≥ ۴۴px؛ پشتیبانی از فونت بزرگ؛ خوانشگر صفحه در فرم‌های مالی</td><td>متخصصان با میانگین سنی بالاتر — سادگی مقدم بر زیبایی</td></tr>
+<tr><td>آفلاین</td><td>اپ متخصص: صف عملیات آفلاین (Check-in/out، عکس، یادداشت) و همگام‌سازی خودکار</td><td>شرط لازم برای کار در پارکینگ/زیرزمین</td></tr>
+</tbody>
+</table>
+
+<h3>۱۰.۲ فهرست وایرفریم‌ها به تفکیک نقش</h3>
+<h4>الف) اپ مشتری (Consumer) — ۱۸ صفحه</h4>
+<table class="tbl">
+<thead><tr><th>کد</th><th>صفحه</th><th>هدف اصلی</th><th>اجزای کلیدی</th><th>اولویت</th><th>پروتوتایپ</th></tr></thead>
+<tbody>
+<tr><td>C-01</td><td>خوش‌آمد / ورود</td><td>ورود با حداقل اصطکاک</td><td>OTP، Google/Apple، Passkey، حالت مهمان</td><td><span class="badge b-mvp">MVP</span></td><td>—</td></tr>
+<tr><td>C-02</td><td>خانه</td><td>انتخاب سریع خدمت</td><td>دسته‌بندی، جست‌وجو، اعزام فوری، سفارش فعال</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>C-03</td><td>جست‌وجو و فیلتر</td><td>یافتن خدمت/متخصص</td><td>فیلتر قیمت، امتیاز، زمان، زبان، جنسیت (اختیاری)</td><td><span class="badge b-mvp">MVP</span></td><td>—</td></tr>
+<tr><td>C-04</td><td>صفحه خدمت (SEO)</td><td>تبدیل از جست‌وجوی وب</td><td>قیمت شفاف، نمونه‌کار، نظرها، CTA</td><td><span class="badge b-mvp">MVP</span></td><td>—</td></tr>
+<tr><td>C-05</td><td>ورودی چندرسانه‌ای</td><td>توصیف مشکل</td><td>صوت، عکس/ویدیو، علائم خطر</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>C-06</td><td>نتیجه تحلیل AI</td><td>اعتبار بخشیدن به تشخیص</td><td>دسته، شدت، اطمینان، اصلاح توسط کاربر</td><td><span class="badge b-v1">V1</span></td><td>✔</td></tr>
+<tr><td>C-07</td><td>تریاژ تعاملی</td><td>دقت‌بخشی به برآورد</td><td>پرسش‌های وابسته، نوار پیشرفت</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>C-08</td><td>قیمت شفاف</td><td>حذف تردید قیمت</td><td>Breakdown، فوریت، Escrow، روش پرداخت</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>C-09</td><td>اعزام فوری</td><td>خدمت اضطراری</td><td>هشدار ایمنی، ETA، لیست کوتاه، پیش‌پرداخت</td><td><span class="badge b-v1">V1</span></td><td>✔</td></tr>
+<tr><td>C-10</td><td>جست‌وجوی متخصص (Dispatch)</td><td>شفافیت انتظار</td><td>موج‌ها، زمان‌شمار، تشدید</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>C-11</td><td>ردیابی زنده</td><td>اطمینان و امنیت</td><td>نقشه، ETA، تماس/چت/ویدیو، پلاک</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>C-12</td><td>پیشنهاد/مزایده</td><td>پروژه‌های بزرگ</td><td>مقایسه پیشنهادها، پروفایل، امتیاز، انتخاب</td><td><span class="badge b-v1">V1</span></td><td>—</td></tr>
+<tr><td>C-13</td><td>جزئیات سفارش (پروژه‌ای)</td><td>پیگیری Milestone</td><td>خط زمانی، عکس پیشرفت، تأیید مرحله</td><td><span class="badge b-v1">V1</span></td><td>✔</td></tr>
+<tr><td>C-14</td><td>تأیید پایان کار و امتیاز</td><td>کیفیت و آزادسازی</td><td>عکس قبل/بعد، امتیاز ۵بعدی، متن</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>C-15</td><td>گارانتی و بیمه</td><td>اطمینان پس از خرید</td><td>انقضا، شماره پرونده، دانلود فاکتور</td><td><span class="badge b-v1">V1</span></td><td>✔</td></tr>
+<tr><td>C-16</td><td>ثبت ادعای خسارت</td><td>جبران خسارت</td><td>شواهد، مبلغ، وضعیت Escrow</td><td><span class="badge b-v1">V1</span></td><td>✔</td></tr>
+<tr><td>C-17</td><td>کیف پول و فاکتورها</td><td>شفافیت مالی</td><td>موجودی، بلوکه، تراکنش، PDF فاکتور</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>C-18</td><td>پروفایل و امنیت</td><td>کنترل کاربر</td><td>نشست‌ها، رضایت‌ها، خروجی داده، حذف حساب</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+</tbody>
+</table>
+
+<h4>ب) اپ متخصص (Provider) — ۱۲ صفحه</h4>
+<table class="tbl">
+<thead><tr><th>کد</th><th>صفحه</th><th>هدف</th><th>اجزای کلیدی</th><th>اولویت</th><th>پروتوتایپ</th></tr></thead>
+<tbody>
+<tr><td>P-01</td><td>ثبت‌نام و ورود</td><td>ورود سریع</td><td>OTP، بیومتریک، دستگاه مورد اعتماد</td><td><span class="badge b-mvp">MVP</span></td><td>—</td></tr>
+<tr><td>P-02</td><td>وارد کردن مدارک</td><td>Onboarding</td><td>آپلود، OCR، وضعیت هر مدرک</td><td><span class="badge b-mvp">MVP</span></td><td>✔ (خلاصه)</td></tr>
+<tr><td>P-03</td><td>احراز تصویری</td><td>Face Match</td><td>راهنمای نور/زاویه، Liveness، نتیجه</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>P-04</td><td>آزمون مهارت و ویدیو</td><td>سنجش صلاحیت</td><td>آزمون، آپلود ویدیو ۶۰ ثانیه، نتیجه</td><td><span class="badge b-v1">V1</span></td><td>—</td></tr>
+<tr><td>P-05</td><td>کارتابل/خانه</td><td>شروع کار روز</td><td>آنلاین/آفلاین، درآمد، پیشنهادها، هشدار مدرک</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>P-06</td><td>جزئیات پیشنهاد</td><td>تصمیم سریع</td><td>رسانه مشتری، فاصله، مبلغ، دلیل تطبیق، پذیرش/رد</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>P-07</td><td>مسیریابی و Check-in</td><td>حضور در محل</td><td>نقشه، ETA، ثبت ورود با GPS</td><td><span class="badge b-mvp">MVP</span></td><td>—</td></tr>
+<tr><td>P-08</td><td>اجرای کار</td><td>مستندسازی</td><td>چک‌لیست، عکس الزامی، مواد مصرفی، Milestone</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>P-09</td><td>درخواست تغییر قیمت</td><td>شفافیت مالی</td><td>علت، عکس، ارسال برای تأیید مشتری</td><td><span class="badge b-v1">V1</span></td><td>✔</td></tr>
+<tr><td>P-10</td><td>درآمد و تحلیل</td><td>رشد درآمد</td><td>نقشه حرارتی، نرخ‌ها، پیشنهاد بهبود، برداشت</td><td><span class="badge b-v1">V1</span></td><td>✔</td></tr>
+<tr><td>P-11</td><td>کیف پول و تسویه</td><td>مالی متخصص</td><td>برداشت، دوره تسویه، توقیف تضمین</td><td><span class="badge b-mvp">MVP</span></td><td>✔ (بخشی)</td></tr>
+<tr><td>P-12</td><td>آموزش و ارتقای سطح</td><td>Upskill</td><td>دوره‌های کوتاه، آزمون، نشان تخصصی</td><td><span class="badge b-v2">V2</span></td><td>—</td></tr>
+</tbody>
+</table>
+
+<h4>ج) پنل عملیات، پشتیبانی و ادمین — ۱۴ صفحه</h4>
+<table class="tbl">
+<thead><tr><th>کد</th><th>صفحه</th><th>هدف</th><th>اجزای کلیدی</th><th>اولویت</th><th>پروتوتایپ</th></tr></thead>
+<tbody>
+<tr><td>S-01</td><td>کانال (Board) عملیات زنده</td><td>کنترل صف روز</td><td>سفارش‌های پرخطر، SLA، نقشه زنده</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>S-02</td><td>کارتابل سفارش/تیکت</td><td>حل پرونده</td><td>خط زمانی، شواهد، اقدامات، لاگ</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>S-03</td><td>صف احراز متخصصان</td><td>تأیید سریع</td><td>صف موارد نیازمند بررسی، Face Match، تصمیم</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>S-04</td><td>اپراتور گفتگوی زنده</td><td>پشتیبانی هم‌زمان</td><td>چند گفتگو، پاسخ سریع، انتقال</td><td><span class="badge b-mvp">MVP</span></td><td>✔ (بخشی)</td></tr>
+<tr><td>S-05</td><td>صف ریسک و تقلب</td><td>کشف و اقدام</td><td>شواهد گراف، اقدام پیشنهادی، ارجاع</td><td><span class="badge b-v1">V1</span></td><td>✔</td></tr>
+<tr><td>S-06</td><td>اتاق بحران</td><td>واکنش به حادثه</td><td>سلامت سیستم، موضوعات داغ، Kill-Switch</td><td><span class="badge b-v1">V1</span></td><td>✔</td></tr>
+<tr><td>S-07</td><td>مدیریت دسته‌بندی و تعرفه</td><td>به‌روزرسانی بی‌کد</td><td>درخت خدمات، Rate Card، درخت تریاژ</td><td><span class="badge b-mvp">MVP</span></td><td>—</td></tr>
+<tr><td>S-08</td><td>مدیریت کمپین و کوپن</td><td>رشد</td><td>ساخت کمپین، محدودیت‌ها، ضدسوءاستفاده</td><td><span class="badge b-v1">V1</span></td><td>—</td></tr>
+<tr><td>S-09</td><td>داشبورد مدیریتی</td><td>تصمیم‌گیری</td><td>GMV، Take Rate، Fulfillment، TTA، CSAT</td><td><span class="badge b-v1">V1</span></td><td>—</td></tr>
+<tr><td>S-10</td><td>مالی و دفتر کل</td><td>کنترل مالی</td><td>Ledger، مغایرت‌یابی، تسویه، بازگشت وجه</td><td><span class="badge b-mvp">MVP</span></td><td>—</td></tr>
+<tr><td>S-11</td><td>صورتحساب و مالیات</td><td>انطباق</td><td>صف ارسال سامانه مؤدیان، خطاها، اصلاح</td><td><span class="badge b-v1">V1</span></td><td>—</td></tr>
+<tr><td>S-12</td><td>پرونده ادعای خسارت</td><td>ارزیابی</td><td>شواهد، ریسک، تصمیم، پرداخت</td><td><span class="badge b-v1">V1</span></td><td>—</td></tr>
+<tr><td>S-13</td><td>مدیریت نقش‌ها و دسترسی</td><td>امنیت</td><td>RBAC، سقف تأیید، تأیید دوعاملی</td><td><span class="badge b-mvp">MVP</span></td><td>—</td></tr>
+<tr><td>S-14</td><td>لاگ حسابرسی</td><td>انطباق و پیگیری</td><td>جست‌وجوی Actor/Resource، خروجی CSV</td><td><span class="badge b-mvp">MVP</span></td><td>—</td></tr>
+</tbody>
+</table>
+
+<h4>د) پنل سازمانی B2B — ۶ صفحه</h4>
+<table class="tbl">
+<thead><tr><th>کد</th><th>صفحه</th><th>هدف</th><th>اولویت</th></tr></thead>
+<tbody>
+<tr><td>B-01</td><td>داشبورد سازمان</td><td>مصرف، سفارش‌های باز، SLA، هزینه هر شعبه</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>B-02</td><td>مدیریت کاربران سازمان</td><td>افزودن کاربر، نقش، سقف تأیید، مرکز هزینه</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>B-03</td><td>ثبت و تأیید سفارش</td><td>جریان درخواست → تأیید → تخصیص</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>B-04</td><td>قرارداد و تعرفه اختصاصی</td><td>Rate Card سازمانی، SLA، دوره تسویه</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>B-05</td><td>فاکتور و گزارش مالی</td><td>فاکتور رسمی، خروجی CSV/Excel، اتصال ERP</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>B-06</td><td>مراکز هزینه و تأیید زنجیره‌ای</td><td>چند سطح تأیید، سقف بودجه</td><td><span class="badge b-v2">V2</span></td></tr>
+</tbody>
+</table>
+
+<h3>۱۰.۳ مسیرهای اصلی کاربر (Key Flows) برای تست قابلیت استفاده</h3>
+<ol>
+<li><b>مسیر اضطراری (Happy Path فوری):</b> کلیدسازی فوری → پرداخت پیش‌پرداخت → پذیرش در ۲۰ ثانیه → ردیابی زنده → پایان کار → امتیاز. <span class="muted">معیار: تکمیل در کمتر از ۹۰ ثانیه ثبت سفارش.</span></li>
+<li><b>مسیر پروژه‌ای (Milestone):</b> بازسازی → بازدید و پیش‌فاکتور → Escrow ۳مرحله‌ای → تأیید مرحله‌به‌مرحله → تحویل و گارانتی ۳۰ روزه.</li>
+<li><b>مسیر اختلاف:</b> اتمام کار → نارضایتی → توقف Escrow → شواهد → پیشنهاد خودکار جبران → تصمیم کارشناس → ثبت اثر روی رتبه.</li>
+<li><b>مسیر Onboarding متخصص:</b> ثبت‌نام → مدارک → Face Match → آزمون → قرارداد و شبا → فعال‌سازی خودکار زیر ۳۰ دقیقه.</li>
+<li><b>مسیر B2B:</b> ثبت سازمان → تأیید اعتبار → ثبت سفارش توسط کارمند → تأیید مدیر → اجرا → فاکتور و تسویه ۳۰ روزه.</li>
+</ol>
+<div class="callout"><b>روش اعتبارسنجی:</b> ۵ آزمون کاربری نگه‌داشت‌شده با مشتری واقعی و ۵ آزمون با متخصص، در دو مرحله (وایرفریم کاغذی و پروتوتایپ کلیک‌پذیر). معیار قبولی: نرخ تکمیل > ۸۰٪ بدون کمک، SUS ≥ ۷۵، خطای بحرانی ≤ ۱ مورد در هر وظیفه.</div>
+</section>

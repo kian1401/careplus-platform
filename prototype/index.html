@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>نمونه اولیه تعاملی سرویسا — پلتفرم خدمات آنلاین</title>
+<style>
+  :root{
+    --brand:#0f7a6c; --brand-d:#0b5d52; --brand-l:#e6f4f2;
+    --ink:#131720; --ink2:#39414f; --muted:#6b7480; --line:#e3e7ec; --bg:#eef1f4; --card:#fff;
+    --amber:#b45309; --amberl:#fff7ed; --blue:#1d4ed8; --bluel:#eef2ff; --rose:#be123c; --rosel:#fff1f3;
+    --green:#15803d; --greenl:#f0fdf4;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Vazirmatn","IRANSans",Tahoma,system-ui,sans-serif;direction:rtl}
+  a{color:var(--brand-d)}
+  /* ---------- chrome ---------- */
+  .topbar{position:sticky;top:0;z-index:30;background:#0b3f4d;color:#fff;display:flex;flex-wrap:wrap;gap:10px;
+    align-items:center;justify-content:space-between;padding:9px 16px}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800}
+  .logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#17b3a0,#0f7a6c);
+    display:grid;place-items:center;font-size:15px}
+  .roles{display:flex;gap:6px;flex-wrap:wrap}
+  .roles button{background:rgba(255,255,255,.12);color:#eaf6f4;border:1px solid rgba(255,255,255,.22);
+    border-radius:999px;padding:5px 13px;font:inherit;font-size:13px;cursor:pointer}
+  .roles button.on{background:#fff;color:#0b3f4d;font-weight:700}
+  .hint{font-size:12px;color:#a9c6c2}
+  .stage{display:flex;gap:20px;justify-content:center;align-items:flex-start;padding:18px 16px 60px;max-width:1220px;margin:0 auto}
+  /* ---------- phone ---------- */
+  .phone{width:392px;flex:0 0 392px;background:#0d1117;border-radius:34px;padding:10px;box-shadow:0 24px 60px rgba(12,23,40,.28)}
+  .frame{background:#f7f8fa;border-radius:26px;overflow:hidden;display:flex;flex-direction:column;height:778px}
+  .statusbar{background:#fff;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;
+    align-items:center;padding:8px 15px;font-size:11.5px;color:var(--muted)}
+  .screen{flex:1;overflow-y:auto;padding:13px 13px 18px}
+  .tabbar{display:flex;border-top:1px solid var(--line);background:#fff}
+  .tabbar button{flex:1;border:0;background:none;padding:9px 2px 10px;font:inherit;font-size:10.5px;color:var(--muted);
+    cursor:pointer;display:flex;flex-direction:column;gap:2px;align-items:center}
+  .tabbar button i{font-size:16px;font-style:normal}
+  .tabbar button.on{color:var(--brand-d);font-weight:700}
+  /* ---------- notes panel ---------- */
+  .notes{flex:1 1 340px;max-width:430px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;
+    box-shadow:0 6px 22px rgba(16,24,40,.06);position:sticky;top:70px}
+  .notes h3{margin:0 0 6px;font-size:16px;color:#0b3f4d}
+  .notes .step{font-size:12px;color:var(--muted);margin-bottom:8px}
+  .notes p{font-size:13.5px;line-height:1.95;color:var(--ink2);margin:6px 0}
+  .notes ul{padding-inline-start:18px;margin:8px 0;font-size:13px;color:var(--ink2)}
+  .notes li{margin:3px 0}
+  .tag{display:inline-block;background:var(--brand-l);color:var(--brand-d);border:1px solid #c7e6e2;
+    border-radius:999px;padding:1px 9px;font-size:11px;margin:2px 2px 0 0}
+  .navrow{display:flex;gap:8px;margin-top:14px}
+  .navrow button{flex:1;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px;font:inherit;
+    font-size:13px;cursor:pointer}
+  .navrow button.p{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:700}
+  /* ---------- app UI atoms ---------- */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+  .card h4{margin:0 0 6px;font-size:14px}
+  .card p{margin:4px 0;font-size:12.5px;color:var(--ink2);line-height:1.85}
+  .row{display:flex;align-items:center;gap:9px}
+  .row.between{justify-content:space-between}
+  .muted{color:var(--muted);font-size:11.5px}
+  .hero{background:linear-gradient(135deg,#0f7a6c,#0b3f4d);color:#fff;border-radius:16px;padding:15px;margin-bottom:11px}
+  .hero h3{margin:0 0 4px;font-size:16.5px}
+  .hero p{margin:0;font-size:12.5px;color:#cfe9e5;line-height:1.8}
+  .btn{display:block;width:100%;border:0;border-radius:12px;padding:11px;font:inherit;font-size:14px;font-weight:700;
+    background:var(--brand);color:#fff;cursor:pointer;margin-top:8px}
+  .btn.ghost{background:#fff;color:var(--brand-d);border:1px solid #cfe0de}
+  .btn.soft{background:var(--brand-l);color:var(--brand-d);border:1px solid #c7e6e2}
+  .btn.warn{background:var(--amber);}
+  .btn.rose{background:var(--rose)}
+  .btn.sm{padding:8px;font-size:12.5px;font-weight:600}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .tile{background:#fff;border:1px solid var(--line);border-radius:13px;padding:10px;text-align:center;font-size:12px;
+    cursor:pointer;line-height:1.7}
+  .tile i{display:block;font-size:20px;font-style:normal;margin-bottom:3px}
+  .tile.sos{background:var(--rosel);border-color:#ffd0d8;color:#9f1239;font-weight:700}
+  .chip{display:inline-block;background:#f1f4f7;border:1px solid var(--line);border-radius:999px;padding:4px 11px;
+    font-size:12px;margin:3px 3px 0 0;cursor:pointer}
+  .chip.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .chip.warnc{background:var(--amberl);border-color:#fcd9a8;color:#92400e}
+  .pill{font-size:10.5px;border-radius:999px;padding:1px 8px;font-weight:700}
+  .pill.new{background:var(--brand-l);color:var(--brand-d)}
+  .pill.ach{background:#f1f3f5;color:#4b5563}
+  .pill.v1{background:var(--amberl);color:var(--amber)}
+  .pill.v2{background:#f5f3ff;color:#6d28d9}
+  .kv{display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;border-bottom:1px dashed #eceff3}
+  .kv:last-child{border:0}
+  .kv b{font-weight:700}
+  .total{font-size:15px;font-weight:800;color:var(--brand-d)}
+  .bar{height:7px;border-radius:99px;background:#eef1f4;overflow:hidden;margin:5px 0}
+  .bar i{display:block;height:100%;background:var(--brand);border-radius:99px}
+  .bar.amber i{background:#d97706}
+  .field{border:1px solid var(--line);border-radius:11px;padding:9px 10px;font-size:12.5px;color:var(--ink2);background:#fff}
+  textarea.field{width:100%;min-height:66px;font:inherit;font-size:12.5px;resize:vertical}
+  .empty{text-align:center;color:var(--muted);font-size:12.5px;padding:26px 8px;line-height:2}
+  .stars{display:flex;gap:4px;font-size:19px;color:#d6dbe1;cursor:pointer}
+  .stars span.on{color:#f0a500}
+  .divider{height:1px;background:var(--line);margin:10px 0}
+  .timeline{position:relative;padding-inline-start:16px}
+  .timeline:before{content:"";position:absolute;inset-inline-start:4px;top:4px;bottom:4px;width:2px;background:#e6eaf0}
+  .tl{position:relative;margin-bottom:9px;font-size:12.5px}
+  .tl:before{content:"";position:absolute;inset-inline-start:-16px;top:5px;width:9px;height:9px;border-radius:50%;
+    background:#cbd5e1;border:2px solid #fff;box-shadow:0 0 0 1px #cbd5e1}
+  .tl.done:before{background:var(--brand);box-shadow:0 0 0 1px var(--brand)}
+  .tl.now:before{background:#f59e0b;box-shadow:0 0 0 1px #f59e0b}
+  .tl b{display:block;font-weight:700}
+  .tl span{color:var(--muted);font-size:11px}
+  .sim{background:#0f1b2a;border-radius:13px;padding:12px;color:#cfe6ff;font-size:12px;line-height:1.9}
+  .sim b{color:#7de3d2}
+  .wave{display:flex;align-items:flex-end;gap:3px;height:44px;margin:8px 0}
+  .wave i{flex:1;background:linear-gradient(180deg,#17b3a0,#0f7a6c);border-radius:3px;animation:w 1.05s ease-in-out infinite}
+  .wave i:nth-child(odd){animation-duration:.85s}
+  .wave i:nth-child(3n){animation-duration:1.25s}
+  @keyframes w{0%,100%{height:16%}50%{height:92%}}
+  .photo{height:74px;border-radius:11px;border:1.5px dashed #c9d2dc;display:grid;place-items:center;color:var(--muted);
+    font-size:11px;background:repeating-linear-gradient(45deg,#fbfcfd,#fbfcfd 7px,#f4f7fa 7px,#f4f7fa 14px)}
+  .radar{position:relative;height:186px;border-radius:14px;background:
+     radial-gradient(circle at 50% 55%,#dff1ee 0 22%,#eef7f5 22% 46%,#f7fbfa 46% 100%);
+     border:1px solid var(--line);overflow:hidden}
+  .radar .ripple{position:absolute;inset-inline-start:50%;top:55%;width:22px;height:22px;margin:-11px;
+    border-radius:50%;background:#0f7a6c;opacity:.9}
+  .radar .ring{position:absolute;inset-inline-start:50%;top:55%;width:22px;height:22px;margin:-11px;border-radius:50%;
+    border:2px solid rgba(15,122,108,.55);animation:ring 2.6s ease-out infinite}
+  .radar .ring:nth-child(2){animation-delay:.8s}.radar .ring:nth-child(3){animation-delay:1.6s}
+  @keyframes ring{from{transform:scale(1);opacity:.85}to{transform:scale(7.5);opacity:0}}
+  .pin{position:absolute;width:11px;height:11px;border-radius:50%;background:#1d4ed8;border:2px solid #fff;
+    box-shadow:0 1px 4px rgba(0,0,0,.25)}
+  svg.map{display:block;width:100%;height:172px;border-radius:13px;background:#f4f7fa;border:1px solid var(--line)}
+  .heat{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .heat i{height:20px;border-radius:4px;display:block}
+  .avatar{width:38px;height:38px;border-radius:50%;background:#dbe7e5;display:grid;place-items:center;font-size:15px;
+    color:#0b5d52;flex:0 0 38px}
+  .sheet{background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px;margin-bottom:9px}
+  .alert{border-inline-start:4px solid var(--rose);background:var(--rosel);border-radius:11px;padding:9px 11px;
+    font-size:12px;margin-bottom:8px}
+  .okbox{border-inline-start:4px solid var(--green);background:var(--greenl);border-radius:11px;padding:9px 11px;font-size:12px}
+  .progress{display:flex;gap:4px;margin:9px 0}
+  .progress i{flex:1;height:4px;border-radius:99px;background:#e6eaf0}
+  .progress i.on{background:var(--brand)}
+  .pad{-webkit-tap-highlight-color:transparent}
+  .sticky-cta{position:sticky;bottom:-18px;background:linear-gradient(180deg,rgba(247,248,250,0),#f7f8fa 46%);padding-top:10px}
+  @media (max-width:900px){
+    .stage{flex-direction:column;align-items:center}
+    .phone{flex:1 1 auto;width:100%;max-width:420px}
+    .notes{position:static;max-width:none;width:100%;flex:1 1 auto}
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><span class="logo">✦</span><span>سرویسا — نمونه اولیه تعاملی</span></div>
+  <div class="roles" id="roles"></div>
+  <div class="hint">۲۲ صفحه • کلیک‌پذیر • بدون نیاز به اینترنت</div>
+</div>
+
+<div class="stage">
+  <div class="phone">
+    <div class="frame">
+      <div class="statusbar">
+        <span id="sbTitle">سرویسا</span>
+        <span>۹:۴۱ &nbsp;•&nbsp; ۵G &nbsp;•&nbsp; ۷۸٪</span>
+      </div>
+      <div class="screen" id="screen"></div>
+      <nav class="tabbar" id="tabbar"></nav>
+    </div>
+  </div>
+  <aside class="notes" id="notes"></aside>
+</div>
+
+<script>
+/* =========================================================================
+   نمونه اولیه تعاملی «سرویسا» — پوشش ماژول‌های ۱ تا ۷ سند
+   ساختار: screens[] با متد render؛ state سراسری؛ رندر با innerHTML
+   ========================================================================= */
+const S = {
+  role: 'customer',
+  screen: 'c_home',
+  urgency: 'same_day',
+  photoCount: 0,
+  rating: {punctuality:0, quality:0, tidiness:0, price:0, conduct:0},
+  selectedProvider: 'علی رضایی',
+  online: true,
+  timer: null,
+  ticket: 0,
+  checklist: {before:false, after:false, parts:false},
+  milestone: 1
+};
+
+const ROLES = [
+  {id:'customer', label:'اپ مشتری', first:'c_home'},
+  {id:'provider', label:'اپ متخصص', first:'p_home'},
+  {id:'support',  label:'پنل پشتیبانی', first:'s_board'}
+];
+
+const TABS = {
+  customer: [
+    {id:'c_home', icon:'⌂', label:'خانه'},
+    {id:'c_intake', icon:'＋', label:'سفارش'},
+    {id:'c_tracking', icon:'⚲', label:'پیگیری'},
+    {id:'c_wallet', icon:'◍', label:'کیف پول'},
+    {id:'c_profile', icon:'☺', label:'پروفایل'}
+  ],
+  provider: [
+    {id:'p_home', icon:'⌂', label:'کارها'},
+    {id:'p_offer', icon:'◈', label:'پیشنهاد'},
+    {id:'p_job', icon:'⚒', label:'اجرا'},
+    {id:'p_earn', icon:'◍', label:'درآمد'},
+    {id:'p_kyc', icon:'✓', label:'احراز'}
+  ],
+  support: [
+    {id:'s_board', icon:'▤', label:'میز پشتیبانی'},
+    {id:'s_ticket', icon:'✉', label:'پرونده'},
+    {id:'s_crisis', icon:'⚠', label:'اتاق بحران'},
+    {id:'s_risk', icon:'◬', label:'ریسک'}
+  ]
+};
+
+const money = n => n.toLocaleString('fa-IR') + ' تومان';
+
+/* ------------------------------ SCREENS ------------------------------ */
+const screens = {
+
+/* ===================== مشتری ===================== */
+c_home: {role:'customer', title:'خانه — انتخاب خدمت', note:{
+  h:'صفحه خانه مشتری',
+  p:'ورودی اصلی: دسته‌بندی خدمات + دکمه اعزام فوری + کارت سفارش فعال. برای کاربر مهمان (بدون ثبت‌نام) هم قابل مشاهده است تا افت قیف کم شود.',
+  refs:['۲.۳ حالت مهمان','۳.۳ اعزام فوری','۱۰ فهرست وایرفریم: C-02'],
+  ul:['جست‌وجوی متنی و صوتی','پیشنهاد خدمت بر پایه محل و سابقه','بنر بیمه و گارانتی برای ایجاد اعتماد','ورود به سفارش جاری با یک کلیک']
+}, render(){ return `
+  <div class="row between" style="margin-bottom:9px">
+    <div class="row"><div class="avatar">☺</div><div><b style="font-size:13.5px">سلام، سارا 👋</b><br><span class="muted">تهران، سعادت‌آباد</span></div></div>
+    <span class="pill new">مهمان قابل استفاده</span>
+  </div>
+  <div class="field" onclick="go('c_intake')">🔍 چه کاری لازم داری؟ (لمس کن یا بگو)</div>
+  <div class="grid2" style="margin-top:9px">
+    <div class="tile sos" onclick="go('c_emergency')">🚨<br>اعزام فوری<br><span style="font-weight:400;font-size:10.5px">همین حالا، ۲۰ ثانیه</span></div>
+    <div class="tile" onclick="go('c_intake')">🛠️<br>سفارش عادی<br><span class="muted" style="font-size:10.5px">انتخاب زمان</span></div>
+  </div>
+  <div class="card" style="margin-top:10px">
+    <div class="row between"><b style="font-size:13px">سفارش فعال</b><span class="pill v1">در راه</span></div>
+    <p>علی رضایی • تعمیر نشت لوله سینک • رسیدن حدود ۱۴ دقیقه</p>
+    <div class="bar"><i style="width:62%"></i></div>
+    <button class="btn sm" onclick="go('c_tracking')">پیگیری زنده</button>
+  </div>
+  <b style="font-size:13px">خدمات پرکاربرد</b>
+  <div class="grid3" style="margin-top:7px">
+    <div class="tile" onclick="go('c_intake')">🚿<br>لوله‌کشی</div>
+    <div class="tile" onclick="go('c_intake')">⚡<br>برقکاری</div>
+    <div class="tile" onclick="go('c_intake')">❄️<br>کولر و اسپلیت</div>
+    <div class="tile" onclick="go('c_intake')">🔑<br>کلیدسازی</div>
+    <div class="tile" onclick="go('c_intake')">🎨<br>نقاشی</div>
+    <div class="tile" onclick="go('c_intake')">🧹<br>نظافت</div>
+  </div>
+  <div class="okbox" style="margin-top:11px">🛡️ هر سفارش به‌صورت خودکار <b>بیمه حوادث و خسارت</b> + <b>گارانتی دسته‌ای</b> دارد.</div>
+  <div class="card"><b style="font-size:13px">تخفیف‌های تو</b><p>کوپن «سرویس اول» ۱۵٪ • اشتراک طلایی: معاف از افزایش قیمت پیک</p></div>
+`;}},
+
+c_intake: {role:'customer', title:'ثبت سفارش چندرسانه‌ای', note:{
+  h:'ورودی چندرسانه‌ای (۳.۱)',
+  p:'مشتری لازم نیست دسته‌بندی درست را بداند: توضیح می‌دهد، عکس می‌گیرد یا ویدیو می‌فرستد؛ سیستم دسته و شدت را استنتاج می‌کند.',
+  refs:['۳.۱ ورودی چندرسانه‌ای','API: /v1/intake/analyze'],
+  ul:['ضبط صوت با راهنمای پرسش','عکس با راهنمای زاویه','تشخیص کلمات خطر (گاز/آب‌گرفتگی)','پیش‌بینی مسیر تریاژ پس از آنالیز']
+}, render(){ return `
+  <div class="hero"><h3>مشکل رو بگو — ما تشخیص می‌دهیم</h3><p>صوت، عکس یا ویدیو بفرست؛ سیستم نوع کار، شدت و بازه قیمت را پیشنهاد می‌دهد.</p></div>
+  <div class="card">
+    <div class="row between"><b style="font-size:13px">🎙️ توضیح صوتی</b><span class="muted">۰:۲۱ / حداکثر ۱:۰۰</span></div>
+    <div class="wave">${Array.from({length:26},()=>'<i style="height:'+(20+Math.random()*70)+'%"></i>').join('')}</div>
+    <div class="field">«آب از زیر سینک آشپزخانه می‌آید و کابینت خیس شده» <span class="muted">— متن خودکار (ASR فارسی)</span></div>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">📷 عکس و ویدیو (اختیاری، نتیجه دقیق‌تر)</b>
+    <div class="grid2" style="margin-top:7px">
+      ${S.photoCount>0?'<div class="photo">✅ عکس ۱ ثبت شد<br><span class="muted">نشت زیر سینک</span></div>':'<div class="photo" onclick="addPhoto()">＋ نمای کلی</div>'}
+      ${S.photoCount>1?'<div class="photo">✅ عکس ۲ ثبت شد<br><span class="muted">کابینت آسیب‌دیده</span></div>':'<div class="photo" onclick="addPhoto()">＋ نمای نزدیک</div>'}
+    </div>
+    <p class="muted">راهنما: نمای کلی، نمای نزدیک، پلاک/برند دستگاه. موقعیت مکانی از عکس حذف می‌شود.</p>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">علائم خطر</b>
+    <p class="muted">انتخاب کن تا مسیر ایمنی فعال شود:</p>
+    <span class="chip warnc" onclick="pick(this)">بوی گاز</span>
+    <span class="chip warnc" onclick="pick(this)">جرقه/دود برق</span>
+    <span class="chip" onclick="pick(this)">آب‌گرفتگی شدید</span>
+    <span class="chip" onclick="pick(this)">هیچ‌کدام</span>
+  </div>
+  <div class="sticky-cta"><button class="btn" onclick="go('c_analyze')">تحلیل هوشمند و ادامه ←</button></div>
+`;}},
+
+c_analyze: {role:'customer', title:'تشخیص هوشمند مشکل', note:{
+  h:'خروجی تحلیل (۳.۱)',
+  p:'مدل، دسته و درجه شدت را پیشنهاد می‌دهد و اگر اطمینان پایین باشد، سفارش را به کارشناس انسانی می‌سپارد. هیچ تصمیم قطعی بدون امکان اصلاح کاربر گرفته نمی‌شود.',
+  refs:['AI Intake','آستانه اطمینان ۰.۷۵','مهارت و تجهیزات لازم'],
+  ul:['اصلاح دسته توسط کاربر (یادگیری از خطا)','نمایش بازه قیمت شفاف','پرچم «قیمت ممکن است پس از بازدید تغییر کند»','درجه اطمینان قابل مشاهده']
+}, render(){ return `
+  <div class="card">
+    <span class="pill new">نتیجه تحلیل</span>
+    <h4 style="margin-top:7px">نشت آب از لوله‌های زیر سینک آشپزخانه</h4>
+    <div class="kv"><span>دسته پیشنهادی</span><b>لوله‌کشی › رفع نشت</b></div>
+    <div class="kv"><span>درجه شدت</span><b>۳ از ۵ (متوسط)</b></div>
+    <div class="kv"><span>اطمینان مدل</span><b>۹۲٪</b></div>
+    <div class="kv"><span>مهارت لازم</span><b>لوله‌کشی پایه + ترمیم کابینت</b></div>
+    <div class="kv"><span>تجهیزات لازم</span><b>آچار لوله‌گیر، تست نشت</b></div>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">مشکل را تأیید می‌کنی؟</b>
+    <div style="margin-top:6px">
+      <span class="chip on" onclick="pick(this,true)">بله، همین است</span>
+      <span class="chip" onclick="pick(this,true)">دسته فرق دارد</span>
+      <span class="chip" onclick="pick(this,true)">مطمئن نیستم / کارشناس زنگ بزند</span>
+    </div>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">پرسش‌های تریاژ (۴ از ۶)</b>
+    <p>آیا شیرآب اصلی قابل بستن است؟</p>
+    <span class="chip" onclick="pick(this,true)">بله</span><span class="chip" onclick="pick(this,true)">نه</span><span class="chip" onclick="pick(this,true)">نمی‌دانم</span>
+    <p style="margin-top:8px">آیا کابینت آسیب دائمی دیده؟</p>
+    <span class="chip" onclick="pick(this,true)">بله، نیاز به تعویض</span><span class="chip" onclick="pick(this,true)">فقط خیس شده</span>
+    <div class="progress"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
+  </div>
+  <div class="sticky-cta"><button class="btn" onclick="go('c_quote')">دریافت قیمت ←</button></div>
+`;}},
+
+c_quote: {role:'customer', title:'برآورد قیمت شفاف', note:{
+  h:'قیمت‌گذاری پویا (۴.۱)',
+  p:'قیمت نهایی از ضرب و جمع مؤلفه‌های معلوم ساخته می‌شود و هر مؤلفه جداگانه به مشتری نشان داده می‌شود؛ افزایش پیک هرگز پنهان نمی‌ماند.',
+  refs:['۴.۱ فرمول قیمت پویا','Rate Card v۴۱','Surge سقف ۱.۵'],
+  ul:['انتخاب فوریت (بر قیمت اثر دارد)','معافیت پیک برای خدمت امدادی','بازه عدم قطعیت + شرایط تغییر قیمت','پرداخت Escrow در گام بعد']
+}, render(){ return `
+  <div class="card">
+    <div class="row between"><b style="font-size:13px">فوریت سفارش</b><span class="muted">قیمت را تغییر می‌دهد</span></div>
+    <div style="margin-top:5px">
+      <span class="chip ${S.urgency==='emergency'?'on':''}" onclick="setUrg('emergency')">همین حالا (۱.۳۵×)</span>
+      <span class="chip ${S.urgency==='same_day'?'on':''}" onclick="setUrg('same_day')">امروز (۱.۱۵×)</span>
+      <span class="chip ${S.urgency==='scheduled'?'on':''}" onclick="setUrg('scheduled')">زمان دلخواه (۱.۰×)</span>
+    </div>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">صورتحساب شفاف</b>
+    <div class="kv"><span>اجرت پایه: رفع نشت لوله</span><b>${money(900000)}</b></div>
+    <div class="kv"><span>ضریب پیچیدگی (ترمیم کابینت)</span><b>+${money(150000)}</b></div>
+    <div class="kv"><span>ایاب و ذهاب (۴.۲ کیلومتر)</span><b>${money(60000)}</b></div>
+    <div class="kv"><span>اقلام مصرفی (با رسید)</span><b>${money(280000)}</b></div>
+    <div class="kv"><span>ضریب تقاضای منطقه (۱.۱۵×)</span><b>+${money(140000)}</b></div>
+    <div class="kv"><span>تخفیف اشتراک طلایی</span><b style="color:var(--green)">−${money(50000)}</b></div>
+    <div class="kv"><span>مالیات ارزش افزوده (۱۰٪)</span><b>${money(148000)}</b></div>
+    <div class="kv"><span class="total">بازه نهایی</span><span class="total">${money(1540000)} تا ${money(1780000)}</span></div>
+    <div class="bar"><i style="width:86%"></i></div>
+    <p class="muted">۹۰٪ سفارش‌های مشابه در این بازه تمام شده‌اند. اگر کار با بازدید بیشتر شود، درخواست تغییر قیمت برای تأیید تو ارسال می‌شود.</p>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">پرداخت</b>
+    <p>💳 پیش‌پرداخت ۳۰٪ · مابقی پس از تأیید تو آزاد می‌شود (Escrow)</p>
+    <span class="chip on" onclick="pick(this,true)">کیف پول</span>
+    <span class="chip" onclick="pick(this,true)">پرداخت آنلاین</span>
+    <span class="chip" onclick="pick(this,true)">پرداخت اقساطی (۳ ماه)</span>
+  </div>
+  <div class="sticky-cta"><button class="btn" onclick="go('c_dispatch')">ثبت سفارش و یافتن متخصص ←</button></div>
+`;}},
+
+c_emergency: {role:'customer', title:'اعزام فوری', note:{
+  h:'خدمت اضطراری (۳.۳)',
+  p:'مسیر جداگانه با پنجره پذیرش ۲۰ ثانیه‌ای، پیش‌پرداخت اجباری و نمایش ETA. برای خطرات جانی، هشدار تماس با اورژانس نمایش داده می‌شود.',
+  refs:['۳.۳ Emergency Dispatch','Safety-first'],
+  ul:['هشدار ایمنی پیش از ادامه','پیش‌پرداخت برای جلوگیری از سوءاستفاده','نمایش لیست متخصصان نزدیک با ETA','شرط عرضه کافی برای فعال بودن این قابلیت']
+}, render(){ return `
+  <div class="alert">⚠️ اگر بوی گاز، دود یا خطر جانی وجود دارد، ابتدا با <b>۱۲۵</b> (آتش‌نشانی) یا <b>۱۹۴</b> (اورژانس گاز) تماس بگیر.</div>
+  <div class="card">
+    <h4>اعزام فوری کلیدسازی</h4>
+    <div class="kv"><span>پیش‌پرداخت اجباری</span><b>${money(250000)}</b></div>
+    <div class="kv"><span>زمان تخمینی رسیدن</span><b>۳۲ دقیقه</b></div>
+    <div class="kv"><span>سهم متخصص از این سفارش</span><b>۱۰۰٪ (انگیزه پیک)</b></div>
+    <p class="muted">پنجره پذیرش ۲۰ ثانیه است؛ پس از آن نردبان تشدید فعال می‌شود (شعاع بیشتر → افزایش سهم → پیشنهاد زمان جایگزین).</p>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">نزدیک‌ترین متخصصان</b>
+    <div class="row between" style="margin-top:7px"><div class="row"><div class="avatar">🔑</div><div><b style="font-size:12.5px">مهدی ک.</b><br><span class="muted">۱.۸ کیلومتر • امتیاز ۴.۸ • ۲۱ دقیقه</span></div></div><span class="pill new">برگزیده</span></div>
+    <div class="divider"></div>
+    <div class="row between"><div class="row"><div class="avatar">🔑</div><div><b style="font-size:12.5px">حسین ص.</b><br><span class="muted">۲.۶ کیلومتر • امتیاز ۴.۶ • ۲۷ دقیقه</span></div></div><span class="pill ach">تأییدشده</span></div>
+  </div>
+  <button class="btn rose" onclick="go('c_dispatch')">تأیید و پرداخت پیش‌پرداخت</button>
+`;}},
+
+c_dispatch: {role:'customer', title:'جست‌وجو و تخصیص هوشمند', note:{
+  h:'Smart Dispatch (۳.۲)',
+  p:'سفارش با فهرست کاندیدها و امتیازدهی چندمتغیره به موج‌های پیشنهاد می‌رود. موج اول ۳–۵ کاندید، پنجره ۹۰ ثانیه، سپس تشدید خودکار.',
+  refs:['۳.۲ تابع امتیازدهی','نردبان تشدید','Live Ops در صورت شکست'],
+  ul:['نمایش شفاف وضعیت به مشتری','تشدید پله‌ای با شفافیت','مسیر جایگزین: تخصیص دستی اپراتور','قفل پذیرش اتمی (اول-پذیرنده-برنده)']
+}, render(){
+  S.timer && clearInterval(S.timer);
+  let t = 38;
+  S.timer = setInterval(()=>{ const el=document.getElementById('cd'); if(!el){clearInterval(S.timer);return;} t=t>0?t-1:0; el.textContent='۰:'+String(t).padStart(2,'0'); if(t===0){clearInterval(S.timer);} },1000);
+  return `
+  <div class="radar">
+    <div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ripple"></div>
+    ${[[22,30],[74,24],[62,72],[30,78],[84,58]].map(([x,y])=>`<div class="pin" style="inset-inline-start:${x}%;top:${y}%"></div>`).join('')}
+  </div>
+  <div class="card" style="margin-top:10px">
+    <div class="row between"><b style="font-size:13px">در حال یافتن متخصص…</b><span class="pill v1">موج ۱ از ۳</span></div>
+    <p>۵ متخصص واجد شرط در شعاع ۴ کیلومتر پیدا شد · ۳ پیشنهاد ارسال شد</p>
+    <div class="bar"><i style="width:44%"></i></div>
+    <p class="muted">پنجره پذیرش این موج: <b id="cd">۰:۳۸</b></p>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">معیارهای تطبیق (شفافیت داخلی)</b>
+    <div class="kv"><span>فاصله جغرافیایی</span><b>وزن ۲۶٪</b></div>
+    <div class="kv"><span>کیفیت ۹۰ روز اخیر</span><b>وزن ۱۸٪</b></div>
+    <div class="kv"><span>نرخ قبولی در همین دسته</span><b>وزن ۱۴٪</b></div>
+    <div class="kv"><span>آن‌تایم بودن و نرخ لغو</span><b>وزن ۱۲٪</b></div>
+    <div class="kv"><span>تجهیزات ثبت‌شده</span><b>وزن ۸٪</b></div>
+    <div class="kv"><span>قیمت پیشنهادی متخصص</span><b>وزن ۱۰٪</b></div>
+  </div>
+  <button class="btn" onclick="go('c_tracking')">شبیه‌سازی: پذیرش متخصص ✓</button>
+  <button class="btn ghost" onclick="go('s_board')">شبیه‌سازی: ارجاع به اپراتور (بدون پاسخ)</button>
+`;}},
+
+c_tracking: {role:'customer', title:'ردیابی زنده و ارتباط', note:{
+  h:'Live Tracking + ارتباط امن (۶.۱ و ۷.۲)',
+  p:'از لحظه پذیرش تا پایان کار: موقعیت زنده، ETA پویا، تماس با شماره پوشانده‌شده، چت و بازدید ویدیویی.',
+  refs:['۷.۲ ردیابی زنده','۶.۱ تماس امن و ویدیو','حریم خصوصی موقعیت'],
+  ul:['ETA بر پایه ترافیک لحظه‌ای','دکمه‌های تماس/چت/ویدیو','نمایش پلاک و مشخصات برای امنیت','توقف اشتراک موقعیت پس از پایان کار']
+}, render(){ return `
+  <div class="card" style="padding:9px">
+    <svg class="map" viewBox="0 0 340 172">
+      <g stroke="#e2e8f0" stroke-width="7" fill="none">
+        <path d="M-5 40 H345"/><path d="M-5 118 H345"/><path d="M70 -5 V177"/><path d="M240 -5 V177"/>
+      </g>
+      <g stroke="#eef2f7" stroke-width="4" fill="none"><path d="M-5 78 H345"/><path d="M150 -5 V177"/><path d="M300 -5 V177"/></g>
+      <g fill="#e8eef4"><rect x="82" y="12" width="52" height="22" rx="3"/><rect x="256" y="48" width="56" height="22" rx="3"/>
+        <rect x="20" y="126" width="40" height="32" rx="3"/><rect x="168" y="88" width="60" height="22" rx="3"/></g>
+      <path d="M292 140 C 240 140, 200 100, 168 88 C 140 78, 120 70, 96 62" stroke="#0f7a6c" stroke-width="3.4"
+        fill="none" stroke-dasharray="7 5"/>
+      <circle cx="292" cy="140" r="8" fill="#1d4ed8" stroke="#fff" stroke-width="2.6"/>
+      <circle cx="96" cy="62" r="7" fill="#0f7a6c" stroke="#fff" stroke-width="2.6"/>
+      <text x="286" y="163" style="font:10px Tahoma;fill:#1d4ed8">متخصص</text>
+      <text x="60" y="50" style="font:10px Tahoma;fill:#0b5d52">مقصد</text>
+    </svg>
+  </div>
+  <div class="card">
+    <div class="row between">
+      <div class="row"><div class="avatar">👨‍🔧</div><div><b style="font-size:13px">علی رضایی</b><br><span class="muted">امتیاز ۴.۸۷ • ۳۱۲ کار موفق • برگزیده</span></div></div>
+      <span class="pill new">در راه</span>
+    </div>
+    <div class="kv"><span>رسیدن تخمینی</span><b>۱۳:۵۵ (۱۴ دقیقه)</b></div>
+    <div class="kv"><span>خودرو</span><b>موتور — پلاک ۲۲۴ ع ۷۸</b></div>
+    <div class="grid3" style="margin-top:8px">
+      <button class="btn ghost sm" onclick="alert('تماس از شماره پوشانده‌شده برقرار می‌شود؛ پس از پایان سفارش غیرفعال می‌گردد.')">📞 تماس امن</button>
+      <button class="btn ghost sm" onclick="alert('چت درون‌برنامه‌ای باز شد — پیام‌ها برای حل اختلاف ذخیره می‌شود.')">💬 چت</button>
+      <button class="btn ghost sm" onclick="alert('بازدید ویدیویی: هزینه ۵۰ هزار تومان، قابل کسر از فاکتور در صورت سفارش نهایی.')">🎥 ویدیو</button>
+    </div>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">وضعیت سفارش</b>
+    <div class="timeline" style="margin-top:8px">
+      <div class="tl done"><b>سفارش ثبت شد</b><span>۱۳:۲۱ — قیمت تأیید و مبلغ در حساب واسط بلوکه شد</span></div>
+      <div class="tl done"><b>متخصص پذیرفت</b><span>۱۳:۲۴ — پیشنهاد با امتیاز ۰.۸۷ پذیرفته شد</span></div>
+      <div class="tl now"><b>در راه</b><span>ETA پویا: ۱۴ دقیقه · موقعیت هر ۱۰ ثانیه</span></div>
+      <div class="tl"><b>ورود و شروع کار</b><span>نیازمند تأیید موقعیت + عکس وضعیت اولیه</span></div>
+      <div class="tl"><b>پایان و تأیید تو</b><span>پنجره اعتراض ۴۸ ساعته، سپس آزادسازی مبلغ</span></div>
+    </div>
+  </div>
+  <div class="okbox">🛡️ بیمه این سفارش فعال است · گارانتی لوله‌کشی: ۳۰ روز · حق توقف: تا ۳۰ دقیقه پس از پذیرش بدون جریمه</div>
+`;}},
+
+c_complete: {role:'customer', title:'تأیید کار، امتیاز چندبعدی و پرداخت', note:{
+  h:'کیفیت و آزادسازی پول (۵.۱ و ۴.۲)',
+  p:'پس از پایان کار، عکس‌های قبل/بعد اجباری است؛ مشتری تأیید می‌کند و امتیاز پنج‌بعدی می‌دهد. مبلغ پس از پنجره ۴۸ ساعته (یا تأیید) آزاد می‌شود.',
+  refs:['۵.۱ امتیازدهی چندبعدی','۴.۲ آزادسازی Escrow','Change Order'],
+  ul:['امتیاز مستقل برای هر بُعد','شرط الزامی عکس قبل/بعد','تضمین بازکاری ۷–۳۰ روز','امکان ثبت ادعای خسارت']
+}, render(){ return `
+  <div class="okbox">✅ علی رضایی کار را تمام‌شده علامت زد · ساعت ۱۵:۴۲ · مدت کار ۵۸ دقیقه</div>
+  <div class="card">
+    <b style="font-size:13px">مستندات اجباری</b>
+    <div class="grid2" style="margin-top:7px">
+      <div class="photo">✅ عکس قبل<br><span class="muted">۱۳:۵۷ — نشت فعال</span></div>
+      <div class="photo">✅ عکس بعد<br><span class="muted">۱۵:۳۵ — لوله و کابینت خشک</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">صورتحساب نهایی</b>
+    <div class="kv"><span>اجرت، ایاب‌وذهاب، اقلام</span><b>${money(1390000)}</b></div>
+    <div class="kv"><span>افزایش تقاضای منطقه (در Preview)</span><b>${money(140000)}</b></div>
+    <div class="kv"><span>مالیات ارزش افزوده</span><b>${money(153000)}</b></div>
+    <div class="kv"><span class="total">جمع کل</span><span class="total">${money(1683000)}</span></div>
+    <div class="kv"><span>پرداخت‌شده از Escrow</span><b>${money(462000)}</b></div>
+    <p class="muted">تفاوت ۱.۳۸٪ نسبت به تخمین اولیه — در بازه اعلام‌شده. جزئیات تغییر: ${money(0)} درخواست تغییر قیمت تأییدنشده.</p>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">امتیاز چندبعدی</b>
+    <div class="kv"><span>وقت‌شناسی و حضور</span><div class="stars" id="st_punctuality"></div></div>
+    <div class="kv"><span>کیفیت فنی کار</span><div class="stars" id="st_quality"></div></div>
+    <div class="kv"><span>تمیزی محیط</span><div class="stars" id="st_tidiness"></div></div>
+    <div class="kv"><span>تطابق قیمت با فاکتور</span><div class="stars" id="st_price"></div></div>
+    <div class="kv"><span>رفتار حرفه‌ای</span><div class="stars" id="st_conduct"></div></div>
+    <textarea class="field" style="margin-top:8px" placeholder="تجربه‌ات را بنویس (برای متخصصان دیگر مفید است)"></textarea>
+  </div>
+  <button class="btn" onclick="go('c_after')">تأیید نهایی و آزادسازی مبلغ</button>
+  <button class="btn ghost" onclick="go('c_claim')">مشکلی وجود دارد (ثبت درخواست)</button>
+`;},
+  afterRender(){ ['punctuality','quality','tidiness','price','conduct'].forEach(d=>drawStars(d)); }
+},
+
+c_after: {role:'customer', title:'پس از سفارش: گارانتی و بیمه', note:{
+  h:'تضمین و بازگشت مشتری (۵.۲ و ۶.۳)',
+  p:'پس از تأیید: رسید، گارانتی فعال، امکان یادآوری سرویس دوره‌ای و سفارش مجدد از همان متخصص با یک کلیک.',
+  refs:['۵.۲ بیمه و گارانتی','۶.۳ CRM و یادآوری دوره‌ای'],
+  ul:['گارانتی فعال با انقضا','بیمه با شماره پرونده','دعوت به سرویس دوره‌ای','دعوت دوستان و پاداش']
+}, render(){ return `
+  <div class="hero"><h3>کار تمام شد ✅</h3><p>مبلغ پس از پنجره ۴۸ ساعته به متخصص آزاد می‌شود؛ در این مدت می‌توانی اعتراض ثبت کنی.</p></div>
+  <div class="card">
+    <div class="kv"><span>شماره سفارش</span><b>SR-1405-88421</b></div>
+    <div class="kv"><span>گارانتی فعال تا</span><b>۳۰ روز (۱۴۰۵/۰۸/۱۲)</b></div>
+    <div class="kv"><span>بیمه</span><b>پوشش ۵۰ میلیون تومان — پرونده IN-77120</b></div>
+    <div class="kv"><span>فاکتور رسمی</span><b>صادر شد ✓ (قابل دانلود PDF)</b></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><b style="font-size:12.5px">سفارش مجدد</b><p>همین متخصص، با یک کلیک</p><button class="btn soft sm">درخواست دوباره</button></div>
+    <div class="card"><b style="font-size:12.5px">یادآوری دوره‌ای</b><p>سرویس شش‌ماهه کولر</p><button class="btn soft sm">فعال‌سازی یادآور</button></div>
+  </div>
+  <div class="card"><b style="font-size:12.5px">۵۰ هزار تومان هدیه معرفی</b><p>لینک دعوت برای دوستانت را بفرست.</p><button class="btn ghost sm">کپی لینک دعوت</button></div>
+`;}},
+
+c_claim: {role:'customer', title:'ادعای خسارت / اختلاف', note:{
+  h:'تضمین و چرخه اختلاف (۵.۲ و ۵.۴)',
+  p:'مشتری می‌تواند خسارت را با ویدیو/عکس ثبت کند؛ ارزیابی اولیه خودکار و پرونده با SLA مشخص بررسی می‌شود. تا تعیین تکلیف، Escrow متوقف می‌ماند.',
+  refs:['۵.۲ پرونده ادعا','۵.۳ ارزیابی خودکار','۵.۴ حل اختلاف'],
+  ul:['توقف آزادسازی وجه','الزام شواهد تصویری','تصمیم‌گیری الگوریتمی/کارشناسی','تسویه از محل بیمه یا پس‌گرفت از متخصص']
+}, render(){ return `
+  <div class="card">
+    <h4>ثبت درخواست خسارت</h4>
+    <div class="kv"><span>نوع</span><b>آسیب مالی (کابینت)</b></div>
+    <div class="kv"><span>مبلغ درخواستی</span><b>${money(3200000)}</b></div>
+    <div class="kv"><span>وضعیت Escrow</span><b style="color:var(--amber)">متوقف (Frozen)</b></div>
+    <div class="grid2" style="margin-top:7px"><div class="photo">＋ ویدیو آسیب</div><div class="photo">＋ عکس فاکتور خرید</div></div>
+  </div>
+  <div class="card sim">
+    <b>موتور ریسک (نمونه خروجی):</b><br>
+    · سابقه ادعای مشتری: ۰ مورد در ۱۸ ماه → ریسک پایین<br>
+    · تطابق عکس قبل/بعد با ادعا: هم‌خوانی ۷۸٪<br>
+    · فاصله زمانی پایان کار تا ادعا: ۳ ساعت ✓<br>
+    · پیشنهاد سیستم: <b>بررسی کارشناسی در ۲۴ ساعت + پیش‌پرداخت ۲۰٪</b>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">مسیر پیشنهادی سریع</b>
+    <p>۱) تعمیر کابینت با تأمین‌کننده مورد تأیید پلتفرم و پرداخت از محل Escrow · ۲) بازگشت ۳۰٪ مبلغ کار · ۳) بررسی کامل بیمه</p>
+  </div>
+  <button class="btn" onclick="alert('پرونده CL-9927 ثبت شد. نتیجه ارزیابی نهایی حداکثر تا ۲۴ ساعت آینده اعلام می‌شود.')">ثبت پرونده</button>
+`;}},
+
+c_wallet: {role:'customer', title:'کیف پول و تراکنش‌ها', note:{
+  h:'کیف پول و Escrow (۴.۲)',
+  p:'موجودی، بلوکه‌شده‌ها، تراکنش‌ها و فاکتورها در یک نما. موجودی کیف پول یک نمای محاسبه‌شده از دفتر کل است، نه یک عدد مستقل.',
+  refs:['۴.۲ دفتر کل دوعاملی','۴.۳ فاکتور مالیاتی'],
+  ul:['تفکیک موجودی در دسترس از مبلغ بلوکه‌شده','سابقه بلوکه/آزادسازی هر سفارش','دسترسی به فاکتور رسمی','شارژ سریع و کوپن']
+}, render(){ return `
+  <div class="hero"><h3 style="font-size:15px">موجودی در دسترس</h3><h3 style="margin:6px 0 2px;font-size:22px">${money(1240000)}</h3>
+  <p>در حساب واسط (بلوکه‌شده برای سفارش‌ها): ${money(462000)}</p></div>
+  <div class="grid2">
+    <button class="btn soft sm">شارژ کیف پول</button><button class="btn ghost sm">کد کوپن</button>
+  </div>
+  <div class="card" style="margin-top:10px">
+    <b style="font-size:13px">تراکنش‌های اخیر</b>
+    <div class="kv"><span>بلوکه برای SR-1405-88421</span><b style="color:var(--amber)">−${money(462000)}</b></div>
+    <div class="kv"><span>شارژ آنلاین (درگاه)</span><b style="color:var(--green)">+${money(1500000)}</b></div>
+    <div class="kv"><span>بازگشت وجه سفارش لغوشده</span><b style="color:var(--green)">+${money(180000)}</b></div>
+    <div class="kv"><span>پاداش معرفی دوستان</span><b style="color:var(--green)">+${money(100000)}</b></div>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">فاکتورها و اسناد</b>
+    <div class="kv"><span>فاکتور رسمی SR-1405-88421</span><b>دانلود PDF</b></div>
+    <div class="kv"><span>گزارش سالانه هزینه خدمات</span><b>دانلود</b></div>
+  </div>
+`;}},
+
+c_profile: {role:'customer', title:'پروفایل، امنیت و دسترسی‌ها', note:{
+  h:'هویت و امنیت (۲.۱)',
+  p:'ورود با OTP، OAuth و Passkey؛ مدیریت دستگاه‌ها، رضایت‌ها و درخواست خروجی داده.',
+  refs:['۲.۱ روش‌های ورود','نشست‌ها و Device Binding','حق حذف/انتقال داده'],
+  ul:['چند روش ورود هم‌زمان','مدیریت نشست‌های فعال','کنترل رضایت‌نامه‌ها (موقعیت، ضبط ویدیو)','خروجی داده و حذف حساب']
+}, render(){ return `
+  <div class="card">
+    <div class="row"><div class="avatar">س</div><div><b style="font-size:13.5px">سارا محمدی</b><br><span class="muted">۰۹۱۲••••۴۵۷ · تأییدشده ✓</span></div></div>
+    <div class="divider"></div>
+    <div class="kv"><span>روش‌های ورود فعال</span><b>OTP · Google · Passkey (این گوشی)</b></div>
+    <div class="kv"><span>وضعیت قفل بیومتریک</span><b style="color:var(--green)">فعال (Face ID)</b></div>
+    <div class="kv"><span>نشست‌های فعال</span><b>۲ دستگاه</b></div>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">رضایت‌نامه‌ها</b>
+    <div class="kv"><span>اشتراک موقعیت در زمان سفارش</span><b>فعال ✓</b></div>
+    <div class="kv"><span>ضبط تماس برای کیفیت</span><b>فعال ✓</b></div>
+    <div class="kv"><span>ضبط ویدیو بازدید</span><b>غیرفعال</b></div>
+    <div class="kv"><span>استفاده از عکس‌ها برای بهبود مدل</span><b>غیرفعال</b></div>
+  </div>
+  <div class="grid2">
+    <button class="btn ghost sm">مدیریت نشست‌ها</button>
+    <button class="btn ghost sm">خروجی داده من</button>
+  </div>
+  <button class="btn ghost sm" style="margin-top:8px">حذف حساب کاربری</button>
+`;}},
+
+/* ===================== متخصص ===================== */
+p_home: {role:'provider', title:'کارتابل متخصص', note:{
+  h:'اپ متخصص — خانه',
+  p:'وضعیت آماده‌به‌کار، درآمد امروز، پیشنهادهای فعال با شمارش معکوس و «چرا این سفارش به من پیشنهاد شد؟» برای شفافیت الگوریتم.',
+  refs:['۷.۳ داشبورد متخصص','۳.۲ Job Offer'],
+  ul:['کلید آنلاین/آفلاین','پیشنهادها با TTL','شفافیت امتیاز تطبیق','هشدار مدارک نزدیک به انقضا']
+}, render(){ return `
+  <div class="card">
+    <div class="row between">
+      <div><b style="font-size:13.5px">وضعیت کار</b><br><span class="muted">${S.online?'دریافت پیشنهاد فعال است':'پیشنهادها متوقف است'}</span></div>
+      <button class="btn sm" style="width:auto;padding:8px 14px;background:${S.online?'var(--green)':'#94a3b8'}" onclick="toggleOnline()">${S.online?'آنلاین ✓':'آفلاین'}</button>
+    </div>
+  </div>
+  <div class="grid3">
+    <div class="tile"><b style="font-size:15px;color:var(--brand-d)">${money(4860000).split(' ')[0]}</b><br><span class="muted">درآمد امروز</span></div>
+    <div class="tile"><b style="font-size:15px;color:var(--brand-d)">۷</b><br><span class="muted">کار امروز</span></div>
+    <div class="tile"><b style="font-size:15px;color:var(--brand-d)">۴.۸۷</b><br><span class="muted">امتیاز</span></div>
+  </div>
+  <div class="card" style="border-color:#fcd9a8;background:var(--amberl)">
+    <b style="font-size:12.5px">⏳ گواهی عدم سوءپیشینه تو ۲۸ روز دیگر منقضی می‌شود</b>
+    <p>برای جلوگیری از محدودیت پذیرش کار، تمدید کن.</p><button class="btn warn sm">تمدید مدرک</button>
+  </div>
+  <b style="font-size:13px">پیشنهادهای فعال</b>
+  <div class="card" style="margin-top:6px">
+    <div class="row between"><b style="font-size:13px">نشت آب زیر سینک</b><span class="pill v1">۰:۳۸</span></div>
+    <p class="muted">۲.۱ کیلومتر از تو · امروز ۱۶:۰۰ · بازه ${money(1540000)} تا ${money(1780000)}</p>
+    <div class="kv"><span>امتیاز تطبیق تو</span><b>۰.۸۷ (رتبه ۲ از ۳)</b></div>
+    <button class="btn sm" onclick="go('p_offer')">مشاهده و پاسخ</button>
+  </div>
+  <div class="card">
+    <div class="row between"><b style="font-size:13px">تعمیر کولر گازی — اسپلیت</b><span class="pill ach">زمان‌بندی‌شده</span></div>
+    <p class="muted">۴.۸ کیلومتر · فردا ۱۰:۰۰ · قیمت ثابت ${money(950000)}</p>
+  </div>
+`;}},
+
+p_offer: {role:'provider', title:'جزئیات پیشنهاد و پاسخ', note:{
+  h:'پذیرش/رد با دلیل (۳.۲)',
+  p:'متخصص رسانه‌ها و جزئیات را می‌بیند و با یک لمس می‌پذیرد. دلایل رد برای یادگیری الگوریتم استفاده می‌شود (مثلاً «وسیله لازم را ندارم» ⇒ حذف از فهرست کاندید در آن دسته).',
+  refs:['۳.۲ سیاست‌های عملیاتی','جریمه رد متوالی'],
+  ul:['نمای رسانه‌های مشتری','جزئیات پرداخت و Escrow','دلایل استاندارد رد','قفل پذیرش اتمی و هم‌زمانی'],
+}, render(){ return `
+  <div class="card">
+    <div class="row between"><b style="font-size:13.5px">نشت آب زیر سینک آشپزخانه</b><span class="pill v1">۰:۳۸ برای پاسخ</span></div>
+    <div class="kv"><span>فاصله تا مشتری</span><b>۲.۱ کیلومتر (۹ دقیقه با موتور)</b></div>
+    <div class="kv"><span>زمان</span><b>امروز ۱۶:۰۰ تا ۱۸:۰۰</b></div>
+    <div class="kv"><span>بازه پرداخت</span><b>${money(1540000)} تا ${money(1780000)}</b></div>
+    <div class="kv"><span>اقلام مصرفی</span><b>با رسید، جداگانه تسویه می‌شود</b></div>
+    <div class="kv"><span>سهم تو</span><b>۸۵٪ (سطح L3 — برگزیده)</b></div>
+    <div class="grid3" style="margin-top:8px">
+      <div class="photo">🎙️ صوت</div><div class="photo">📷 عکس ۱</div><div class="photo">📷 عکس ۲</div>
+    </div>
+    <textarea class="field" style="margin-top:8px">آب از زیر سینک می‌آید و کابینت خیس شده — شیر اصلی قابل بستن است.</textarea>
+  </div>
+  <div class="card">
+    <b style="font-size:12.5px">چرا این پیشنهاد به تو رسید؟</b>
+    <div class="kv"><span>نزدیکی</span><b>۰.۹۱</b></div>
+    <div class="kv"><span>کیفیت ۹۰ روز</span><b>۰.۹۵</b></div>
+    <div class="kv"><span>نرخ قبولی در همین دسته</span><b>۰.۸۲</b></div>
+    <div class="kv"><span>تطابق تجهیزات</span><b>۰.۷۵ (نقص: تست نشت)</b></div>
+    <div class="kv"><span>امتیاز کل</span><b>۰.۸۷</b></div>
+  </div>
+  <div class="grid2">
+    <button class="btn" onclick="go('p_job')">پذیرش سفارش</button>
+    <button class="btn ghost" onclick="alert('دلیل رد ثبت شد: «تجهیزات کافی ندارم». پیشنهادهای مشابه این دسته برای ۷ روز آینده کم‌تر ارسال می‌شود.')">رد کردن</button>
+  </div>
+  <div class="card"><b style="font-size:12.5px">دلیل رد (اجباری پس از ۳ رد متوالی)</b>
+    <div style="margin-top:5px"><span class="chip" onclick="pick(this,true)">دور است</span><span class="chip" onclick="pick(this,true)">مهارت ندارم</span>
+    <span class="chip" onclick="pick(this,true)">تجهیزات ندارم</span><span class="chip" onclick="pick(this,true)">زمان آزاد نیست</span></div>
+  </div>
+`;}},
+
+p_job: {role:'provider', title:'اجرای کار (چک‌لیست و Milestone)', note:{
+  h:'اجرای کار و مستندسازی (۳.۲ و ۴.۲)',
+  p:'Check-in با GPS، چک‌لیست قبل/بعد با عکس الزامی، ثبت اقلام مصرفی و ارسال Milestone برای پروژه‌های مرحله‌ای؛ تغییر قیمت فقط با تأیید مشتری.',
+  refs:['۳.۲ چرخه عمر سفارش','۴.۲ Milestone','Change Order'],
+  ul:['عکس الزامی قبل/بعد (پایه بیمه)','Check-in/out مبنای تسویه ساعتی','ثبت مواد مصرفی با فاکتور','درخواست افزایش قیمت با تأیید مشتری']
+}, render(){ return `
+  <div class="card">
+    <div class="row between"><b style="font-size:13px">سفارش SR-1405-88421</b><span class="pill new">در حال اجرا</span></div>
+    <div class="kv"><span>Check-in</span><b>${S.checklist.before?'۱۵:۰۲ ✓':'—'}</b></div>
+    <div class="kv"><span>مدت کار تا الآن</span><b>۴۸ دقیقه (ساعتی: ${money(320000)})</b></div>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">چک‌لیست اجباری</b>
+    <div class="kv"><span>۱) عکس وضعیت اولیه + لیست اقلام</span>
+      <button class="btn soft sm" style="width:auto" onclick="S.checklist.before=true;render()">${S.checklist.before?'✓ ثبت شد':'ثبت عکس'}</button></div>
+    <div class="kv"><span>۲) تست نشت پس از تعمیر</span>
+      <button class="btn soft sm" style="width:auto" onclick="S.checklist.parts=true;render()">${S.checklist.parts?'✓ ثبت شد':'ثبت'}</button></div>
+    <div class="kv"><span>۳) عکس وضعیت نهایی و محیط مرتب</span>
+      <button class="btn soft sm" style="width:auto" onclick="S.checklist.after=true;render()">${S.checklist.after?'✓ ثبت شد':'ثبت عکس'}</button></div>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">پروژه مرحله‌ای (Milestone) — نمونه بازسازی</b>
+    <div class="progress">${[1,2,3].map(i=>`<i class="${i<=S.milestone?'on':''}"></i>`).join('')}</div>
+    <div class="kv"><span>Milestone ۱ — شروع و مصالح (۳۰٪)</span><b style="color:var(--green)">تأیید شد ✓</b></div>
+    <div class="kv"><span>Milestone ۲ — پیشرفت (۴۰٪)</span><b>${S.milestone>=2?'تأیید شد ✓':'در انتظار ارسال'}</b></div>
+    <div class="kv"><span>Milestone ۳ — تحویل نهایی (۳۰٪)</span><b>—</b></div>
+    <button class="btn sm" onclick="S.milestone=Math.min(3,S.milestone+1);render()">ارسال پیشرفت مرحله ${S.milestone+1>3?3:S.milestone+1}</button>
+    <p class="muted">۵٪ مبلغ تا ۳۰ روز به‌عنوان «تضمین بازکاری» توقیف می‌ماند.</p>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">درخواست تغییر قیمت</b>
+    <p class="muted">مبلغ اضافه فقط با تأیید مشتری در اپ از Escrow آزاد می‌شود.</p>
+    <div class="field">علت: کشف ترکیدگی لوله اصلی — نیاز به تعویض ۱.۵ متر لوله</div>
+    <button class="btn ghost sm" onclick="alert('درخواست برای مشتری ارسال شد. تا تأیید، مبلغ تغییر ناپذیر است.')">ارسال برای تأیید</button>
+  </div>
+  <button class="btn" onclick="go('c_complete')">اعلام اتمام کار</button>
+`;}},
+
+p_earn: {role:'provider', title:'درآمد و کیفیت', note:{
+  h:'داشبورد تحلیلی و تسویه (۷.۳)',
+  p:'درآمد، نقشه حرارتی ساعات/محله‌های پرکار، نرخ‌های عملکردی و پیشنهادهای عملی برای افزایش درآمد؛ به‌همراه کیف پول و برداشت.',
+  refs:['۷.۳ داشبورد متخصص','۴.۲ تسویه و برداشت'],
+  ul:['نقشه حرارتی تقاضا','پیشنهاد زمان/محله بهتر','نرخ بازکاری و لغو','برداشت با تأیید دو مرحله‌ای']
+}, render(){
+  const heat = [[0,1,2,3,2,1,0],[1,2,3,4,3,2,1],[1,3,4,5,4,3,2],[0,2,3,4,3,2,1]];
+  const col = v => ['#f1f4f7','#d6ebe7','#a9d9d1','#5fbfb0','#0f7a6c'][v];
+  return `
+  <div class="grid2">
+    <div class="card"><span class="muted">درآمد این هفته</span><br><b style="font-size:16px;color:var(--brand-d)">${money(21300000)}</b></div>
+    <div class="card"><span class="muted">پیش‌بینی پایان ماه</span><br><b style="font-size:16px;color:var(--brand-d)">${money(48200000)}</b></div>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">نقشه حرارتی تقاضا (محله شما)</b>
+    <p class="muted">شنبه تا چهارشنبه، ساعت ۱۲ تا ۲۲</p>
+    <div class="heat" style="margin-top:6px">${heat.map(r=>r.map(v=>`<i style="background:${col(v)}"></i>`).join('')).join('')}</div>
+    <p class="muted">اوج: چهارشنبه ۱۸–۲۱ — سهم تو از پیشنهادهای این بازه ۳۴٪ است.</p>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">نرخ‌های عملکردی</b>
+    <div class="kv"><span>نرخ پذیرش</span><b>۸۲٪</b></div>
+    <div class="kv"><span>نرخ تکمیل</span><b>۹۶٪</b></div>
+    <div class="kv"><span>نرخ لغو</span><b style="color:var(--green)">۲٪</b></div>
+    <div class="kv"><span>بازکاری ۳۰ روزه</span><b style="color:var(--green)">۱.۴٪</b></div>
+    <div class="kv"><span>امتیاز کیفیت فنی</span><b>۴.۹ از ۵</b></div>
+  </div>
+  <div class="card" style="border-color:#c7e6e2;background:var(--brand-l)">
+    <b style="font-size:12.5px">💡 پیشنهاد افزایش درآمد</b>
+    <p>اگر دوشنبه‌ها ۱۸ تا ۲۱ فعال باشی، حدود <b>۲۴٪ سفارش بیشتر</b> می‌گیری. افزودن مهارت «تعمیر کولر گازی» می‌تواند میانگین درآمد هفتگی را ۱۹٪ بالا ببرد.</p>
+    <button class="btn sm">شروع دوره کوتاه کولر گازی</button>
+  </div>
+  <div class="card">
+    <div class="kv"><span>موجودی قابل برداشت</span><b>${money(2140000)}</b></div>
+    <div class="kv"><span>در حال تسویه (T+1)</span><b>${money(3760000)}</b></div>
+    <div class="kv"><span>توقیف تضمین بازکاری</span><b>${money(450000)}</b></div>
+    <button class="btn ghost sm" onclick="alert('برداشت پس از تأیید پیامک دوم و بررسی شبا (تطابق نام) انجام می‌شود.')">درخواست برداشت</button>
+  </div>
+`;}},
+
+p_kyc: {role:'provider', title:'احراز هویت و سطح اعتماد', note:{
+  h:'Onboarding دیجیتال (۲.۲)',
+  p:'مسیر هفت‌گانه از شماره تا تصمیم خودکار؛ هدف: تأیید زیر ۳۰ دقیقه برای ریسک پایین و ارجاع انسانی فقط برای اقلیت موارد.',
+  refs:['۲.۲ پایپ‌لاین احراز','Face Match + OCR + Liveness','نردبان اعتماد L0–L4'],
+  ul:['OCR و اعتبارسنجی کد ملی','تطبیق چهره و تشخیص زنده‌بودن','اعتبارسنجی شبا به نام شخص','یادآوری انقضای مدارک']
+}, render(){ return `
+  <div class="card">
+    <div class="progress">${[1,2,3,4,5,6,7].map((i)=>`<i class="${i<=6?'on':''}"></i>`).join('')}</div>
+    <b style="font-size:13px">مرحله ۶ از ۷ — در حال تأیید خودکار</b>
+    <div class="kv"><span>۱. شماره تأییدشده</span><b>✓</b></div>
+    <div class="kv"><span>۲. پروفایل و مهارت</span><b>✓</b></div>
+    <div class="kv"><span>۳. کارت ملی (OCR)</span><b>✓ شماره ملی معتبر</b></div>
+    <div class="kv"><span>۳. گواهی عدم سوءپیشینه</span><b>✓ QR تأییدشده</b></div>
+    <div class="kv"><span>۴. تطبیق چهره</span><b>✓ شباهت ۹۴٪ — Liveness تأیید</b></div>
+    <div class="kv"><span>۵. آزمون مهارت</span><b>✓ نمره ۸۷ از ۱۰۰</b></div>
+    <div class="kv"><span>۶. شبا و قرارداد</span><b>✓ در انتظار تصمیم نهایی</b></div>
+  </div>
+  <div class="card sim">
+    <b>خروجی موتور تصمیم:</b><br>
+    ریسک هویت: پایین (تطابق چهره ۹۴٪، کد ملی معتبر، بدون تطابق در لیست سیاه)<br>
+    ریسک مالی: پایین (شبا به نام خود، بدون تطابق دستگاه مشکوک)<br>
+    تصمیم: <b>تأیید خودکار سطح L2 — فعال‌سازی فوری</b><br>
+    زمان کل پردازش: ۲ دقیقه و ۱۲ ثانیه
+  </div>
+  <div class="card">
+    <b style="font-size:13px">سطح اعتماد و دسترسی‌ها</b>
+    <div class="kv"><span>L1 پایه</span><b>کارهای کم‌ریسک با سقف مبلغ</b></div>
+    <div class="kv"><span>L2 حرفه‌ای (فعلی)</span><b>همه سفارش‌ها + Escrow + اعزام فوری</b></div>
+    <div class="kv"><span>L3 برگزیده</span><b>نیازمند ۵۰ کار و امتیاز ۴.۶+ — تو: ۳۱۲ کار، ۴.۸۷ ✓</b></div>
+    <div class="kv"><span>L4 سازمان</span><b>نیازمند مجوز کسب‌وکار و ۳ تکنسین</b></div>
+  </div>
+  <div class="okbox">🎉 تأیید شد! از همین حالا پیشنهادها برای تو فعال است. کمیسیون سطح L3: ۱۵٪</div>
+`;}},
+
+/* ===================== پشتیبانی ===================== */
+s_board: {role:'support', title:'میز پشتیبانی و صف عملیات', note:{
+  h:'Live Ops Board',
+  p:'نمای زنده سفارش‌های پرخطر: بدون متخصص، تأخیردار، امتیاز پایین، مبلغ بالا. اپراتور با یک لمس تخصیص دستی، تماس یا کوپن اعمال می‌کند.',
+  refs:['۱.۲ نقش اپراتور دیسپچ','۳.۲ مسیر جایگزین انسانی','۶.۳ کارتابل اپراتور'],
+  ul:['صف اولویت‌دار با SLA','تخصیص دستی با ثبت دلیل','دسترسی محدود به PII با لاگ','نمایش زنده موقعیت متخصص']
+}, render(){ return `
+  <div class="grid3">
+    <div class="tile"><b style="font-size:15px;color:var(--rose)">۱۴</b><br><span class="muted">بدون متخصص</span></div>
+    <div class="tile"><b style="font-size:15px;color:var(--amber)">۲۷</b><br><span class="muted">تأخیردار</span></div>
+    <div class="tile"><b style="font-size:15px;color:var(--brand-d)">۱۱۲</b><br><span class="muted">سفارش باز</span></div>
+  </div>
+  <div class="alert">🚨 ۳ سفارش از SLA گذشته‌اند (بیش از ۸ دقیقه بدون پذیرش) — اولویت ۱</div>
+  <div class="card">
+    <b style="font-size:13px">صف اولویت‌دار</b>
+    <div class="row between" style="margin-top:7px">
+      <div><b style="font-size:12.5px">SR-88421 · نشت آب</b><br><span class="muted">موج ۳ · ۴ دقیقه بدون پاسخ · مبلغ ۱.۷م</span></div>
+      <div style="text-align:left"><span class="pill v1">SLA ۲:۱۰</span></div>
+    </div>
+    <div class="grid3" style="margin-top:7px">
+      <button class="btn soft sm" onclick="go('s_ticket')">پرونده</button>
+      <button class="btn ghost sm" onclick="alert('تماس پوشانده‌شده با متخصصان همان منطقه آغاز شد (۳ تماس موازی).')">تماس گروهی</button>
+      <button class="btn ghost sm" onclick="alert('تخصیص دستی: فهرست متخصصان آفلاین/خارج از شعاع با امکان تماس خروجی.')">تخصیص دستی</button>
+    </div>
+    <div class="divider"></div>
+    <div class="row between">
+      <div><b style="font-size:12.5px">SR-88394 · بازسازی واحد ۱۲۰م²</b><br><span class="muted">Milestone ۲ معطل ۲ روز · مبلغ ۴۸۰م</span></div>
+      <span class="pill ach">کارشناسی</span>
+    </div>
+    <div class="divider"></div>
+    <div class="row between">
+      <div><b style="font-size:12.5px">SR-88380 · کلیدسازی فوری</b><br><span class="muted">متخصص در محل است اما Check-in ثبت نشده</span></div>
+      <span class="pill v1">بررسی</span>
+    </div>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">نقشه زنده عملیات</b>
+    <svg class="map" viewBox="0 0 340 150">
+      <g stroke="#e6ebf1" stroke-width="6" fill="none"><path d="M-5 34 H345"/><path d="M-5 104 H345"/><path d="M80 -5 V155"/><path d="M250 -5 V155"/></g>
+      ${[[52,28,'#0f7a6c'],[128,44,'#1d4ed8'],[196,26,'#b45309'],[92,86,'#0f7a6c'],[228,72,'#be123c'],[286,96,'#1d4ed8']]
+        .map(([x,y,c])=>`<circle cx="${x}" cy="${y}" r="6.5" fill="${c}" stroke="#fff" stroke-width="2.4"/>`).join('')}
+      <circle cx="228" cy="72" r="15" fill="none" stroke="#be123c" stroke-width="2" opacity=".55"/>
+      <circle cx="228" cy="72" r="24" fill="none" stroke="#be123c" stroke-width="1.6" opacity=".3"/>
+    </svg>
+    <p class="muted">متخصصان در راه (آبی) · در حال کار (سبز) · هشدار تأخیر (نارنجی) · نیازمند مداخله (قرمز)</p>
+  </div>
+`;}},
+
+s_ticket: {role:'support', title:'پرونده سفارش در پشتیبانی', note:{
+  h:'نمای ۳۶۰ درجه پرونده',
+  p:'همه چیز در یک صفحه: سفارش، موقعیت زنده، تاریخچه چت و تماس با متن، شواهد تصویری و اقدامات. این همان «کارتابل» مورد اشاره در بخش ۶ است.',
+  refs:['۶.۳ کارتابل اپراتور','۶.۱ ضبط و رونویسی تماس','ورود دیجیتال (۵.۴)'],
+  ul:['تاریخچه یکپارچه چندکاناله','رونویسی قابل جست‌وجو','اقدامات با ثبت دلیل اجباری','جلسه ویدیویی سه‌نفره برای اختلاف فنی']
+}, render(){ return `
+  <div class="card">
+    <div class="row between"><b style="font-size:13px">SR-88421 · نشت آب زیر سینک</b><span class="pill v1">SLA ۲:۱۰</span></div>
+    <div class="kv"><span>مشتری</span><b>سارا محمدی · ۰۹۱۲••••۴۵۷ · ۳ سفارش تکراری</b></div>
+    <div class="kv"><span>ثبت سفارش</span><b>کانال: اپ · با صوت و ۲ عکس</b></div>
+    <div class="kv"><span>Escrow</span><b>${money(462000)} بلوکه شده</b></div>
+    <div class="kv"><span>متخصص فعلی</span><b>— (هنوز تخصیص نشده)</b></div>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">خط زمانی چندکاناله</b>
+    <div class="timeline" style="margin-top:7px">
+      <div class="tl done"><b>سفارش ثبت شد</b><span>۱۳:۲۱ — صوت ۲۱ ثانیه + ۲ عکس</span></div>
+      <div class="tl done"><b>پرداخت و بلوکه</b><span>۱۳:۲۲ — کیف پول، مانده در حساب واسط</span></div>
+      <div class="tl done"><b>موج ۱ و ۲ تخصیص</b><span>۱۳:۲۲–۱۳:۳۱ — ۸ پیشنهاد، ۳ رد، ۵ بی‌پاسخ</span></div>
+      <div class="tl now"><b>ارجاع به اپراتور</b><span>۱۳:۳۲ — دلیل: نبود متخصص واجد تجهیزات در شعاع ۵ کیلومتر</span></div>
+    </div>
+  </div>
+  <div class="card sim">
+    <b>رونویسی تماس (نمونه):</b><br>
+    «سلام، برای نشت آب زیر سینک کسی آزاد هست؟» — «تا ۴۰ دقیقه دیگر می‌رسم» — <span style="color:#ffd9a8">[شماره تلفن تشخیص داده شد: پرچم تبانی — پیام آموزشی برای متخصص ارسال شد]</span>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">شواهد</b>
+    <div class="grid3" style="margin-top:6px"><div class="photo">🎙️ صوت</div><div class="photo">📷 نشت</div><div class="photo">📷 کابینت</div></div>
+  </div>
+  <div class="grid2">
+    <button class="btn soft sm" onclick="alert('تخصیص دستی انجام شد. دلیل ثبت شد و در audit_log درج گردید.')">تخصیص دستی متخصص</button>
+    <button class="btn ghost sm" onclick="alert('جلسه ویدیویی سه‌نفره ایجاد شد؛ با رضایت طرفین ضبط می‌شود.')">جلسه ویدیویی</button>
+    <button class="btn ghost sm" onclick="alert('کوپن ۲۰٪ برای جبران تأخیر صادر شد (نیازمند ثبت دلیل).')">کوپن جبران</button>
+    <button class="btn ghost sm" onclick="alert('بازگشت کامل وجه و بستن سفارش — نیازمند تأیید دوم مالی برای موارد بالای سقف.')">بازگشت وجه</button>
+  </div>
+  <div class="alert">🔒 ثبت هر اقدام در <b>audit_log</b> با شناسه اپراتور، دلیل و Correlation-ID الزامی است.</div>
+`;}},
+
+s_crisis: {role:'support', title:'اتاق بحران', note:{
+  h:'Crisis Cockpit (۶.۳)',
+  p:'پایش سلامت عملیات: تجمع شکایت، حوادث ایمنی، اختلال درگاه پرداخت یا Push، و ابزارهای واکنش مثل پیام عمومی و توقف موقت عرضه.',
+  refs:['۶.۳ اتاق بحران','۷.۴ سلامت Push','Kill-Switch قابلیت‌ها'],
+  ul:['دید یکپارچه سلامت سیستم','گلوگاه‌ها به تفکیک منطقه و دسته','اقدامات یک‌کلیکی پرقدرت با تأیید دوم','گزارش حادثه و Post-mortem']
+}, render(){ return `
+  <div class="alert">⚡ پایش فعال: نرخ تبدیل سفارش در منطقه ۳ تهران ۱۲٪ کاهش — همزمان با قطعی جزئی سرویس Push</div>
+  <div class="grid2">
+    <div class="card"><span class="muted">نرخ تحقق سفارش (۱ ساعت)</span><div class="bar"><i style="width:71%"></i></div><b style="font-size:12.5px">۷۱٪ — کمتر از هدف ۸۵٪</b></div>
+    <div class="card"><span class="muted">میانگین زمان پذیرش</span><div class="bar amber"><i style="width:58%"></i></div><b style="font-size:12.5px">۴.۸ دقیقه — هدف &lt; ۳ دقیقه</b></div>
+    <div class="card"><span class="muted">مجموع شکایت باز</span><b style="font-size:14px;color:var(--amber)">۳۹ پرونده</b><p class="muted">۱۴٪ مربوط به دسته کولر گازی</p></div>
+    <div class="card"><span class="muted">سلامت پرداخت</span><b style="font-size:14px;color:var(--green)">درگاه اصلی سالم · مسیر جایگزین آماده</b><p class="muted">خطای پرداخت ۰.۹٪</p></div>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">موضوعات داغ کشف‌شده (NLP شکایت‌ها)</b>
+    <div style="margin-top:5px">
+      <span class="chip warnc">تأخیر در سرویس کولر (۴۱٪)</span><span class="chip warnc">اختلاف قیمت پس از بازدید (۱۸٪)</span>
+      <span class="chip">کیفیت بازسازی (۱۱٪)</span><span class="chip">رفتار متخصص (۷٪)</span>
+    </div>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">اقدامات واکنشی</b>
+    <div class="grid2" style="margin-top:6px">
+      <button class="btn soft sm" onclick="alert('پیام عمومی به ۱۴۲ متخصص فعال منطقه ارسال شد: «افزایش تقاضا تا ۳ ساعت آینده، انگیزه ۱۵٪».')">پیام عمومی منطقه</button>
+      <button class="btn ghost sm" onclick="alert('فعال‌سازی انگیزه پیک برای دسته کولر گازی با تأیید دوم.')">انگیزه افزایشی</button>
+      <button class="btn ghost sm" onclick="alert('توقف موقت پذیرش سفارش‌های زمان‌بندی‌شده «نقاشی» برای حفظ SLA سفارش‌های جاری.')">توقف موقت یک دسته</button>
+      <button class="btn ghost sm" onclick="alert('Kill-Switch موتور قیمت پویا فعال شد؛ بازگشت به قیمت ثابت.')">خاموشی قیمت پویا</button>
+    </div>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">یادداشت حادثه (Incident)</b>
+    <textarea class="field">۱۴۰۵/۰۷/۱۰ · ۱۳:۴۰ — افت نرخ پذیرش منطقه ۳ به‌دنبال قطعی Push. اقدام: ارسال SMS جایگزین، فعال‌سازی انگیزه پیک، پایش ۳۰ دقیقه‌ای.</textarea>
+    <button class="btn sm" style="margin-top:7px">ثبت و ایجاد Post-mortem</button>
+  </div>
+`;}},
+
+s_risk: {role:'support', title:'صف ریسک و تقلب', note:{
+  h:'Fraud & Collusion (۵.۳)',
+  p:'صف موارد مشکوک با شواهد و توضیح‌پذیری: چرا این پرونده علامت خورد و اقدام پیشنهادی چیست. همه تصمیم‌ها قابل اعتراض کاربر هستند.',
+  refs:['۵.۳ الگوهای تقلب','قواعد: دورزدن کمیسیون','مدل گراف و Community Detection'],
+  ul:['دسته‌بندی الگو (تبانی/تقلب/سوءاستفاده)','شواهد قابل بازبینی','اقدام متناسب و قابل اعتراض','بازخورد به مدل برای کاهش خطای مثبت'],
+}, render(){ return `
+  <div class="grid3">
+    <div class="tile"><b style="font-size:15px;color:var(--rose)">۹</b><br><span class="muted">ریسک بالا</span></div>
+    <div class="tile"><b style="font-size:15px;color:var(--amber)">۲۳</b><br><span class="muted">نیازمند بررسی</span></div>
+    <div class="tile"><b style="font-size:15px;color:var(--brand-d)">۴</b><br><span class="muted">هشدار تبانی</span></div>
+  </div>
+  <div class="alert">🕸️ الگوی تبانی: زوج «متخصص ۲۲۴۱ ↔ مشتری ۹۹۰۲» — ۶ سفارش لغوشده پس از چت طولانی و ذکر شماره در متن.</div>
+  <div class="card">
+    <b style="font-size:13px">پرونده ریسک RC-1187</b>
+    <div class="kv"><span>نوع</span><b>دورزدن کمیسیون (Off-platform)</b></div>
+    <div class="kv"><span>اطمینان مدل</span><b>۸۶٪</b></div>
+    <div class="kv"><span>شواهد</span><b>۳ چت با شماره • ۲ لغو پس از توافق • همان IBAN در ۲ حساب</b></div>
+    <div class="kv"><span>تأثیر مالی تخمینی</span><b>${money(4200000)} کمیسیون ازدست‌رفته</b></div>
+    <div class="kv"><span>سابقه</span><b>۱ هشدار قبلی ۴۵ روز پیش</b></div>
+  </div>
+  <div class="card sim">
+    <b>تصمیم پیشنهادی مدل:</b> هشدار رسمی + کاهش رتبه ۱۰٪ برای ۳۰ روز + الزام ماندن در چت رسمی<br>
+    <b>گزینه‌های اپراتور:</b> تایید | تعدیل | رد با دلیل | ارجاع به انطباق
+  </div>
+  <div class="grid2">
+    <button class="btn soft sm" onclick="alert('هشدار رسمی صادر شد. کاربر می‌تواند از طریق پنل اعتراض، اعتراض ثبت کند.')">تایید اقدام پیشنهادی</button>
+    <button class="btn ghost sm" onclick="alert('ارجاع به سطح ۲ انطباق با بسته شواهد کامل.')">ارجاع به انطباق</button>
+  </div>
+  <div class="card">
+    <b style="font-size:13px">الگوهای فعال این هفته</b>
+    <div class="kv"><span>تبانی مشتری–متخصص</span><b>۴ پرونده</b></div>
+    <div class="kv"><span>نظر جعلی / حلقه نظرات</span><b>۷ پرونده</b></div>
+    <div class="kv"><span>GPS جعلی (Mock Location)</span><b>۲ پرونده</b></div>
+    <div class="kv"><span>ادعای خسارت پرتکرار</span><b>۳ پرونده</b></div>
+  </div>
+`;}}
+};
+
+/* ------------------------------ RENDER ------------------------------ */
+function go(id){ if(S.timer){clearInterval(S.timer);S.timer=null;} S.screen=id; if(screens[id].role!==S.role){S.role=screens[id].role;} render(); window.scrollTo({top:0,behavior:'smooth'}); }
+function setRole(r){ const tab=TABS[r][0].id; if(S.timer){clearInterval(S.timer);S.timer=null;} S.role=r; S.screen=tab; render(); }
+function toggleOnline(){ S.online=!S.online; render(); }
+function addPhoto(){ S.photoCount=(S.photoCount+1)%3; render(); }
+function setUrg(u){ S.urgency=u; render(); }
+function pick(el, exclusive){ if(exclusive){ [...el.parentElement.children].forEach(c=>c.classList.remove('on')); } el.classList.toggle('on'); }
+function rate(dim,val){ S.rating[dim]=val; drawStars(dim); }
+function drawStars(dim){
+  const box=document.getElementById('st_'+dim); if(!box) return;
+  box.innerHTML=[1,2,3,4,5].map(i=>`<span class="${i<=S.rating[dim]?'on':''}" onclick="rate('${dim}',${i})">★</span>`).join('');
+}
+
+function render(){
+  const sc = screens[S.screen] || screens[TABS[S.role][0].id];
+  const note = sc.note || {};
+  document.getElementById('sbTitle').textContent = sc.title;
+  document.getElementById('screen').innerHTML = sc.render();
+  document.getElementById('screen').scrollTop = 0;
+  // role tabs
+  document.getElementById('roles').innerHTML = ROLES.map(r=>
+    `<button class="${r.id===S.role?'on':''}" onclick="setRole('${r.id}')">${r.label}</button>`).join('');
+  // bottom tabs
+  const list = TABS[S.role];
+  const idx = list.findIndex(t=>t.id===S.screen);
+  const tabId = idx>=0 ? list[idx].id : '';
+  document.getElementById('tabbar').innerHTML = list.map(t=>
+    `<button class="${t.id===tabId?'on':''}" onclick="go('${t.id}')"><i>${t.icon}</i>${t.label}</button>`).join('');
+  // notes
+  document.getElementById('notes').innerHTML = `
+    <h3>${note.h||sc.title}</h3>
+    <div class="step">صفحه ${note.step||''} — نقش: ${S.role==='customer'?'مشتری':S.role==='provider'?'متخصص':'پشتیبانی/عملیات'}</div>
+    <p>${note.p||''}</p>
+    ${note.ul?`<ul>${note.ul.map(x=>`<li>${x}</li>`).join('')}</ul>`:''}
+    ${note.refs?`<div>${note.refs.map(r=>`<span class="tag">${r}</span>`).join('')}</div>`:''}
+    <div class="navrow">
+      <button onclick="prevScreen()">← قبلی</button>
+      <button class="p" onclick="nextScreen()">بعدی →</button>
+    </div>
+    <p class="muted" style="margin-top:10px">این نمونه اولیه، منطق بخش‌های سند را شبیه‌سازی می‌کند و به بک‌اند متصل نیست. برای دیدن مسیرها از تب‌های پایین و نقش‌ها از نوار بالا استفاده کنید.</p>
+  `;
+  if(sc.afterRender) sc.afterRender();
+}
+function flatScreens(){ return Object.keys(screens); }
+function nextScreen(){ const a=flatScreens(); const i=(a.indexOf(S.screen)+1)%a.length; go(a[i]); }
+function prevScreen(){ const a=flatScreens(); const i=(a.indexOf(S.screen)-1+a.length)%a.length; go(a[i]); }
+
+render();
+</script>
+</body>
+</html>

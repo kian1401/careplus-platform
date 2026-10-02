@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>کنسول دمو — سرویسا MVP</title>
+<style>
+  :root{
+    --bg:#0f1720; --panel:#16202b; --panel2:#1c2937; --line:#26384a; --ink:#e8eef5; --muted:#93a4b8;
+    --brand:#1fb6a2; --brand2:#0f7a6c; --amber:#f0a545; --rose:#f06a7a; --green:#3ecf8e; --blue:#5b9cf8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:"Vazirmatn","IRANSans",Tahoma,system-ui,sans-serif;direction:rtl;font-size:14px;line-height:1.9}
+  a{color:var(--brand)}
+  header{position:sticky;top:0;z-index:5;background:linear-gradient(90deg,#0b5d52,#123043);
+         padding:12px 18px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;
+         border-bottom:1px solid var(--line)}
+  header h1{margin:0;font-size:17px}
+  header .sub{color:#bcd7d2;font-size:12px}
+  .wrap{max-width:1280px;margin:0 auto;padding:18px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+  .panel h2{margin:0 0 10px;font-size:15px;color:#cfe9e4}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:10px;
+         padding:8px 13px;font:inherit;font-size:13px;cursor:pointer;transition:.15s}
+  button:hover{border-color:var(--brand);color:#fff}
+  button.primary{background:var(--brand2);border-color:var(--brand);color:#fff;font-weight:700}
+  button.warn{background:#5a3a12;border-color:var(--amber);color:#ffe3bd}
+  button.danger{background:#5a1a25;border-color:var(--rose);color:#ffd7dd}
+  input[type=range]{width:150px}
+  input[type=number]{background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+                     border-radius:8px;padding:6px 8px;width:80px;font:inherit}
+  label{color:var(--muted);font-size:12.5px}
+  .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+  .kpi{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .kpi b{display:block;font-size:19px;color:var(--brand)}
+  .kpi span{color:var(--muted);font-size:12px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:right}
+  th{color:#a9c6c2;font-weight:600;font-size:12px}
+  code,.mono{font-family:ui-monospace,Menlo,Consolas,monospace;direction:ltr;display:inline-block;font-size:12px}
+  .badge{border-radius:999px;padding:1px 9px;font-size:11px;border:1px solid var(--line)}
+  .b-ok{background:#10382a;border-color:var(--green);color:var(--green)}
+  .b-warn{background:#3d2c10;border-color:var(--amber);color:var(--amber)}
+  .b-bad{background:#3d141c;border-color:var(--rose);color:var(--rose)}
+  .b-info{background:#132b46;border-color:var(--blue);color:var(--blue)}
+  ol.steps{list-style:none;padding:0;margin:0}
+  ol.steps li{position:relative;padding:10px 14px 10px 14px;margin-bottom:8px;background:var(--panel2);
+              border:1px solid var(--line);border-radius:12px;border-inline-start:3px solid var(--brand2)}
+  ol.steps li b{color:#fff}
+  ol.steps li .det{color:var(--muted);font-size:12.5px;display:block;margin-top:3px}
+  details{background:#131d27;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:6px}
+  summary{cursor:pointer;color:#a9c6c2;font-size:12.5px}
+  pre{background:#0b131b;border:1px solid var(--line);border-radius:10px;padding:10px;overflow:auto;
+      direction:ltr;text-align:left;font-size:12px;max-height:280px}
+  .kv{display:flex;justify-content:space-between;border-bottom:1px dashed var(--line);padding:4px 0;font-size:12.5px}
+  .kv:last-child{border:0}
+  .muted{color:var(--muted)}
+  .foot{color:var(--muted);font-size:12px;text-align:center;padding:10px 0 30px}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--brand);border-top-color:transparent;
+        border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>کنسول دمو — سرویسا <span class="muted" style="font-size:12px">(اسکلت MVP)</span></h1>
+    <div class="sub">سفارش → Escrow → تخصیص امتیازمحور → اجرا → آزادسازی پول → کیفیت</div>
+  </div>
+  <div class="row">
+    <span id="ready" class="badge b-info">در حال بررسی…</span>
+    <a class="badge b-info" href="/docs" target="_blank">مستندات API</a>
+    <a class="badge b-info" href="/v1/demo/state" target="_blank">وضعیت خام (JSON)</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="panel">
+    <h2>۱) اجرای سناریو</h2>
+    <div class="row" style="margin-bottom:10px">
+      <button class="primary" onclick="run('accept')">▶ سناریوی موفق: پذیرش متخصص</button>
+      <button onclick="run('reject_then_escalate')">↻ رد موج اول → تشدید خودکار</button>
+      <button class="warn" onclick="run('no_provider')">⚠ نبود متخصص → ارجاع به اپراتور</button>
+      <button class="danger" onclick="reset()">⟲ بازنشانی داده دمو</button>
+    </div>
+    <div class="row">
+      <label>ضریب تقاضای منطقه (Surge): <b id="surgeVal">۱.۰۰</b></label>
+      <input type="range" id="surge" min="0.95" max="1.5" step="0.05" value="1.00" oninput="document.getElementById('surgeVal').textContent=fmt(this.value)">
+      <label>تعداد متخصص آفلاین‌شده: <input type="number" id="offline" value="0" min="0" max="30"></label>
+      <span class="muted" id="runner"></span>
+    </div>
+  </div>
+
+  <div id="stepsPanel" class="panel" style="display:none">
+    <h2>روایت اجرا (گام‌به‌گام)</h2>
+    <ol class="steps" id="steps"></ol>
+  </div>
+
+  <div class="panel">
+    <h2>۲) شاخص‌های عملیاتی</h2>
+    <div class="grid3" id="kpis"></div>
+  </div>
+
+  <div class="grid3">
+    <div class="panel">
+      <h2>سفارش‌ها</h2>
+      <div id="orders"></div>
+    </div>
+    <div class="panel">
+      <h2>نگهداشت و آزادسازی (Escrow)</h2>
+      <div id="escrow"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>۳) سلامت مالی — تراز دفتر کل (Double-Entry)</h2>
+    <div class="row" style="margin-bottom:8px">
+      <span id="ledgerBadge" class="badge">—</span>
+      <span class="muted" id="ledgerTotals"></span>
+    </div>
+    <div id="ledger"></div>
+  </div>
+
+  <div class="panel">
+    <h2>۴) رویدادها (Outbox → Kafka در معماری عملیاتی)</h2>
+    <div id="events"></div>
+  </div>
+
+  <div class="panel">
+    <h2>۵) تعامل سریع با API</h2>
+    <div class="row">
+      <button onclick="showJson('/v1/catalog/services')">کاتالوگ خدمات</button>
+      <button onclick="showJson('/v1/catalog/zones/zone-tehran-3/surge')">وضعیت Surge منطقه ۳</button>
+      <button onclick="showJson('/v1/admin/kpi')">KPI سرور</button>
+      <button onclick="showJson('/v1/admin/ledger/trial-balance')">تراز آزمایشی</button>
+      <button onclick="showJson('/v1/admin/events?limit=20')">رویدادهای Outbox</button>
+    </div>
+    <pre id="jsonOut">—</pre>
+  </div>
+
+  <div class="foot">این کنسول روی سرور محلی شما اجرا می‌شود و داده‌ها در <code>mvp/var/mvp.sqlite</code> ذخیره می‌شوند.</div>
+</div>
+
+<script>
+const nf = new Intl.NumberFormat('fa-IR');
+const fmt = v => nf.format((+v).toFixed(2));
+const money = v => nf.format(v) + ' ریال';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let OPS_TOKEN = '';
+
+async function api(path, opts){
+  opts = opts || {};
+  if (OPS_TOKEN && (path.includes('/admin/') || path.includes('/ops-'))) {
+    opts.headers = Object.assign({}, opts.headers, {'x-ops-token': OPS_TOKEN});
+  }
+  const res = await fetch(path, opts);
+  const text = await res.text();
+  try { return {ok:res.ok, data: JSON.parse(text)}; } catch(e){ return {ok:res.ok, data:text}; }
+}
+
+async function loadOpsToken(){
+  try { const r = await api('/v1/demo/ops-token'); if (r.data && r.data.x_ops_token) OPS_TOKEN = r.data.x_ops_token; }
+  catch(e) { /* کنسول فقط در محیط غیرعملیاتی کلید اپراتور می‌گیرد */ }
+}
+
+function ready(){
+  api('/ready').then(r=>{
+    const el = document.getElementById('ready');
+    if(r.ok && r.data.db==='ok'){
+      el.className = 'badge ' + (r.data.seeded?'b-ok':'b-warn');
+      el.textContent = r.data.seeded ? 'پایگاه داده: آماده و داده‌گذاری‌شده' : 'پایگاه داده: بدون داده پایه';
+    } else { el.className='badge b-bad'; el.textContent='سرور در دسترس نیست'; }
+  });
+}
+
+async function run(tactic){
+  const surge = document.getElementById('surge').value;
+  const offline = document.getElementById('offline').value;
+  document.getElementById('runner').innerHTML = '<span class="spin"></span> در حال اجرای سناریو…';
+  const {ok, data} = await api(`/v1/demo/scenario?tactic=${tactic}&offline_providers=${offline}&surge=${surge}`, {method:'POST'});
+  document.getElementById('runner').textContent = ok ? 'اجرا شد ✓' : 'خطا در اجرا';
+  if(ok){ renderSteps(data.steps); renderState(data.snapshot); }
+  else { document.getElementById('jsonOut').textContent = JSON.stringify(data, null, 2); }
+}
+
+async function reset(){
+  await api('/v1/demo/reset', {method:'POST'});
+  const s = await api('/v1/demo/state');
+  if(s.ok) renderState(s.data);
+  document.getElementById('runner').textContent = 'داده دمو بازنشانی شد ✓';
+}
+
+function renderSteps(steps){
+  const box = document.getElementById('steps');
+  box.innerHTML = (steps||[]).map(s=>`
+    <li>
+      <b>گام ${s.step}: ${esc(s.title_fa)}</b>
+      <span class="det">${esc(s.detail_fa)}</span>
+      ${s.data && Object.keys(s.data).length ? `<details><summary>داده فنی گام</summary><pre>${esc(JSON.stringify(s.data,null,2))}</pre></details>`:''}
+    </li>`).join('');
+  document.getElementById('stepsPanel').style.display = steps?.length ? 'block':'none';
+}
+
+function renderState(s){
+  if(!s) return;
+  const c = s.counts || {};
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><b>${nf.format(c.orders||0)}</b><span>سفارش ثبت‌شده</span></div>
+    <div class="kpi"><b>${nf.format(c.providers_online||0)}</b><span>متخصص آنلاین</span></div>
+    <div class="kpi"><b>${nf.format(c.offers||0)}</b><span>پیشنهاد ارسال‌شده</span></div>
+    <div class="kpi"><b>${nf.format(c.ledger_entries||0)}</b><span>قید دفتر کل</span></div>
+    <div class="kpi"><b>${(s.ledger&&s.ledger.balanced)?'متوازن ✓':'نامتوازن ✗'}</b><span>وضعیت دفتر کل</span></div>`;
+
+  document.getElementById('orders').innerHTML = (s.orders||[]).length ? `<table><tr>
+      <th>کد</th><th>وضعیت</th><th>مبلغ</th><th>Escrow</th><th>موج</th></tr>
+      ${s.orders.map(o=>`<tr>
+        <td class="mono">${esc(o.code)}</td>
+        <td><span class="badge ${o.status==='CLOSED'?'b-ok':(o.status==='DISPUTED'?'b-bad':'b-info')}">${esc(o.status)}</span></td>
+        <td>${money(o.amount||0)}</td>
+        <td class="muted">${esc(o.escrow)}</td>
+        <td>${nf.format(o.wave||0)}</td></tr>`).join('')}
+    </table>` : '<div class="muted">سفارشی ثبت نشده است.</div>';
+
+  document.getElementById('escrow').innerHTML = (s.escrow||[]).length ? `<table><tr>
+      <th>سفارش</th><th>مبلغ</th><th>آزادشده</th><th>بازگشتی</th><th>وضعیت</th></tr>
+      ${s.escrow.map(e=>`<tr><td class="mono">${esc(e.order_id.slice(0,8))}…</td>
+        <td>${money(e.amount)}</td><td>${money(e.released)}</td><td>${money(e.refunded)}</td>
+        <td><span class="badge ${e.status==='RELEASED'?'b-ok':(e.status==='FROZEN'?'b-bad':'b-warn')}">${esc(e.status)}</span></td></tr>`).join('')}
+    </table>` : '<div class="muted">نگهداشت فعالی وجود ندارد.</div>';
+
+  const L = s.ledger || {accounts:{}};
+  document.getElementById('ledgerBadge').className = 'badge ' + (L.balanced?'b-ok':'b-bad');
+  document.getElementById('ledgerBadge').textContent = L.balanced ? 'تراز متوازن است ✓' : 'عدم توازن — بررسی فوری ✗';
+  document.getElementById('ledgerTotals').textContent = `جمع بدهکار: ${money(L.total_debit||0)} · جمع بستانکار: ${money(L.total_credit||0)}`;
+  document.getElementById('ledger').innerHTML = `<table><tr><th>حساب</th><th>بدهکار</th><th>بستانکار</th></tr>
+    ${Object.entries(L.accounts||{}).map(([k,v])=>`<tr><td class="mono">${esc(k)}</td>
+      <td>${v.DEBIT?money(v.DEBIT):'—'}</td><td>${v.CREDIT?money(v.CREDIT):'—'}</td></tr>`).join('')}
+    </table>`;
+
+  document.getElementById('events').innerHTML = (s.events||[]).length ? `<table><tr>
+      <th>موضوع</th><th>رویداد</th><th>زمان</th><th>خلاصه</th></tr>
+      ${s.events.map(e=>`<tr><td><span class="badge b-info">${esc(e.topic)}</span></td>
+        <td class="mono">${esc(e.event)}</td>
+        <td class="muted">${esc(new Date(e.at).toLocaleTimeString('fa-IR'))}</td>
+        <td class="muted">${esc(JSON.stringify(e.payload).slice(0,90))}</td></tr>`).join('')}
+    </table>` : '<div class="muted">رویدادی ثبت نشده است.</div>';
+}
+
+async function showJson(path){
+  const {data} = await api(path);
+  document.getElementById('jsonOut').textContent = JSON.stringify(data, null, 2);
+}
+
+async function boot(){
+  await loadOpsToken();
+  ready();
+  run('accept');   // اجرای خودکار سناریوی موفق در بارگذاری اول
+  setInterval(ready, 15000);
+}
+boot();
+</script>
+</body>
+</html>

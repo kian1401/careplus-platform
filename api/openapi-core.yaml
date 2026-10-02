@@ -1,0 +1,823 @@
+openapi: 3.1.0
+info:
+  title: سرویسا (Care+) — API هسته
+  version: 1.0.0
+  description: |
+    قرارداد API هسته پلتفرم خدمات آنلاین «سرویسا» (نسخه ارتقایافته مدل آچاره).
+    این فایل فقط مسیرهای هسته را پوشش می‌دهد؛ فهرست کامل در `api/api_catalog.md`.
+    قواعد: JWT Bearer، Idempotency-Key روی همه نوشتن‌ها، صفحه‌بندی Cursor، خطای ساخت‌یافته.
+  contact: {name: تیم محصول و معماری, url: 'https://example.ir'}
+servers:
+  - url: https://api.careplus.ir/v1
+    description: Production
+  - url: https://sandbox-api.careplus.ir/v1
+    description: Sandbox
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Auth
+  - name: Me
+  - name: Providers
+  - name: Catalog
+  - name: Intake
+  - name: Pricing
+  - name: Orders
+  - name: Dispatch
+  - name: Payments
+  - name: Trust
+  - name: Support
+  - name: Risk
+  - name: Admin
+
+paths:
+  # ------------------------------------------------------------- AUTH
+  /auth/otp/request:
+    post:
+      tags: [Auth]
+      summary: ارسال کد یک‌بارمصرف
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone]
+              properties:
+                phone: {type: string, example: '+989121234567'}
+                purpose: {type: string, enum: [LOGIN, VERIFY_PHONE, PAYOUT_CONFIRM], default: LOGIN}
+      responses:
+        '200': {description: کد ارسال شد, content: {application/json: {schema: {$ref: '#/components/schemas/OtpChallenge'}}}}
+        '429': {$ref: '#/components/responses/RateLimited'}
+  /auth/otp/verify:
+    post:
+      tags: [Auth]
+      summary: تأیید کد و صدور توکن
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [challenge_id, code]
+              properties:
+                challenge_id: {type: string, format: uuid}
+                code: {type: string, example: '48219'}
+                device: {$ref: '#/components/schemas/Device'}
+      responses:
+        '200': {description: توکن صادر شد, content: {application/json: {schema: {$ref: '#/components/schemas/TokenPair'}}}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+  /auth/passkey/register/options:
+    post:
+      tags: [Auth]
+      summary: دریافت گزینه‌های ثبت Passkey (WebAuthn)
+      responses: {'200': {description: OK}}
+  /auth/passkey/login/verify:
+    post:
+      tags: [Auth]
+      summary: تأیید ورود با Passkey
+      security: []
+      responses: {'200': {description: OK}}
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: تمدید توکن (Rotation + Reuse-Detection)
+      security: []
+      responses:
+        '200': {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/TokenPair'}}}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+
+  # --------------------------------------------------------------- ME
+  /me:
+    get:
+      tags: [Me]
+      summary: پروفایل کاربر جاری
+      responses: {'200': {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/User'}}}}}
+    patch:
+      tags: [Me]
+      summary: ویرایش پروفایل
+      requestBody:
+        content: {application/json: {schema: {type: object, properties: {full_name: {type: string}, email: {type: string}}}}}
+      responses: {'200': {description: OK}}
+  /me/sessions:
+    get:
+      tags: [Me]
+      summary: نشست‌های فعال
+      responses: {'200': {description: OK}}
+  /me/consents:
+    post:
+      tags: [Me]
+      summary: ثبت یا ابطال رضایت نسخه‌دار
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [consent_type, version, granted]
+              properties:
+                consent_type: {type: string, enum: [LOCATION_TRACKING, CALL_RECORDING, VIDEO_RECORDING, MODEL_TRAINING, MARKETING]}
+                version: {type: string}
+                granted: {type: boolean}
+      responses: {'200': {description: OK}}
+
+  # -------------------------------------------------------- PROVIDERS
+  /providers/apply:
+    post:
+      tags: [Providers]
+      summary: شروع فرآیند جذب متخصص
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [display_name, categories, city]
+              properties:
+                display_name: {type: string}
+                categories: {type: array, items: {type: string}}
+                city: {type: string}
+                experience_years: {type: integer}
+      responses: {'201': {description: پرونده ایجاد شد}}
+  /providers/me/documents:
+    post:
+      tags: [Providers]
+      summary: ثبت مدرک (فایل پیش‌آپلودشده)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind, file_id]
+              properties:
+                kind: {type: string, enum: [NATIONAL_ID, CRIMINAL_RECORD, SKILL_CERT, INSURANCE, BUSINESS_LICENSE]}
+                file_id: {type: string, format: uuid}
+                issue_date: {type: string, format: date}
+                expiry_date: {type: string, format: date}
+      responses: {'202': {description: در صف پردازش OCR}}
+  /providers/me/identity/selfie:
+    post:
+      tags: [Providers]
+      summary: ارسال سلفی زنده و اجرای Face-Match
+      responses: {'200': {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/IdentityCheck'}}}}}
+  /providers/me/availability:
+    put:
+      tags: [Providers]
+      summary: به‌روزرسانی تقویم کاری
+      responses: {'200': {description: OK}}
+  /providers/me/online:
+    post:
+      tags: [Providers]
+      summary: آماده‌به‌کار شدن و شروع ارسال موقعیت
+      responses: {'200': {description: OK}}
+  /providers/me/dashboard:
+    get:
+      tags: [Providers]
+      summary: داشبورد درآمد و کیفیت
+      parameters:
+        - {in: query, name: range, schema: {type: string, enum: [7d, 30d, 90d], default: 30d}}
+      responses: {'200': {description: OK}}
+  /providers/me/withdrawals:
+    post:
+      tags: [Providers]
+      summary: درخواست برداشت
+      requestBody:
+        required: true
+        content: {application/json: {schema: {type: object, required: [amount], properties: {amount: {type: integer, format: int64}}}}}
+      responses: {'202': {description: در صف تسویه}}
+
+  # ---------------------------------------------------------- CATALOG
+  /catalog/categories:
+    get:
+      tags: [Catalog]
+      summary: درخت دسته‌بندی خدمات
+      security: []
+      responses: {'200': {description: OK}}
+  /catalog/services:
+    get:
+      tags: [Catalog]
+      summary: جست‌وجوی خدمات
+      security: []
+      parameters:
+        - {in: query, name: q, schema: {type: string}}
+        - {in: query, name: category_id, schema: {type: string, format: uuid}}
+      responses: {'200': {description: OK}}
+  /catalog/services/{service_id}/rate-card:
+    get:
+      tags: [Catalog]
+      summary: تعرفه منطقه‌ای شفاف
+      parameters:
+        - {in: path, name: service_id, required: true, schema: {type: string, format: uuid}}
+        - {in: query, name: zone_id, schema: {type: string, format: uuid}}
+      responses: {'200': {description: OK}}
+
+  # ---------------------------------------------------------- INTAKE
+  /media/presigned-url:
+    post:
+      tags: [Intake]
+      summary: دریافت URL امضاشده برای آپلود مستقیم به S3
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [purpose, content_type]
+              properties:
+                purpose: {type: string, enum: [ORDER_MEDIA, DOCUMENT, SELFIE, CLAIM_EVIDENCE, CHAT]}
+                content_type: {type: string, example: 'image/jpeg'}
+                size_bytes: {type: integer}
+      responses: {'200': {description: OK}}
+  /intake/analyze:
+    post:
+      tags: [Intake]
+      summary: تحلیل چندرسانه‌ای مشکل (دسته، شدت، خطر)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/IntakeRequest'}
+      responses:
+        '200': {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/IntakeAnalysis'}}}}
+  /triage/flow/{service_id}:
+    get:
+      tags: [Intake]
+      summary: درخت پرسش‌های تریاژ
+      parameters: [{in: path, name: service_id, required: true, schema: {type: string, format: uuid}}]
+      responses: {'200': {description: OK}}
+
+  # --------------------------------------------------------- PRICING
+  /pricing/quote:
+    post:
+      tags: [Pricing]
+      summary: تخمین قیمت با Breakdown شفاف
+      parameters: [{in: header, name: Idempotency-Key, schema: {type: string}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [service_item_id, urgency, location]
+              properties:
+                service_item_id: {type: string, format: uuid}
+                urgency: {type: string, enum: [EMERGENCY, SAME_DAY, SCHEDULED]}
+                location: {$ref: '#/components/schemas/GeoPoint'}
+                triage_answers: {type: object, additionalProperties: true}
+                promotion_code: {type: string}
+      responses:
+        '200': {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/PriceQuote'}}}}
+        '422': {$ref: '#/components/responses/BusinessError'}
+  /pricing/quote/{quote_id}/revision:
+    post:
+      tags: [Pricing]
+      summary: درخواست تغییر قیمت وسط کار (Change Order)
+      parameters: [{in: path, name: quote_id, required: true, schema: {type: string, format: uuid}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason_code, new_amount]
+              properties:
+                reason_code: {type: string, enum: [EXTRA_MATERIAL, HIDDEN_DAMAGE, SCOPE_CHANGE, TRAVEL_CHANGE]}
+                new_amount: {type: integer, format: int64}
+                media_file_ids: {type: array, items: {type: string, format: uuid}}
+      responses: {'202': {description: در انتظار تأیید مشتری}}
+  /emergency/quote:
+    post:
+      tags: [Pricing]
+      summary: پیش‌قیمت و ETA اعزام فوری
+      responses: {'200': {description: OK}}
+
+  # ---------------------------------------------------------- ORDERS
+  /orders:
+    post:
+      tags: [Orders]
+      summary: ثبت سفارش
+      parameters: [{in: header, name: Idempotency-Key, required: true, schema: {type: string}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateOrderRequest'}
+      responses:
+        '201': {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/Order'}}}}
+        '402': {$ref: '#/components/responses/BusinessError'}
+    get:
+      tags: [Orders]
+      summary: لیست سفارش‌ها
+      parameters:
+        - {in: query, name: status, schema: {type: string}}
+        - {in: query, name: limit, schema: {type: integer, default: 20}}
+        - {in: query, name: cursor, schema: {type: string}}
+      responses: {'200': {description: OK}}
+  /orders/{order_id}:
+    get:
+      tags: [Orders]
+      summary: جزئیات سفارش
+      parameters: [{in: path, name: order_id, required: true, schema: {type: string, format: uuid}}]
+      responses: {'200': {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/Order'}}}}}
+  /orders/{order_id}/submit-for-dispatch:
+    post:
+      tags: [Dispatch]
+      summary: ورود سفارش به صف تخصیص
+      parameters: [{in: path, name: order_id, required: true, schema: {type: string, format: uuid}}]
+      responses: {'202': {description: OK}}
+  /orders/{order_id}/tracking:
+    get:
+      tags: [Orders]
+      summary: وضعیت ردیابی زنده
+      parameters: [{in: path, name: order_id, required: true, schema: {type: string, format: uuid}}]
+      responses: {'200': {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/Tracking'}}}}}
+  /orders/{order_id}/approve:
+    post:
+      tags: [Orders]
+      summary: تأیید کار توسط مشتری (آزادسازی Escrow)
+      parameters: [{in: path, name: order_id, required: true, schema: {type: string, format: uuid}}]
+      responses: {'200': {description: OK}}
+  /orders/{order_id}/cancel:
+    post:
+      tags: [Orders]
+      summary: لغو سفارش (با محاسبه جریمه)
+      parameters: [{in: path, name: order_id, required: true, schema: {type: string, format: uuid}}]
+      requestBody:
+        content: {application/json: {schema: {type: object, properties: {reason_code: {type: string}}}}}
+      responses: {'200': {description: OK}}
+  /orders/{order_id}/media:
+    post:
+      tags: [Orders]
+      summary: افزودن رسانه به سفارش
+      parameters: [{in: path, name: order_id, required: true, schema: {type: string, format: uuid}}]
+      responses: {'201': {description: OK}}
+  /bookings/{booking_id}/check-in:
+    post:
+      tags: [Orders]
+      summary: ثبت ورود متخصص (GPS + عکس الزامی)
+      parameters: [{in: path, name: booking_id, required: true, schema: {type: string, format: uuid}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [location]
+              properties:
+                location: {$ref: '#/components/schemas/GeoPoint'}
+                photo_file_id: {type: string, format: uuid}
+      responses: {'200': {description: OK}}
+  /bookings/{booking_id}/check-out:
+    post:
+      tags: [Orders]
+      summary: ثبت پایان کار
+      parameters: [{in: path, name: booking_id, required: true, schema: {type: string, format: uuid}}]
+      responses: {'200': {description: OK}}
+  /orders/{order_id}/milestones/{seq}/submit:
+    post:
+      tags: [Orders]
+      summary: ارسال پیشرفت Milestone
+      parameters:
+        - {in: path, name: order_id, required: true, schema: {type: string, format: uuid}}
+        - {in: path, name: seq, required: true, schema: {type: integer}}
+      responses: {'202': {description: OK}}
+  /recurring-plans:
+    post:
+      tags: [Orders]
+      summary: ایجاد سفارش دوره‌ای
+      responses: {'201': {description: OK}}
+
+  # -------------------------------------------------------- DISPATCH
+  /providers/me/offers:
+    get:
+      tags: [Dispatch]
+      summary: پیشنهادهای فعال متخصص
+      responses: {'200': {description: OK}}
+  /providers/me/offers/{offer_id}/accept:
+    post:
+      tags: [Dispatch]
+      summary: پذیرش پیشنهاد (اتمی — اول‌پذیرنده‌برنده)
+      parameters: [{in: path, name: offer_id, required: true, schema: {type: string, format: uuid}}]
+      responses:
+        '200': {description: OK}
+        '409': {description: پیشنهاد منقضی یا پذیرفته‌شده توسط دیگری}
+  /providers/me/offers/{offer_id}/reject:
+    post:
+      tags: [Dispatch]
+      summary: رد پیشنهاد با دلیل
+      parameters: [{in: path, name: offer_id, required: true, schema: {type: string, format: uuid}}]
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, required: [reason_code], properties: {reason_code: {type: string, enum: [TOO_FAR, NO_SKILL, NO_EQUIPMENT, NO_TIME, PRICE_LOW, OTHER]}}}
+      responses: {'200': {description: OK}}
+  /orders/{order_id}/assign:
+    post:
+      tags: [Dispatch]
+      summary: تخصیص دستی توسط اپراتور (با دلیل)
+      parameters: [{in: path, name: order_id, required: true, schema: {type: string, format: uuid}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, required: [provider_id, reason], properties: {provider_id: {type: string, format: uuid}, reason: {type: string}}}
+      responses: {'200': {description: OK}}
+
+  # -------------------------------------------------------- PAYMENTS
+  /payments/intents:
+    post:
+      tags: [Payments]
+      summary: ایجاد تعهد پرداخت
+      parameters: [{in: header, name: Idempotency-Key, required: true, schema: {type: string}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [order_id, amount, method]
+              properties:
+                order_id: {type: string, format: uuid}
+                amount: {type: integer, format: int64, description: ریال}
+                method: {type: string, enum: [IPG, WALLET, BNPL, CREDIT_LINE]}
+      responses:
+        '201': {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/PaymentIntent'}}}}
+  /payments/intents/{intent_id}/confirm:
+    post:
+      tags: [Payments]
+      summary: تأیید نتیجه پرداخت (Idempotent)
+      parameters: [{in: path, name: intent_id, required: true, schema: {type: string, format: uuid}}]
+      responses: {'200': {description: OK}}
+  /payments/callback/{psp}:
+    post:
+      tags: [Payments]
+      summary: Webhook درگاه پرداخت (HMAC)
+      security: []
+      responses: {'200': {description: OK}}
+  /wallets/me:
+    get:
+      tags: [Payments]
+      summary: کیف پول من
+      responses: {'200': {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/Wallet'}}}}}
+  /refunds:
+    post:
+      tags: [Payments]
+      summary: درخواست بازگشت وجه
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [order_id, amount, reason_code]
+              properties:
+                order_id: {type: string, format: uuid}
+                amount: {type: integer, format: int64}
+                reason_code: {type: string}
+                destination: {type: string, enum: [WALLET, IPG], default: WALLET}
+      responses: {'202': {description: OK}}
+  /orders/{order_id}/escrow:
+    get:
+      tags: [Payments]
+      summary: وضعیت Escrow سفارش
+      parameters: [{in: path, name: order_id, required: true, schema: {type: string, format: uuid}}]
+      responses: {'200': {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/Escrow'}}}}}
+  /bnpl/eligibility:
+    post:
+      tags: [Payments]
+      summary: بررسی واجد شرایط بودن پرداخت اقساطی
+      responses: {'200': {description: OK}}
+  /invoices/{invoice_id}:
+    get:
+      tags: [Payments]
+      summary: دریافت فاکتور
+      parameters: [{in: path, name: invoice_id, required: true, schema: {type: string, format: uuid}}]
+      responses: {'200': {description: OK}}
+
+  # ----------------------------------------------------------- TRUST
+  /orders/{order_id}/review:
+    post:
+      tags: [Trust]
+      summary: ثبت نظر و امتیاز چندبعدی
+      parameters: [{in: path, name: order_id, required: true, schema: {type: string, format: uuid}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ReviewRequest'}
+      responses: {'201': {description: OK}}
+  /orders/{order_id}/warranty:
+    get:
+      tags: [Trust]
+      summary: وضعیت گارانتی سفارش
+      parameters: [{in: path, name: order_id, required: true, schema: {type: string, format: uuid}}]
+      responses: {'200': {description: OK}}
+  /claims:
+    post:
+      tags: [Trust]
+      summary: ثبت ادعای خسارت
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ClaimRequest'}
+      responses: {'201': {description: OK}}
+  /disputes:
+    post:
+      tags: [Trust]
+      summary: باز کردن اختلاف (توقف Escrow)
+      responses: {'201': {description: OK}}
+  /disputes/{dispute_id}/messages:
+    post:
+      tags: [Trust]
+      summary: ارسال پیام در پرونده اختلاف
+      parameters: [{in: path, name: dispute_id, required: true, schema: {type: string, format: uuid}}]
+      responses: {'201': {description: OK}}
+
+  # --------------------------------------------------------- SUPPORT
+  /support/tickets:
+    post:
+      tags: [Support]
+      summary: ایجاد تیکت پشتیبانی
+      responses: {'201': {description: OK}}
+  /support/chatbot/sessions:
+    post:
+      tags: [Support]
+      summary: شروع گفتگو با دستیار هوشمند
+      responses: {'201': {description: OK}}
+  /support/chatbot/sessions/{session_id}/messages:
+    post:
+      tags: [Support]
+      summary: ارسال پیام به دستیار (با امکان Handoff به اپراتور)
+      parameters: [{in: path, name: session_id, required: true, schema: {type: string, format: uuid}}]
+      requestBody:
+        required: true
+        content: {application/json: {schema: {type: object, required: [text], properties: {text: {type: string}}}}}
+      responses: {'200': {description: OK}}
+  /support/calls/mask:
+    post:
+      tags: [Support]
+      summary: ایجاد تماس با شماره پوشانده‌شده
+      responses: {'201': {description: OK}}
+
+  # ------------------------------------------------------------ RISK
+  /admin/risk/cases:
+    get:
+      tags: [Risk]
+      summary: صف بررسی ریسک
+      parameters: [{in: query, name: band, schema: {type: string, enum: [LOW, MEDIUM, HIGH]}}]
+      responses: {'200': {description: OK}}
+  /admin/risk/cases/{case_id}/decision:
+    post:
+      tags: [Risk]
+      summary: تصمیم کارشناس ریسک
+      parameters: [{in: path, name: case_id, required: true, schema: {type: string, format: uuid}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, required: [decision, reason], properties: {decision: {type: string, enum: [ACTION, DISMISS, ESCALATE]}, reason: {type: string}}}
+      responses: {'200': {description: OK}}
+
+  # ----------------------------------------------------------- ADMIN
+  /admin/analytics/overview:
+    get:
+      tags: [Admin]
+      summary: داشبورد مدیریتی
+      parameters:
+        - {in: query, name: range, schema: {type: string, default: 30d}}
+        - {in: query, name: zone_id, schema: {type: string, format: uuid}}
+      responses: {'200': {description: OK}}
+  /admin/feature-flags/{key}:
+    post:
+      tags: [Admin]
+      summary: تغییر Feature Flag / Kill-Switch
+      parameters: [{in: path, name: key, required: true, schema: {type: string}}]
+      responses: {'200': {description: OK}}
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    Unauthorized:
+      description: احراز هویت نشده
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    RateLimited:
+      description: محدودیت نرخ
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    BusinessError:
+      description: خطای کسب‌وکار
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: {type: string, example: ORDER_NOT_ASSIGNABLE}
+            message_fa: {type: string}
+            details: {type: object, additionalProperties: true}
+            trace_id: {type: string}
+    GeoPoint:
+      type: object
+      required: [lat, lng]
+      properties:
+        lat: {type: number, format: double, example: 35.7448}
+        lng: {type: number, format: double, example: 51.4261}
+        address_id: {type: string, format: uuid}
+    Device:
+      type: object
+      properties:
+        device_id: {type: string}
+        platform: {type: string, enum: [ANDROID, IOS, WEB]}
+        model: {type: string}
+        app_version: {type: string}
+        push_token: {type: string}
+    TokenPair:
+      type: object
+      properties:
+        access_token: {type: string}
+        expires_in: {type: integer, example: 900}
+        refresh_token: {type: string}
+        token_type: {type: string, default: Bearer}
+    OtpChallenge:
+      type: object
+      properties:
+        challenge_id: {type: string, format: uuid}
+        expires_in: {type: integer, example: 120}
+        attempts_left: {type: integer, example: 3}
+    User:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        phone_masked: {type: string, example: '0912***4567'}
+        full_name: {type: string}
+        roles: {type: array, items: {type: string}}
+        created_at: {type: string, format: date-time}
+    IdentityCheck:
+      type: object
+      properties:
+        face_match_score: {type: number, example: 94.2}
+        liveness_score: {type: number, example: 97.8}
+        decision: {type: string, enum: [APPROVED, REJECTED, MANUAL_REVIEW]}
+    IntakeRequest:
+      type: object
+      required: [text]
+      properties:
+        text: {type: string, example: 'آب از زیر سینک می‌آید'}
+        media_ids: {type: array, items: {type: string, format: uuid}}
+        location: {$ref: '#/components/schemas/GeoPoint'}
+        urgency: {type: string, enum: [EMERGENCY, SAME_DAY, SCHEDULED]}
+    IntakeAnalysis:
+      type: object
+      properties:
+        suggested_category: {type: string, example: 'plumbing.leak.sink'}
+        category_confidence: {type: number, example: 0.92}
+        severity: {type: integer, minimum: 1, maximum: 5}
+        skills_required: {type: array, items: {type: string}}
+        equipment_required: {type: array, items: {type: string}}
+        risk_flags: {type: array, items: {type: string}}
+        requires_human_triage: {type: boolean}
+        estimated_band: {type: object, properties: {min: {type: integer, format: int64}, max: {type: integer, format: int64}}}
+    PriceQuote:
+      type: object
+      properties:
+        quote_id: {type: string, format: uuid}
+        model: {type: string, enum: [FIXED, BAND, INSPECTION, BID, HOURLY, RETAINER]}
+        min_amount: {type: integer, format: int64}
+        max_amount: {type: integer, format: int64}
+        currency: {type: string, default: IRR}
+        breakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              title: {type: string}
+              amount: {type: integer, format: int64}
+              note: {type: string}
+        engine_version: {type: string}
+        rate_card_version: {type: string}
+        confidence: {type: number}
+        expires_at: {type: string, format: date-time}
+    CreateOrderRequest:
+      type: object
+      required: [service_item_id, urgency, location]
+      properties:
+        service_item_id: {type: string, format: uuid}
+        urgency: {type: string, enum: [EMERGENCY, SAME_DAY, SCHEDULED]}
+        location: {$ref: '#/components/schemas/GeoPoint'}
+        quote_id: {type: string, format: uuid}
+        media_ids: {type: array, items: {type: string, format: uuid}}
+        triage_answers: {type: object, additionalProperties: true}
+        slot_start: {type: string, format: date-time}
+        org_id: {type: string, format: uuid}
+        notes: {type: string}
+    Order:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        code: {type: string, example: 'SR-1405-88421'}
+        status:
+          type: string
+          enum: [CREATED, DISPATCHING, ASSIGNED, EN_ROUTE, IN_PROGRESS, COMPLETED, QUALITY_WINDOW, CLOSED, CANCELLED, DISPUTED]
+        urgency: {type: string}
+        final_amount: {type: integer, format: int64}
+        payment_state: {type: string}
+        escrow_state: {type: string}
+        assigned_provider:
+          type: object
+          properties:
+            id: {type: string, format: uuid}
+            display_name: {type: string}
+            rating: {type: number}
+        slot_start: {type: string, format: date-time}
+        created_at: {type: string, format: date-time}
+    Tracking:
+      type: object
+      properties:
+        order_id: {type: string, format: uuid}
+        provider_location: {$ref: '#/components/schemas/GeoPoint'}
+        eta_minutes: {type: integer}
+        stage: {type: string}
+        updated_at: {type: string, format: date-time}
+    PaymentIntent:
+      type: object
+      properties:
+        intent_id: {type: string, format: uuid}
+        amount: {type: integer, format: int64}
+        method: {type: string}
+        status: {type: string}
+        payment_url: {type: string, description: 'برای IPG'}
+    Escrow:
+      type: object
+      properties:
+        order_id: {type: string, format: uuid}
+        amount: {type: integer, format: int64}
+        released_amount: {type: integer, format: int64}
+        refunded_amount: {type: integer, format: int64}
+        status: {type: string, enum: [HELD, PARTIAL, RELEASED, REFUNDED, FROZEN]}
+        milestones:
+          type: array
+          items:
+            type: object
+            properties:
+              seq: {type: integer}
+              title: {type: string}
+              status: {type: string}
+              share_percent: {type: number}
+    Wallet:
+      type: object
+      properties:
+        balance: {type: integer, format: int64}
+        escrow_locked: {type: integer, format: int64}
+        currency: {type: string, default: IRR}
+    ReviewRequest:
+      type: object
+      required: [dimensions]
+      properties:
+        dimensions:
+          type: object
+          properties:
+            punctuality: {type: integer, minimum: 1, maximum: 5}
+            quality: {type: integer, minimum: 1, maximum: 5}
+            tidiness: {type: integer, minimum: 1, maximum: 5}
+            price_accuracy: {type: integer, minimum: 1, maximum: 5}
+            conduct: {type: integer, minimum: 1, maximum: 5}
+        text: {type: string}
+    ClaimRequest:
+      type: object
+      required: [order_id, type, description, amount_requested]
+      properties:
+        order_id: {type: string, format: uuid}
+        type: {type: string, enum: [ACCIDENT, DAMAGE, INJURY, THEFT, OTHER]}
+        description: {type: string}
+        amount_requested: {type: integer, format: int64}
+        evidence_file_ids: {type: array, items: {type: string, format: uuid}}
+
+x-webhooks:
+  order.status_changed:
+    post:
+      summary: تغییر وضعیت سفارش (برای پارتنر B2B)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event: {type: string, example: order.assigned}
+                order_id: {type: string, format: uuid}
+                status: {type: string}
+                at: {type: string, format: date-time}
+      responses: {'200': {description: OK}}
+  payment.settled:
+    post:
+      summary: تسویه پرداخت (برای سیستم‌های مالی مشتری)
+      responses: {'200': {description: OK}}

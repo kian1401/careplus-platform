@@ -1,0 +1,163 @@
+<section id="s3">
+<h2><span class="num">۳</span>موتور سفارش‌گیری و الگوریتم تطبیق هوشمند</h2>
+<p class="lead">دو گلوگاه اصلی بازار خدمات: «مشتری دقیقاً نمی‌داند مشکلش چیست و چقدر می‌ارزد» و «متخصص درست در منطقه درست آزاد نیست». راه‌حل: ورودی چندرسانه‌ای + تریاژ هوشمند برای حل گلوگاه اول، و Dispatch امتیازمحور با صف اولویت‌دار برای گلوگاه دوم.</p>
+
+<h3 id="s3-1">۳.۱ ثبت سفارش چندرسانه‌ای و تشخیص خودکار مشکل</h3>
+<div class="flow">
+<svg viewBox="0 0 980 220" role="img" aria-label="پایپ‌لاین ورودی چندرسانه‌ای">
+ <defs><marker id="ar3" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#94a3b8"/></marker>
+ <style>
+  .m{fill:#f2f9f8;stroke:#0f7a6c;stroke-width:1.4;rx:10}
+  .m2{fill:#eef2ff;stroke:#1d4ed8;stroke-width:1.4;rx:10}
+  .t2{font:600 11.5px Tahoma,sans-serif;fill:#0b3f4d;text-anchor:middle;direction:rtl}
+  .s2{font:10.5px Tahoma,sans-serif;fill:#5c6472;text-anchor:middle;direction:rtl}
+  .l3{stroke:#94a3b8;stroke-width:1.3;marker-end:url(#ar3)}
+ </style></defs>
+ <rect class="m" x="800" y="30" width="150" height="58"/><text class="t2" x="875" y="54">ورودی مشتری</text><text class="s2" x="875" y="72">صوت • عکس • ویدیو • متن</text>
+ <rect class="m2" x="620" y="30" width="160" height="58"/><text class="t2" x="700" y="54">پردازش رسانه</text><text class="s2" x="700" y="72">ASR فارسی • CV • OCR</text>
+ <rect class="m2" x="440" y="30" width="160" height="58"/><text class="t2" x="520" y="54">تشخیص دسته و شدت</text><text class="s2" x="520" y="72">طبقه‌بندی + درجه فوریت</text>
+ <rect class="m" x="270" y="30" width="150" height="58"/><text class="t2" x="345" y="54">تریاژ تعاملی</text><text class="s2" x="345" y="72">۴ تا ۷ پرسش وابسته</text>
+ <rect class="m" x="100" y="30" width="150" height="58"/><text class="t2" x="175" y="54">برآورد قیمت</text><text class="s2" x="175" y="72">بازه + ریسک تغییر</text>
+ <rect class="m2" x="100" y="140" width="850" height="58"/><text class="t2" x="525" y="164">خروجی: «سفارش ساخت‌یافته» — دسته(های) لازم، مهارت، تجهیزات، بازه قیمت، بازه زمان، ریسک، سطح فوریت</text><text class="s2" x="525" y="182">اگر اطمینان مدل &lt; آستانه ⇒ پرچم «نیازمند کارشناس» و ارجاع به صف تریاژ انسانی (چت/تماس)</text>
+ <line class="l3" x1="798" y1="59" x2="786" y2="59"/><line class="l3" x1="618" y1="59" x2="606" y2="59"/>
+ <line class="l3" x1="438" y1="59" x2="426" y2="59"/><line class="l3" x1="268" y1="59" x2="256" y2="59"/>
+ <line class="l3" x1="175" y1="90" x2="175" y2="138"/>
+</svg>
+</div>
+
+<h4>قابلیت‌ها و تصمیم‌های طراحی</h4>
+<table class="tbl">
+<thead><tr><th>قابلیت</th><th>شرح</th><th>نکته مهندسی</th><th>اولویت</th></tr></thead>
+<tbody>
+<tr><td>ضبط صوت با راهنما</td><td>مشتری ۱۵–۶۰ ثانیه توضیح می‌دهد: «آب از زیر سینک می‌آید و کابینت خیس شده». نمایش پرسش‌های راهنمای روی صفحه هنگام ضبط</td><td>ASR فارسی با واژه‌نامه تخصصی (Lexicon: شیر توپی، سیفون، کولر گازی اسپلیت…)، تشخیص سکوت و پیشنهاد ضبط مجدد</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>آپلود عکس/ویدیو</td><td>۱–۶ عکس یا ویدیو ۳۰ ثانیه‌ای با راهنمای زاویه («نمای کلی + نمای نزدیک + پلاک/برند وسیله»)</td><td>فشرده‌سازی در دستگاه، آپلود مستقیم به S3، ترنسکد ویدیو، حذف EXIF مکانی پیش از نمایش عمومی</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>طبقه‌بندی و شدت‌سنجی</td><td>مدل چندکلاسه برای دسته (لوله‌کشی/برق/کولر/نقاشی…) + مدل رگرسیون برای شدت (۱ تا ۵)</td><td>مدل باید <b>Calibration</b> شود تا «اطمینان» قابل استفاده در تصمیم باشد؛ نسخه‌دار و با Shadow-Mode قبل از انتشار</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>برآورد قیمت اولیه</td><td>بازه قیمت (کف/سقف) + شفافیت در مورد علت تغییر قیمت پس از بازدید</td><td>از Rate Card + قیمت‌گذاری پویا؛ نمایش «۹۰٪ سفارش‌های مشابه در این بازه تمام شدند» (Data-driven trust)</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>تریاژ تعاملی</td><td>درخت تصمیم پویا: پاسخ هر سؤال، سؤال بعدی را تعیین می‌کند (مثلاً «برق قطع است کل واحد یا فقط یک پریز؟»)</td><td>درخت به‌صورت داده در CMS تعریف می‌شود (نه کد) تا تیم محصول بدون انتشار اپ تغییر دهد</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>تشخیص مداخله فوری</td><td>کلمات/تصاویر خطر: «گاز»، «آب‌گرفتگی»، «دود و جرقه» → هدایت به مسیر اضطراری + هشدار ایمنی</td><td>قانون سخت‌گیرانه: False-Negative غیرقابل قبول؛ ترکیب Keyword + Audio Classifier</td><td><span class="badge b-mvp">MVP</span></td></tr>
+</tbody>
+</table>
+
+<p><b>نمونه بدنه سفارش ساخت‌یافته (خروجی تریاژ):</b></p>
+<pre class="code">POST /v1/orders
+{
+  "service_category": "plumbing.leak.sink",
+  "skills_required": ["plumbing.basic", "cabinet.water_damage"],
+  "equipment_required": ["pipe_wrench_set", "leak_detector"],
+  "intake": {
+    "text": "آب از زیر سینک می‌آید",
+    "media": [{"id":"md_91a","type":"image","ai_tags":["water_leak","under_sink"],"conf":0.92},
+              {"id":"md_91b","type":"audio","transcript":"...","lang":"fa"}],
+    "severity": 3,
+    "triage_answers": {"cabinet_damage": true, "water_shutoff_available": true}
+  },
+  "urgency": "same_day",                        // scheduled | same_day | emergency
+  "location": {"lat":35.7448,"lng":51.4261,"geohash":"tnk2v"},
+  "quote": {"min": 850000, "max": 1600000, "currency":"IRR", "confidence": 0.68,
+            "basis":"rate_card:v41 + surge:1.00 + complexity:1.15"},
+  "risk_flags": ["price_may_increase_after_inspection"],
+  "requires_human_triage": false
+}</pre>
+
+<h4>ساخت دیتاست (شرط موفقیت هوشمندی)</h4>
+<ul>
+<li>هر سفارش باید برچسب «نتیجه واقعی» بگیرد: دسته نهایی کار، قطعات مصرف‌شده، زمان واقعی، قیمت نهایی، رضایت. این داده‌ها پیکره آموزشی مدل‌های بعدی است.</li>
+<li>ابزار <b>Label Studio</b>-مانند داخلی برای تیم تریاژ: تأیید/اصلاح برچسب تصاویر و متن‌ها، ذخیره‌شده در جداول <code>ai_inference</code> و <code>ai_label</code>.</li>
+<li>معیار پذیرش مدل: <b>Macro-F1 ≥ ۰.۸۵</b> روی داده آزمون انسانی برای دسته‌های &gt; ۲٪ حجم؛ خطای شدت سنجی حداکثر ±۱ درجه.</li>
+</ul>
+
+<h3 id="s3-2">۳.۲ الگوریتم تخصیص هوشمند (Smart Dispatch)</h3>
+<p>تخصیص در سه مرحله انجام می‌شود: <b>(الف)</b> تولید فهرست کاندید با جست‌وجوی مکانی و فیلتر صلاحیت، <b>(ب)</b> امتیازدهی چندمتغیره، <b>(ج)</b> پیشنهاد مرحله‌ای و مدیریت پذیرش/رد.</p>
+
+<h4>الف) تولید کاندیدها (Candidate Generation)</h4>
+<pre class="code">-- فیلتر اولیه: مکانی + صلاحیت + ظرفیت + تعارض زمانی
+WITH cand AS (
+  SELECT p.provider_id,
+         ST_Distance(p.last_location, o.location) / 1000.0 AS dist_km,
+         p.rating_avg, p.acceptance_rate, p.on_time_rate,
+         p.repeat_customer_bonus, p.tier,
+         ci.capacity_free_slots_today,
+         EXISTS (SELECT 1 FROM provider_equipment e
+                 WHERE e.provider_id = p.provider_id
+                   AND e.equipment_id = ANY(o.equipment_required)) AS has_equipment
+  FROM provider_profile p
+  JOIN provider_service_area psa ON psa.provider_id = p.provider_id
+  JOIN city_service_zone z    ON z.zone_id = psa.zone_id AND z.active
+  JOIN order o                ON o.order_id = :order_id
+  JOIN provider_capacity ci   ON ci.provider_id = p.provider_id
+  WHERE p.status = 'ACTIVE'
+    AND p.verified_level >= :min_level
+    AND p.last_location && ST_Expand(o.location::geometry, :radius_meters)::geography
+    AND p.skills @> o.skills_required                       -- مهارت‌ها پوشش داده شود
+    AND NOT EXISTS (SELECT 1 FROM booking b               -- تعارض تقویم
+                    WHERE b.provider_id = p.provider_id
+                      AND b.time_range && o.time_range)
+    AND p.blocked_until IS NULL
+  ORDER BY p.last_location <-> o.location
+  LIMIT 200
+)
+SELECT * FROM cand;</pre>
+
+<h4>ب) تابع امتیازدهی (Ranking Score)</h4>
+<pre class="code">Score(p, o) =
+      w1 * S_distance(p,o)        // نزدیکی: 1 - norm(dist/radius)  ، وزن پیشنهادی 0.26
+    + w2 * S_quality(p)           // کیفیت: ترکیب امتیاز چندبعدی + روند 90 روز اخیر ، 0.18
+    + w3 * S_acceptance(p,o)      // نرخ قبولی در همین دسته/منطقه (نه کلی) ، 0.14
+    + w4 * S_reliability(p)       // آن‌تایم بودن، نرخ لغو، نرخ بازکاری ، 0.12
+    + w5 * S_equipment(p,o)       // تطابق تجهیزات و خودرو/وسایل لازم ، 0.08
+    + w6 * S_price(p,o)           // نزدیکی پیشنهاد قیمت به بازه تخمین پلتفرم ، 0.10
+    + w7 * S_history(p,o)         // سابقه کار قبلی با همین مشتری/ساختمان ، 0.06
+    + w8 * S_fairness(p)          // عدالت: جبران کم‌کاری متخصصان حاشیه‌ای ، 0.04
+    + w9 * S_retention(p)         // ریسک ریزش متخصص (کمبود کار اخیر) ، 0.02
+    - P_penalty(p,o)              // جریمه‌ها: ردهای اخیر همان سفارش، تعلیق موقت، فاصله غیرواقعی، …</pre>
+<div class="callout"><b>نکته کلیدی:</b> وزن‌ها <b>Hyperparameter</b> نیستند که یک‌بار تنظیم شوند؛ هر منطقه و هر دسته وزن متفاوت دارد. موتور باید A/B-Test وزن‌ها را پشتیبانی کند و معیار اصلی بهینه‌سازی، <b>Fulfillment Rate</b> و <b>Time-to-Accept</b> است، نه صرفاً رضایت.</div>
+
+<h4>پارامترها و سیاست‌های عملیاتی</h4>
+<table class="tbl">
+<thead><tr><th>پارامتر</th><th>مقدار پیشنهادی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td>شعاع موج اول</td><td>۳–۵ کیلومتر (شهری)، ۸–۱۲ کیلومتر (خدمات کم‌تکرار)</td><td>افزایش پله‌ای در هر موج</td></tr>
+<tr><td>اندازه موج</td><td>۳–۵ متخصص هم‌زمان (نه بیشتر از ۱۰)</td><td>جلوگیری از «کاهش ارزش پیشنهاد» و رد زیاد</td></tr>
+<tr><td>پنجره پذیرش</td><td>سفارش عادی: ۹۰ ثانیه / اعزام فوری: ۲۰ ثانیه</td><td>پس از انقضا، موج بعدی</td></tr>
+<tr><td>نردبان تشدید (Escalation Ladder)</td><td>۱) موج بعدی با شعاع بیشتر → ۲) افزایش سهم متخصص (Surge Incentive) → ۳) پیشنهاد زمان جایگزین به مشتری → ۴) صف دستی اپراتور</td><td>هر پله TTL و Trigger مشخص دارد</td></tr>
+<tr><td>قفل پذیرش</td><td>تراکنش اتمی روی <code>job_offer</code>؛ اول-پذیرنده-برنده</td><td>جلوگیری از پذیرش دوگانه</td></tr>
+<tr><td>سقف رد متوالی</td><td>پس از ۳ رد در یک سفارش، متخصص تا ۳۰ دقیقه در آن سفارش نامزد نمی‌شود</td><td>کاهش نویز و نارضایتی</td></tr>
+<tr><td>پاداش پذیرش سریع</td><td>افزایش سهم سودی متخصص در سفارش‌های کم‌عمر/دور</td><td>ابزار سیاستی برای مناطق کم‌عرضه</td></tr>
+</tbody>
+</table>
+
+<h4>ج) چرخه عمر پیشنهاد و سفارش</h4>
+<div class="flow">
+<svg viewBox="0 0 980 200" role="img" aria-label="چرخه عمر تخصیص">
+ <defs><marker id="ar4" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#94a3b8"/></marker>
+ <style>.t3{font:600 11.5px Tahoma,sans-serif;fill:#0b3f4d;text-anchor:middle;direction:rtl}
+ .s3{font:10.5px Tahoma,sans-serif;fill:#5c6472;text-anchor:middle;direction:rtl}
+ .q{fill:#f2f9f8;stroke:#0f7a6c;stroke-width:1.4;rx:10}.q2{fill:#fff8ed;stroke:#b45309;stroke-width:1.4;rx:10}
+ .l4{stroke:#94a3b8;stroke-width:1.3;marker-end:url(#ar4)}</style></defs>
+ <rect class="q" x="800" y="40" width="150" height="56"/><text class="t3" x="875" y="63">CREATED</text><text class="s3" x="875" y="81">سفارش ثبت و قیمت‌گذاری شد</text>
+ <rect class="q" x="630" y="40" width="150" height="56"/><text class="t3" x="705" y="63">DISPATCHING</text><text class="s3" x="705" y="81">موج پیشنهاد در جریان</text>
+ <rect class="q2" x="460" y="40" width="150" height="56"/><text class="t3" x="535" y="63">ASSIGNED</text><text class="s3" x="535" y="81">قفل پذیرش + تماس/چت امن</text>
+ <rect class="q" x="290" y="40" width="150" height="56"/><text class="t3" x="365" y="63">EN_ROUTE</text><text class="s3" x="365" y="81">ردیابی زنده + ETA</text>
+ <rect class="q" x="120" y="40" width="150" height="56"/><text class="t3" x="195" y="63">IN_PROGRESS</text><text class="s3" x="195" y="81">Check-in/out + عکس قبل/بعد</text>
+ <rect class="q" x="290" y="140" width="380" height="50"/><text class="t3" x="480" y="163">COMPLETED → QUALITY_WINDOW (۴۸ ساعت) → CLOSED / DISPUTED</text><text class="s3" x="480" y="180">آزادسازی Escrow، ثبت امتیاز چندبعدی، فعال‌سازی گارانتی</text>
+ <rect class="q2" x="690" y="140" width="290" height="50"/><text class="t3" x="835" y="163">CANCELLED / NO_SHOW / EXPIRED</text><text class="s3" x="835" y="180">جریمه/تخفیف متخصص بر اساس سیاست</text>
+ <line class="l4" x1="798" y1="68" x2="784" y2="68"/><line class="l4" x1="628" y1="68" x2="614" y2="68"/>
+ <line class="l4" x1="458" y1="68" x2="444" y2="68"/><line class="l4" x1="288" y1="68" x2="274" y2="68"/>
+ <line class="l4" x1="195" y1="98" x2="330" y2="138"/><line class="l4" x1="705" y1="98" x2="790" y2="138"/>
+</svg>
+</div>
+
+<h3 id="s3-3">۳.۳ اعزام فوری (Emergency Dispatch) و زمان‌بندی</h3>
+<table class="tbl">
+<thead><tr><th>ویژگی</th><th>طراحی</th></tr></thead>
+<tbody>
+<tr><td>دسته‌های واجد شرط</td><td>لوله‌کشی/نشت گاز و آب، برق و اتصال کوتاه، کلیدسازی و قفل‌شکستگی، تخلیه چاه اضطراری، تعمیر آسانسور گیرکرده (با هشدار ایمنی)، خدمات درمانی غیراورژانسی (بعداً)</td></tr>
+<tr><td>تجربه مشتری</td><td>دکمه «همین حالا» → تخمین زمان رسیدن («حدود ۳۵ دقیقه») → نمایش لیست کوتاه متخصصان نزدیک با ETA → تأیید و پرداخت پیش‌پرداخت اجباری (ضدسوءاستفاده)</td></tr>
+<tr><td>تفاوت با سفارش عادی</td><td>پنجره پذیرش کوتاه (۲۰ ثانیه)، شعاع بزرگ‌تر، سهم متخصص بالاتر (تا ۱۰۰٪ مبلغ به‌عنوان انگیزه در پیک)، اولویت در پوش نوتیفیکیشن (تلفن را حتی در حالت مزاحم کم‌صدا نشان دهد تا حد مجاز پلتفرم)</td></tr>
+<tr><td>KI/ETA</td><td>مدل ETA بر پایه شبکه معابر (ماشین/موتور)، ترافیک لحظه‌ای، زمان آماده‌سازی ابزار؛ نمایش بازه (نه عدد قطعی) برای کاهش انتظار نامطلوب</td></tr>
+<tr><td>سقف ایمنی</td><td>درخواست‌های خطرناک (گاز/آتش) باید پیام «تماس با اورژانس/آتش‌نشانی ۱۲۵/۱۱۵» را قبل از ادامه نشان دهد</td></tr>
+<tr><td>زمان‌بندی و تکرارشونده</td><td>رزرو بازه (Slot) با ظرفیت هر متخصص، سفارش دوره‌ای (نظافت هفتگی، سرویس ماهانه کولر)، سفارش چندمتخصصی هم‌زمان (نقاشی + برق)، و «بازگشت به متخصص قبلی» با یک کلیک</td></tr>
+</tbody>
+</table>
+<div class="callout warn"><b>ریسک عملیاتی:</b> اعزام فوری بدون عرضه کافی، مشتری را ناامید می‌کند. شرط راه‌اندازی این قابلیت در هر شهر: حداقل <b>۸ متخصص فعال در شعاع ۵ کیلومتر</b> و نرخ پذیرش شبانه‌روزی بالای ۷۰٪. قبل از آن، دسته‌بندی فقط «نوبت روز بعد» ارائه دهد.</div>
+</section>

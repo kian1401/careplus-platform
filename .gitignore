@@ -1,0 +1,32 @@
+# پایگاه‌های داده محلی و اجرای آزمون
+*.sqlite
+*.sqlite-journal
+*.db
+mvp/var/
+
+# پایتون
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ساخت‌های موقت
+.build_tmp/
+dist/
+build/
+out/
+*.log
+
+# محیط و رازها
+.env
+.env.*
+!.env.example
+
+# سیستم و ابزار
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

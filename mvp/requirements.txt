@@ -1,0 +1,12 @@
+# سرویسا (Care+) — MVP Skeleton
+# نسخه: 1.0 | پروژه نمونه از سند جامع (بخش‌های ۲ تا ۹)
+fastapi==0.142.2
+uvicorn[standard]==0.40.0
+SQLAlchemy==2.1.2
+pydantic==2.13.4
+pydantic-settings==2.13.0
+# برای اجرا روی PostgreSQL (اختیاری — پیش‌فرض SQLite)
+psycopg[binary]==3.2.12
+# تست
+pytest==9.0.3
+httpx==0.28.1

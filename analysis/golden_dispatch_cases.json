@@ -1,0 +1,732 @@
+{
+  "generated_by": "tools/golden_cases.py",
+  "weights": {
+    "distance": 0.26,
+    "quality": 0.18,
+    "acceptance": 0.14,
+    "reliability": 0.12,
+    "equipment": 0.08,
+    "price": 0.1,
+    "history": 0.06,
+    "fairness": 0.04,
+    "retention": 0.02
+  },
+  "urgency_ttl_seconds": {
+    "EMERGENCY": 20,
+    "SAME_DAY": 90,
+    "SCHEDULED": 90
+  },
+  "tolerance": 0.001,
+  "note_fa": "ترتیب و امتیازها باید با هر تغییر در وزن‌ها یا فرمول‌ها بازتولید شود؛ افزایش/کاهش امتیاز بیش از ۰.۰۰۱ یا جابه‌جایی رتبه‌ها = تغییر رفتاری عمدی که باید مستند و تأیید شود.",
+  "supply": [
+    {
+      "name": "پ-۱",
+      "lat": 35.746,
+      "lng": 51.427,
+      "skills": "plumbing.basic,cabinet.water_damage",
+      "equipment": "pipe_wrench,leak_detector",
+      "rating": 4.87,
+      "acceptance_rate": 0.86
+    },
+    {
+      "name": "پ-۲",
+      "lat": 35.7415,
+      "lng": 51.418,
+      "skills": "plumbing.basic",
+      "equipment": "pipe_wrench",
+      "rating": 4.72,
+      "acceptance_rate": 0.79
+    },
+    {
+      "name": "پ-۳",
+      "lat": 35.751,
+      "lng": 51.433,
+      "skills": "plumbing.basic,cabinet.water_damage",
+      "equipment": "pipe_wrench",
+      "rating": 4.61,
+      "acceptance_rate": 0.74
+    },
+    {
+      "name": "پ-۴",
+      "lat": 35.738,
+      "lng": 51.412,
+      "skills": "plumbing.basic",
+      "equipment": "pipe_wrench,leak_detector",
+      "rating": 4.4,
+      "acceptance_rate": 0.68
+    },
+    {
+      "name": "پ-۵",
+      "lat": 35.7455,
+      "lng": 51.439,
+      "skills": "electrical.basic",
+      "equipment": "multimeter",
+      "rating": 4.68,
+      "acceptance_rate": 0.81
+    },
+    {
+      "name": "پ-۶",
+      "lat": 35.753,
+      "lng": 51.4155,
+      "skills": "electrical.basic,hvac.service",
+      "equipment": "multimeter,vacuum_pump",
+      "rating": 4.81,
+      "acceptance_rate": 0.84
+    },
+    {
+      "name": "پ-۷",
+      "lat": 35.735,
+      "lng": 51.4265,
+      "skills": "plumbing.basic",
+      "equipment": "pipe_wrench",
+      "rating": 4.32,
+      "acceptance_rate": 0.65
+    },
+    {
+      "name": "پ-۸",
+      "lat": 35.7448,
+      "lng": 51.426,
+      "skills": "plumbing.basic,cabinet.water_damage",
+      "equipment": "pipe_wrench,leak_detector",
+      "rating": 4.95,
+      "acceptance_rate": 0.9
+    }
+  ],
+  "cases": [
+    {
+      "case": "GC-01",
+      "order": {
+        "lat": 35.7448,
+        "lng": 51.4261,
+        "skills_required": "plumbing.basic",
+        "equipment_required": "req:pipe_wrench",
+        "urgency": "SAME_DAY",
+        "radius_m": 4000
+      },
+      "candidates_scored": 6,
+      "ranking": [
+        {
+          "rank": 1,
+          "provider": "پ-۱",
+          "total_score": 0.8619,
+          "distance_km": 0.16,
+          "components": {
+            "distance": 0.9609,
+            "quality": 0.9604,
+            "acceptance": 0.86,
+            "reliability": 0.99,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 0.2 کیلومتر · کیفیت 0.96 · نرخ قبولی 0.86 · تجهیزات 1.00 · جریمه 0.00"
+        },
+        {
+          "rank": 2,
+          "provider": "پ-۸",
+          "total_score": 0.836,
+          "distance_km": 0.01,
+          "components": {
+            "distance": 0.9977,
+            "quality": 0.982,
+            "acceptance": 0.9,
+            "reliability": 0.615,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 0.0 کیلومتر · کیفیت 0.98 · نرخ قبولی 0.90 · تجهیزات 1.00 · جریمه 0.00"
+        },
+        {
+          "rank": 3,
+          "provider": "پ-۲",
+          "total_score": 0.8024,
+          "distance_km": 0.82,
+          "components": {
+            "distance": 0.7955,
+            "quality": 0.9264,
+            "acceptance": 0.79,
+            "reliability": 0.985,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 0.8 کیلومتر · کیفیت 0.93 · نرخ قبولی 0.79 · تجهیزات 1.00 · جریمه 0.00"
+        },
+        {
+          "rank": 4,
+          "provider": "پ-۳",
+          "total_score": 0.7832,
+          "distance_km": 0.93,
+          "components": {
+            "distance": 0.7678,
+            "quality": 0.9052,
+            "acceptance": 0.74,
+            "reliability": 0.975,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 0.9 کیلومتر · کیفیت 0.91 · نرخ قبولی 0.74 · تجهیزات 1.00 · جریمه 0.00"
+        },
+        {
+          "rank": 5,
+          "provider": "پ-۷",
+          "total_score": 0.7132,
+          "distance_km": 1.09,
+          "components": {
+            "distance": 0.7274,
+            "quality": 0.8384,
+            "acceptance": 0.65,
+            "reliability": 0.685,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 1.1 کیلومتر · کیفیت 0.84 · نرخ قبولی 0.65 · تجهیزات 1.00 · جریمه 0.00"
+        },
+        {
+          "rank": 6,
+          "provider": "پ-۴",
+          "total_score": 0.7062,
+          "distance_km": 1.48,
+          "components": {
+            "distance": 0.6299,
+            "quality": 0.86,
+            "acceptance": 0.68,
+            "reliability": 0.77,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 1.5 کیلومتر · کیفیت 0.86 · نرخ قبولی 0.68 · تجهیزات 1.00 · جریمه 0.00"
+        }
+      ],
+      "wave1_offers": [
+        {
+          "provider": "پ-۱",
+          "score": 0.8619,
+          "distance_km": 0.16
+        },
+        {
+          "provider": "پ-۸",
+          "score": 0.836,
+          "distance_km": 0.01
+        },
+        {
+          "provider": "پ-۲",
+          "score": 0.8024,
+          "distance_km": 0.82
+        }
+      ],
+      "simulator_match": true
+    },
+    {
+      "case": "GC-02",
+      "order": {
+        "lat": 35.7448,
+        "lng": 51.4261,
+        "skills_required": "plumbing.basic",
+        "equipment_required": "req:pipe_wrench,leak_detector",
+        "urgency": "SAME_DAY",
+        "radius_m": 4000
+      },
+      "candidates_scored": 6,
+      "ranking": [
+        {
+          "rank": 1,
+          "provider": "پ-۱",
+          "total_score": 0.8619,
+          "distance_km": 0.16,
+          "components": {
+            "distance": 0.9609,
+            "quality": 0.9604,
+            "acceptance": 0.86,
+            "reliability": 0.99,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 0.2 کیلومتر · کیفیت 0.96 · نرخ قبولی 0.86 · تجهیزات 1.00 · جریمه 0.00"
+        },
+        {
+          "rank": 2,
+          "provider": "پ-۸",
+          "total_score": 0.836,
+          "distance_km": 0.01,
+          "components": {
+            "distance": 0.9977,
+            "quality": 0.982,
+            "acceptance": 0.9,
+            "reliability": 0.615,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 0.0 کیلومتر · کیفیت 0.98 · نرخ قبولی 0.90 · تجهیزات 1.00 · جریمه 0.00"
+        },
+        {
+          "rank": 3,
+          "provider": "پ-۲",
+          "total_score": 0.7624,
+          "distance_km": 0.82,
+          "components": {
+            "distance": 0.7955,
+            "quality": 0.9264,
+            "acceptance": 0.79,
+            "reliability": 0.985,
+            "equipment": 0.5,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 0.8 کیلومتر · کیفیت 0.93 · نرخ قبولی 0.79 · تجهیزات 0.50 · جریمه 0.00"
+        },
+        {
+          "rank": 4,
+          "provider": "پ-۳",
+          "total_score": 0.7432,
+          "distance_km": 0.93,
+          "components": {
+            "distance": 0.7678,
+            "quality": 0.9052,
+            "acceptance": 0.74,
+            "reliability": 0.975,
+            "equipment": 0.5,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 0.9 کیلومتر · کیفیت 0.91 · نرخ قبولی 0.74 · تجهیزات 0.50 · جریمه 0.00"
+        },
+        {
+          "rank": 5,
+          "provider": "پ-۴",
+          "total_score": 0.7062,
+          "distance_km": 1.48,
+          "components": {
+            "distance": 0.6299,
+            "quality": 0.86,
+            "acceptance": 0.68,
+            "reliability": 0.77,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 1.5 کیلومتر · کیفیت 0.86 · نرخ قبولی 0.68 · تجهیزات 1.00 · جریمه 0.00"
+        },
+        {
+          "rank": 6,
+          "provider": "پ-۷",
+          "total_score": 0.6732,
+          "distance_km": 1.09,
+          "components": {
+            "distance": 0.7274,
+            "quality": 0.8384,
+            "acceptance": 0.65,
+            "reliability": 0.685,
+            "equipment": 0.5,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 1.1 کیلومتر · کیفیت 0.84 · نرخ قبولی 0.65 · تجهیزات 0.50 · جریمه 0.00"
+        }
+      ],
+      "wave1_offers": [
+        {
+          "provider": "پ-۱",
+          "score": 0.8619,
+          "distance_km": 0.16
+        },
+        {
+          "provider": "پ-۸",
+          "score": 0.836,
+          "distance_km": 0.01
+        },
+        {
+          "provider": "پ-۲",
+          "score": 0.7624,
+          "distance_km": 0.82
+        }
+      ],
+      "simulator_match": true
+    },
+    {
+      "case": "GC-03",
+      "order": {
+        "lat": 35.744,
+        "lng": 51.44,
+        "skills_required": "electrical.basic",
+        "equipment_required": "req:multimeter",
+        "urgency": "EMERGENCY",
+        "radius_m": 6000
+      },
+      "candidates_scored": 2,
+      "ranking": [
+        {
+          "rank": 1,
+          "provider": "پ-۵",
+          "total_score": 0.85,
+          "distance_km": 0.19,
+          "components": {
+            "distance": 0.9684,
+            "quality": 0.9256,
+            "acceptance": 0.81,
+            "reliability": 0.985,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 0.2 کیلومتر · کیفیت 0.93 · نرخ قبولی 0.81 · تجهیزات 1.00 · جریمه 0.00"
+        },
+        {
+          "rank": 2,
+          "provider": "پ-۶",
+          "total_score": 0.7621,
+          "distance_km": 2.43,
+          "components": {
+            "distance": 0.5955,
+            "quality": 0.9492,
+            "acceptance": 0.84,
+            "reliability": 0.99,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 2.4 کیلومتر · کیفیت 0.95 · نرخ قبولی 0.84 · تجهیزات 1.00 · جریمه 0.00"
+        }
+      ],
+      "wave1_offers": [
+        {
+          "provider": "پ-۵",
+          "score": 0.85,
+          "distance_km": 0.19
+        },
+        {
+          "provider": "پ-۶",
+          "score": 0.7621,
+          "distance_km": 2.43
+        }
+      ],
+      "simulator_match": true
+    },
+    {
+      "case": "GC-04",
+      "order": {
+        "lat": 35.74,
+        "lng": 51.426,
+        "skills_required": "plumbing.basic,cabinet.water_damage",
+        "equipment_required": "req:pipe_wrench",
+        "urgency": "SCHEDULED",
+        "radius_m": 4000
+      },
+      "candidates_scored": 3,
+      "ranking": [
+        {
+          "rank": 1,
+          "provider": "پ-۱",
+          "total_score": 0.8283,
+          "distance_km": 0.67,
+          "components": {
+            "distance": 0.8317,
+            "quality": 0.9604,
+            "acceptance": 0.86,
+            "reliability": 0.99,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 0.7 کیلومتر · کیفیت 0.96 · نرخ قبولی 0.86 · تجهیزات 1.00 · جریمه 0.00"
+        },
+        {
+          "rank": 2,
+          "provider": "پ-۸",
+          "total_score": 0.8019,
+          "distance_km": 0.53,
+          "components": {
+            "distance": 0.8666,
+            "quality": 0.982,
+            "acceptance": 0.9,
+            "reliability": 0.615,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 0.5 کیلومتر · کیفیت 0.98 · نرخ قبولی 0.90 · تجهیزات 1.00 · جریمه 0.00"
+        },
+        {
+          "rank": 3,
+          "provider": "پ-۳",
+          "total_score": 0.7541,
+          "distance_km": 1.38,
+          "components": {
+            "distance": 0.6558,
+            "quality": 0.9052,
+            "acceptance": 0.74,
+            "reliability": 0.975,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 1.4 کیلومتر · کیفیت 0.91 · نرخ قبولی 0.74 · تجهیزات 1.00 · جریمه 0.00"
+        }
+      ],
+      "wave1_offers": [
+        {
+          "provider": "پ-۱",
+          "score": 0.8283,
+          "distance_km": 0.67
+        },
+        {
+          "provider": "پ-۸",
+          "score": 0.8019,
+          "distance_km": 0.53
+        },
+        {
+          "provider": "پ-۳",
+          "score": 0.7541,
+          "distance_km": 1.38
+        }
+      ],
+      "simulator_match": true
+    },
+    {
+      "case": "GC-05",
+      "order": {
+        "lat": 35.747,
+        "lng": 51.41,
+        "skills_required": "plumbing.basic",
+        "equipment_required": "req:pipe_wrench",
+        "urgency": "SAME_DAY",
+        "radius_m": 4000
+      },
+      "candidates_scored": 6,
+      "ranking": [
+        {
+          "rank": 1,
+          "provider": "پ-۲",
+          "total_score": 0.794,
+          "distance_km": 0.95,
+          "components": {
+            "distance": 0.7634,
+            "quality": 0.9264,
+            "acceptance": 0.79,
+            "reliability": 0.985,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 0.9 کیلومتر · کیفیت 0.93 · نرخ قبولی 0.79 · تجهیزات 1.00 · جریمه 0.00"
+        },
+        {
+          "rank": 2,
+          "provider": "پ-۱",
+          "total_score": 0.7721,
+          "distance_km": 1.54,
+          "components": {
+            "distance": 0.6154,
+            "quality": 0.9604,
+            "acceptance": 0.86,
+            "reliability": 0.99,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 1.5 کیلومتر · کیفیت 0.96 · نرخ قبولی 0.86 · تجهیزات 1.00 · جریمه 0.00"
+        },
+        {
+          "rank": 3,
+          "provider": "پ-۸",
+          "total_score": 0.7414,
+          "distance_km": 1.46,
+          "components": {
+            "distance": 0.6339,
+            "quality": 0.982,
+            "acceptance": 0.9,
+            "reliability": 0.615,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 1.5 کیلومتر · کیفیت 0.98 · نرخ قبولی 0.90 · تجهیزات 1.00 · جریمه 0.00"
+        },
+        {
+          "rank": 4,
+          "provider": "پ-۴",
+          "total_score": 0.7363,
+          "distance_km": 1.02,
+          "components": {
+            "distance": 0.7458,
+            "quality": 0.86,
+            "acceptance": 0.68,
+            "reliability": 0.77,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 1.0 کیلومتر · کیفیت 0.86 · نرخ قبولی 0.68 · تجهیزات 1.00 · جریمه 0.00"
+        },
+        {
+          "rank": 5,
+          "provider": "پ-۳",
+          "total_score": 0.7056,
+          "distance_km": 2.12,
+          "components": {
+            "distance": 0.4693,
+            "quality": 0.9052,
+            "acceptance": 0.74,
+            "reliability": 0.975,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 2.1 کیلومتر · کیفیت 0.91 · نرخ قبولی 0.74 · تجهیزات 1.00 · جریمه 0.00"
+        },
+        {
+          "rank": 6,
+          "provider": "پ-۷",
+          "total_score": 0.6541,
+          "distance_km": 2.0,
+          "components": {
+            "distance": 0.5001,
+            "quality": 0.8384,
+            "acceptance": 0.65,
+            "reliability": 0.685,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 2.0 کیلومتر · کیفیت 0.84 · نرخ قبولی 0.65 · تجهیزات 1.00 · جریمه 0.00"
+        }
+      ],
+      "wave1_offers": [
+        {
+          "provider": "پ-۲",
+          "score": 0.794,
+          "distance_km": 0.95
+        },
+        {
+          "provider": "پ-۱",
+          "score": 0.7721,
+          "distance_km": 1.54
+        },
+        {
+          "provider": "پ-۸",
+          "score": 0.7414,
+          "distance_km": 1.46
+        }
+      ],
+      "simulator_match": true
+    },
+    {
+      "case": "GC-06",
+      "order": {
+        "lat": 35.752,
+        "lng": 51.42,
+        "skills_required": "electrical.basic,hvac.service",
+        "equipment_required": "req:multimeter,vacuum_pump",
+        "urgency": "FLEXIBLE",
+        "radius_m": 4000
+      },
+      "candidates_scored": 1,
+      "ranking": [
+        {
+          "rank": 1,
+          "provider": "پ-۶",
+          "total_score": 0.8399,
+          "distance_km": 0.42,
+          "components": {
+            "distance": 0.8947,
+            "quality": 0.9492,
+            "acceptance": 0.84,
+            "reliability": 0.99,
+            "equipment": 1.0,
+            "price": 0.6,
+            "history": 0,
+            "fairness": 1.0,
+            "retention": 1.0
+          },
+          "penalty": 0.0,
+          "explain_fa": "فاصله 0.4 کیلومتر · کیفیت 0.95 · نرخ قبولی 0.84 · تجهیزات 1.00 · جریمه 0.00"
+        }
+      ],
+      "wave1_offers": [
+        {
+          "provider": "پ-۶",
+          "score": 0.8399,
+          "distance_km": 0.42
+        }
+      ],
+      "simulator_match": true
+    }
+  ],
+  "mismatches": [],
+  "status": "OK"
+}

@@ -1,0 +1,1837 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>سند جامع پلتفرم خدمات آنلاین سرویسا — نیازمندی، معماری داده، API و RFP</title>
+<style>
+:root{
+  --bg:#f6f7f9; --fg:#16181d; --muted:#5c6472; --line:#e2e5ea; --card:#ffffff;
+  --brand:#0f7a6c; --brand2:#0b5d52; --accent:#c2410c; --blue:#1d4ed8;
+  --warn:#b45309; --ok:#15803d; --danger:#b91c1c;
+  --radius:14px; --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--fg);
+  font-family:"Vazirmatn","IRANSans","Segoe UI",Tahoma,"Noto Naskh Arabic",system-ui,-apple-system,sans-serif;
+  line-height:1.95;font-size:15.5px;direction:rtl;
+}
+a{color:var(--brand2);text-decoration:none}
+a:hover{text-decoration:underline}
+.layout{display:flex;gap:26px;max-width:1400px;margin:0 auto;padding:22px 20px 80px}
+aside.toc{
+  position:sticky;top:18px;align-self:flex-start;width:300px;flex:0 0 300px;
+  max-height:calc(100vh - 36px);overflow:auto;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 14px 18px;box-shadow:var(--shadow)
+}
+aside.toc h4{margin:6px 4px 10px;font-size:14px;color:var(--muted);letter-spacing:.02em}
+aside.toc a{display:block;padding:6px 9px;border-radius:9px;color:#2b3140;font-size:13.5px;line-height:1.6}
+aside.toc a:hover{background:#eef4f3;text-decoration:none}
+aside.toc a.sub{padding-inline-start:22px;color:#4b5563;font-size:12.8px}
+main{flex:1 1 auto;min-width:0}
+header.doc{
+  background:linear-gradient(135deg,#0f7a6c,#0b3f4d 75%);color:#fff;border-radius:var(--radius);
+  padding:26px 26px 22px;box-shadow:var(--shadow);margin-bottom:22px
+}
+header.doc h1{margin:0 0 6px;font-size:26px;line-height:1.6}
+header.doc p{margin:4px 0 0;color:#d7ece8;font-size:14px}
+header.doc .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+header.doc .meta span{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);
+  padding:3px 10px;border-radius:999px;font-size:12.5px}
+section{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:22px 24px;margin:0 0 20px;box-shadow:var(--shadow)}
+h2{margin:0 0 12px;font-size:21px;line-height:1.7;padding-bottom:10px;border-bottom:2px solid #eef4f3}
+h2 .num{display:inline-block;background:var(--brand);color:#fff;border-radius:8px;
+  padding:0 9px;margin-inline-end:8px;font-size:15px;vertical-align:middle}
+h3{margin:22px 0 8px;font-size:17px;color:#0b3f4d}
+h4{margin:16px 0 6px;font-size:15px;color:#243b53}
+p{margin:8px 0}
+.lead{font-size:16px;color:#333a48}
+ul,ol{margin:8px 0;padding-inline-start:22px}
+li{margin:4px 0}
+small,.muted{color:var(--muted)}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin:14px 0}
+.grid.two{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.card{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fcfdfd}
+.card h4{margin:0 0 6px;font-size:15px}
+.card p{margin:4px 0;font-size:14px}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#f7fbfa;text-align:center}
+.kpi b{display:block;font-size:22px;color:var(--brand2);line-height:1.5}
+.kpi span{font-size:12.5px;color:var(--muted)}
+table.tbl{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;background:#fff}
+table.tbl th,table.tbl td{border:1px solid var(--line);padding:8px 10px;text-align:right;vertical-align:top}
+table.tbl thead th{background:#eef4f3;color:#0b3f4d;font-weight:700;font-size:13.5px}
+table.tbl tbody tr:nth-child(even){background:#fafbfc}
+table.tbl td code{font-size:12.5px}
+.badge{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.b-new{background:#e0f2f1;color:#0b5d52;border:1px solid #b7e0db}
+.b-ach{background:#f1f3f5;color:#4b5563;border:1px solid #dfe3e8}
+.b-mvp{background:#e8f0ff;color:#1d4ed8;border:1px solid #c9dbff}
+.b-v1{background:#fff4e6;color:#b45309;border:1px solid #ffd9a8}
+.b-v2{background:#f3e8ff;color:#6b21a8;border:1px solid #e0c8ff}
+.b-p0{background:#ffe4e6;color:#b91c1c;border:1px solid #ffc7cc}
+.callout{border-inline-start:4px solid var(--brand);background:#f2f9f8;border-radius:10px;padding:12px 14px;margin:14px 0}
+.callout.warn{border-color:var(--warn);background:#fff8ed}
+.callout.ok{border-color:var(--ok);background:#f1fbf3}
+.callout.danger{border-color:var(--danger);background:#fef3f3}
+.callout b{color:#0b3f4d}
+pre.code{background:#0f1b2a;color:#e6edf3;border-radius:12px;padding:14px 16px;overflow:auto;
+  direction:ltr;text-align:left;font-size:12.8px;line-height:1.7;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+pre.code .c{color:#7d8da1}
+pre.ascii{background:#fbfcfd;border:1px solid var(--line);border-radius:12px;padding:14px;overflow:auto;
+  direction:rtl;font-size:12.8px;line-height:1.8;font-family:ui-monospace,Menlo,Consolas,monospace;white-space:pre}
+code{background:#f1f3f5;border:1px solid #e6e9ee;border-radius:6px;padding:0 5px;font-size:13px;
+  font-family:ui-monospace,Menlo,Consolas,monospace;direction:ltr;display:inline-block}
+details{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:10px 0;background:#fcfdfd}
+details>summary{cursor:pointer;font-weight:700;color:#0b3f4d}
+details[open]>summary{margin-bottom:6px}
+.flow{background:#fbfcfd;border:1px solid var(--line);border-radius:12px;padding:12px;margin:14px 0;overflow:auto}
+.flow svg{display:block;margin:auto;max-width:100%;height:auto}
+.pillrow{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.pill{background:#eef4f3;border:1px solid #d8e8e5;color:#0b5d52;border-radius:999px;padding:2px 10px;font-size:12.5px}
+.pill.gray{background:#f1f3f5;border-color:#e2e5ea;color:#4b5563}
+footer.doc{color:var(--muted);font-size:13px;text-align:center;padding:18px 10px 0}
+hr.sep{border:0;border-top:1px dashed var(--line);margin:18px 0}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:1000px){
+  .layout{flex-direction:column}
+  aside.toc{position:static;width:auto;flex:1 1 auto;max-height:none}
+  .two-col{grid-template-columns:1fr}
+}
+/* ---------- جلد و فهرست مخصوص چاپ (فقط در PDF) ---------- */
+.print-only{display:none}
+@media print{
+  body{background:#fff;font-size:10.5pt;color:#111}
+  .layout{display:block;padding:0;max-width:none}
+  .print-only{display:block}
+  /* جلد */
+  .print-cover{break-after:page;text-align:right;padding:0 0 6mm;border-bottom:3px solid #0b5f52}
+  .print-cover .pc-kicker{letter-spacing:.06em;color:#0b7a68;font-weight:700;font-size:10pt;margin-bottom:6mm}
+  .print-cover h1{font-size:23pt;line-height:1.55;margin:0 0 4mm;color:#0b2f38}
+  .print-cover .pc-sub{font-size:12pt;color:#375561;margin:0 0 8mm}
+  .print-cover .pc-meta{display:grid;grid-template-columns:1fr 1fr;gap:3mm 10mm;font-size:10pt;color:#2b3d47}
+  .print-cover .pc-meta b{color:#0b5f52}
+  .print-cover .pc-note{margin-top:8mm;font-size:9.5pt;color:#5b6b76;border:1px solid #d7e2e0;
+      border-radius:10px;padding:4mm 5mm;background:#f6faf9}
+  /* فهرست در صفحه مستقل */
+  aside.toc{display:block !important;position:static;width:auto;max-height:none;border:0;
+      box-shadow:none;padding:0;margin:0 0 6mm;break-after:page;columns:2;column-gap:12mm}
+  aside.toc h4{font-size:13pt;color:#0b5f52;margin:0 0 4mm;border-bottom:1px solid #d7e2e0;padding-bottom:2mm;column-span:all}
+  aside.toc a{color:#1c2b33;font-size:10pt;padding:2px 4px;break-inside:avoid}
+  aside.toc a.sub{font-size:9.3pt;color:#4a5a63}
+  /* بدنه */
+  section{break-inside:auto;box-shadow:none;border-color:#cfdad8;margin-bottom:8mm}
+  header.doc{background:#0b3f4d !important;-webkit-print-color-adjust:exact;break-after:auto}
+  h2{break-after:avoid} h3{break-after:avoid} h4{break-after:avoid}
+  .callout,.card,.kpi,.grid,.two-col,.flow{break-inside:avoid}
+  table.tbl{break-inside:auto}
+  table.tbl thead{display:table-header-group}
+  table.tbl tr{break-inside:avoid}
+  pre,pre.ascii,pre.code{break-inside:avoid;white-space:pre-wrap;font-size:9pt}
+  svg{max-width:100%;height:auto}
+  a{color:#0b5f52;text-decoration:none}
+  .badge{border-width:1px}
+}
+
+</style>
+</head>
+<body>
+<div class="print-only print-cover" dir="rtl">
+<div class="pc-kicker">RFP · مجموعه اسناد واگذاری کار</div>
+<h1>سند جامع طراحی و توسعه پلتفرم خدمات آنلاین «سرویسا»</h1>
+<p class="pc-sub">نسخه ارتقایافتهٔ مدل آچاره — نیازمندی‌ها، مدل داده، API، وایرفریم و برآورد زمان و هزینه</p>
+<div class="pc-meta">
+  <div><b>نسخه سند:</b> ۱.۰</div><div><b>تاریخ انتشار:</b> ۱۴۰۵/۰۷/۱۰</div>
+  <div><b>مخاطب:</b> تیم محصول و فنی، پیمانکار توسعه</div><div><b>دامنه:</b> ۶ ماژول + داده + API + نمونه اولیه + RFP</div>
+  <div><b>حجم محتوا:</b> ۱۱۳ جدول اسکیمای اجرایی، ۶۲ اندپوینت، ۵۰ وایرفریم</div>
+  <div><b>مبنا:</b> تحلیل ساختاری پلتفرم آچاره + شکاف‌های تجربه کاربری</div>
+</div>
+<div class="pc-note">این نسخه برای چاپ و مذاکره با پیمانکار آماده شده است. پیوست‌های فنی قابل اجرا:
+<code>db/schema.sql</code> (۱۱۳ جدول)، <code>api/openapi-core.yaml</code> (۶۲ عملیات)،
+<code>prototype/index.html</code> (نمونه اولیه کلیک‌پذیر) و <code>mvp/</code> (اسکلت اجرایی سفارش، Escrow و تخصیص).
+همه اعداد هزینه، برنامه‌ریزی‌محور و نیازمند تأیید بازار است.</div>
+</div>
+<div class="layout">
+<aside class="toc">
+<h4>فهرست سند</h4>
+<a href="#s0">۰. خلاصه مدیریتی و تفاوت‌ها با آچاره</a>
+<a href="#s1">۱. معماری کلان، قلمروها و نقش‌ها</a>
+<a href="#s2">۲. ماژول هویت و مدیریت کاربران</a>
+<a class="sub" href="#s2-1">۲.۱ ورود کاربر (OTP/OAuth/Passkey)</a>
+<a class="sub" href="#s2-2">۲.۲ Onboarding و احراز متخصص</a>
+<a class="sub" href="#s2-3">۲.۳ نقش‌ها، B2B و RBAC</a>
+<a href="#s3">۳. موتور سفارش‌گیری و تطبیق هوشمند</a>
+<a class="sub" href="#s3-1">۳.۱ ورودی چندرسانه‌ای و تشخیص AI</a>
+<a class="sub" href="#s3-2">۳.۲ الگوریتم Smart Dispatch</a>
+<a class="sub" href="#s3-3">۳.۳ اعزام فوری و زمان‌بندی</a>
+<a href="#s4">۴. قیمت‌گذاری و تراکنش‌های مالی</a>
+<a class="sub" href="#s4-1">۴.۱ موتور قیمت‌گذاری پویا</a>
+<a class="sub" href="#s4-2">۴.۲ کیف پول، Escrow و Milestone</a>
+<a class="sub" href="#s4-3">۴.۳ مالیات، فاکتور و BNPL</a>
+<a href="#s5">۵. کیفیت، اعتماد و مبارزه با تقلب</a>
+<a class="sub" href="#s5-1">۵.۱ امتیازدهی چندبعدی</a>
+<a class="sub" href="#s5-2">۵.۲ بیمه و ضمانت</a>
+<a class="sub" href="#s5-3">۵.۳ Fraud &amp; Collusion Detection</a>
+<a href="#s6">۶. پشتیبانی، ارتباطات و CRM</a>
+<a href="#s7">۷. زیرساخت فنی و قابلیت‌های پیشرفته</a>
+<a href="#s8">۸. مدل داده و ERD</a>
+<a href="#s9">۹. فهرست APIها</a>
+<a href="#s10">۱۰. وایرفریم و نمونه اولیه</a>
+<a href="#s11">۱۱. الزامات غیرکارکردی (NFR)</a>
+<a href="#s12">۱۲. نقشه راه، فازبندی و KPI</a>
+<a href="#s13">۱۳. RFP: زمان‌بندی، تیم و برآورد هزینه</a>
+<a href="#s14">۱۴. ریسک‌ها، انطباق قانونی و امنیت</a>
+<a href="#s15">۱۵. پیوست‌ها: واژه‌نامه و فرم‌های ارزیابی</a>
+</aside>
+
+<main>
+<header class="doc">
+<h1>سند جامع طراحی و توسعه پلتفرم خدمات آنلاین «سرویسا»</h1>
+<p>نسخه ارتقایافته و بهبودیافته از مدل آچاره — نیازمندی‌ها، معماری داده، API، وایرفریم و RFP</p>
+<div class="meta">
+  <span>نسخه ۱.۰</span><span>تاریخ: ۱۴۰۵/۰۷/۱۰</span>
+  <span>مخاطب: تیم محصول، تیم فنی، پیمانکار</span>
+  <span>دامنه: ۶ ماژول + مدل داده + API + نمونه اولیه + RFP</span>
+  <span>حجم: ۱۱۳ جدول در اسکیمای اجرایی، ۶۲ اندپوینت مستندشده، ۵۰ وایرفریم</span>
+</div>
+</header>
+<!-- ===== 01-overview.html (s0) ===== -->
+<section id="s0">
+<h2><span class="num">۰</span>خلاصه مدیریتی و تفاوت‌های نسخه پیشنهادی با آچاره</h2>
+<p class="lead">هدف این سند، تبدیل «پرامپت بهبود آچاره» به یک <b>بسته اجرایی</b> است: نیازمندی‌های صفر تا صد، معماری داده، فهرست APIها، فهرست وایرفریم‌ها، نقشه راه فازبندی‌شده و برآورد زمان/هزینه (RFP). سند برای تحویل مستقیم به تیم محصول، تیم فنی یا شرکت پیمانکار نوشته شده است.</p>
+
+<div class="grid">
+  <div class="kpi"><b>۶ ماژول</b><span>هویت، تطبیق، فین‌تک، اعتماد، پشتیبانی، زیرساخت</span></div>
+  <div class="kpi"><b>۱۱۳ جدول</b><span>مدل داده PostgreSQL/PostGIS + پارتیشن‌بندی</span></div>
+  <div class="kpi"><b>۱۴۰+ API</b><span>REST نسخه‌دار + رویدادهای Kafka</span></div>
+  <div class="kpi"><b>۱۰–۱۲ ماه</b><span>از Discovery تا مقیاس‌پذیری ملی</span></div>
+</div>
+
+<h3>۰.۱ تصویر کلی: از «مارکت‌پلیس سفارش» به «سیستم‌عامل خدمات خانگی»</h3>
+<p>آچاره در وضعیت فعلی یک مارکت‌پلیس دوطرفه با نقاط قوت «اعتماد برند»، «پوشش دسته‌بندی» و «شبکه متخصص» است. گلوگاه‌های رشد در چنین پلتفرم‌هایی معمولاً چهار نقطه است: <b>(۱)</b> زمان و کیفیت تطبیق سفارش با متخصص، <b>(۲)</b> نرخ سبد ناتمام (cart abandonment) به‌دلیل ابهام قیمت، <b>(۳)</b> نرخ دورزدن کمیسیون و تخلفات خارج از پلتفرم، <b>(۴)</b> هزینه پشتیبانی انسانی و نرخ جبران خسارت. نسخه پیشنهادی دقیقاً روی همین چهار نقطه مهندسی شده است.</p>
+
+<table class="tbl">
+<thead><tr><th style="width:15%">محور</th><th style="width:29%">آچاره فعلی (طبق سند شما)</th><th style="width:36%">نسخه پیشنهادی «سرویسا/Care+»</th><th style="width:20%">افت اقتصادی مورد انتظار</th></tr></thead>
+<tbody>
+<tr><td>هویت</td><td>موبایل + OTP</td><td>OTP + OAuth + Passkey + بیومتریک؛ Onboarding دیجیتال متخصص با Face Match و سوابق کیفری آنلاین</td><td>کوتاه شدن زمان تأیید از ~۷۲ ساعت به &lt;۳۰ دقیقه؛ +۲۵٪ عرضه فعال در هفته اول</td></tr>
+<tr><td>ثبت سفارش</td><td>فرم متنی/انتخابی</td><td>ورودی چندرسانه‌ای (صوت/عکس/ویدیو) + تریاژ تشخیصی + برآورد خودکار قیمت</td><td>کاهش رهاکردن فرم ۲۰–۳۵٪؛ کاهش تماس‌های «قیمتش چنده؟»</td></tr>
+<tr><td>تخصیص</td><td>ارسال درخواست به منطقه / قیمت ثابت</td><td>اسکورینگ ماتریسی چندمتغیره + صف اولویت‌دار + اعزام فوری شبیه تاکسی اینترنتی</td><td>کاهش زمان پذیرش سفارش (TTA) ۴۰–۶۰٪؛ افزایش Fulfillment Rate</td></tr>
+<tr><td>قیمت</td><td>ثابت یا توافقی</td><td>قیمت‌گذاری پویا مبتنی بر تقاضای محله/ساعت/پیچیدگی + شفافیت پیش از سفارش</td><td>افزایش حاشیه در پیک بدون افت نرخ تبدیل</td></tr>
+<tr><td>پرداخت</td><td>پرداخت آنلاین/درجا</td><td>کیف پول + Escrow + آزادسازی مرحله‌ای + BNPL + فاکتور مالیاتی</td><td>افزایش تیکت بزرگ (بازسازی/نقاشی) و ورود مشتری B2B</td></tr>
+<tr><td>کیفیت</td><td>۱–۵ ستاره + متن</td><td>امتیاز ۴بعدی + صحت‌سنجی نظر + بیمه خودکار هر سفارش + Garanti خدمات</td><td>کاهش Rework و هزینه جبران خسارت ۱۵–۳۰٪</td></tr>
+<tr><td>پشتیبانی</td><td>چت متنی + شماره پوشانده‌شده</td><td>چت‌بات پیش‌پشتیبانی + تماس امن + ویدیو-بازدید + Cockpit بحران با ضبط جلسه</td><td>Deflection ≥ ۴۵٪ تیکت‌های سطح ۱</td></tr>
+</tbody>
+</table>
+
+<h3>۰.۲ تصمیم‌های معماری کلیدی (ADR خلاصه)</h3>
+<table class="tbl">
+<thead><tr><th>#</th><th>تصمیم</th><th>گزینه‌های بررسی‌شده</th><th>دلیل انتخاب</th></tr></thead>
+<tbody>
+<tr><td>ADR-01</td><td>Microservices با قلمروهای کسب‌وکاری (DDD) روی Kubernetes</td><td>مونولیت ماژولار / Microservices</td><td>تیم‌های موازی، مقیاس مستقل روی Dispatch و Payments، استقلال استقرار؛ با رعایت «مونولیت در ابتدا» برای ماژول‌های کم‌بار</td></tr>
+<tr><td>ADR-02</td><td>PostgreSQL (+PostGIS) به‌عنوان منبع حقیقت هر سرویس</td><td>MongoDB / MySQL</td><td>تراکنش‌های مالی (ACID)، جست‌وجوی مکانی، پارتیشن‌بندی اعلان‌دار، هزینه TCO پایین‌تر</td></tr>
+<tr><td>ADR-03</td><td>Kafka برای رویدادها + Outbox Pattern</td><td>RabbitMQ / cron</td><td>پایداری رویداد، Replay برای بازسازی مدل‌های تحلیلی و Fraud</td></tr>
+<tr><td>ADR-04</td><td>Dispatch به‌صورت سرویس مستقل با حالت Stateful/In-Memory (Redis + GEO) </td><td>منطق درون سرویس سفارش</td><td>نیاز به بروزرسانی مکرر موقعیت و امتیاز در مقیاس هزاران سفارش باز</td></tr>
+<tr><td>ADR-05</td><td>BFF جداگانه برای اپ مشتری، اپ متخصص و پنل‌ها</td><td>Gateway واحد</td><td>کاهش بایت روی موبایل، امکان بهینه‌سازی مستقل، نسخه‌بندی اپ</td></tr>
+<tr><td>ADR-06</td><td>Media-as-a-Service (آپلود مستقیم به S3 + صف پردازش)</td><td>آپلود از طریق API</td><td>کاهش بار سرور، امکان ترنسکد ویدیو و تحلیل CV نامتقارن</td></tr>
+</tbody>
+</table>
+
+<h3>۰.۳ دامنه سند (In/Out of Scope)</h3>
+<div class="two-col">
+<div class="card"><h4>در دامنه</h4>
+<ul>
+<li>اپ مشتری (Android/iOS/وب PWA)، اپ متخصص، پنل پشتیبانی/عملیات، پنل ادمین و مالی، پنل B2B</li>
+<li>موتور تطبیق، قیمت‌گذاری، Escrow، کیف پول، بیمه، Fraud و CRM</li>
+<li>مدل داده، API، رویدادها، NFR، RFP و نقشه راه</li>
+<li>نمونه اولیه قابل کلیک (Prototype) و فهرست کامل وایرفریم‌ها</li>
+</ul></div>
+<div class="card"><h4>خارج از دامنه (نیازمند سند جدا)</h4>
+<ul>
+<li>متن حقوقی قرارداد کاربر/متخصص و شرایط بیمه (تیم حقوقی)</li>
+<li>تولید محتوای سئو و کمپین‌های بازاریابی</li>
+<li>سخت‌افزار/سیم‌کارت سازمانی یا مرکز تماس تلفنی</li>
+<li>مدل‌های ML سفارشی (در سند به‌عنوان «مصرف‌کننده سرویس» ارجاع داده شده‌اند)</li>
+</ul></div>
+</div>
+
+<div class="callout ok"><b>قاعده طلایی این پروژه:</b> هر قابلیت هوشمند باید «مسیر جایگزین انسانی» داشته باشد. اگر تشخیص تصویر اشتباه بود یا امتیاز تطبیق پایین بود، اپراتور باید با یک کلیک همان سفارش را دستی تخصیص دهد. بدون این شرط، هوشمندسازی به ریسک عملیاتی تبدیل می‌شود.</div>
+</section>
+
+<section id="s1">
+<h2><span class="num">۱</span>معماری کلان، قلمروها و نقش‌ها</h2>
+<h3>۱.۱ نقشه قلمروهای کسب‌وکار (Bounded Contexts)</h3>
+<div class="flow">
+<svg viewBox="0 0 980 470" role="img" aria-label="نقشه معماری میکروسرویس‌ها">
+  <defs>
+    <style>
+      .bx{fill:#f2f9f8;stroke:#0f7a6c;stroke-width:1.4;rx:10}
+      .bx2{fill:#eef2ff;stroke:#1d4ed8;stroke-width:1.4;rx:10}
+      .bx3{fill:#fff8ed;stroke:#b45309;stroke-width:1.4;rx:10}
+      .t{font:600 12px Tahoma,sans-serif;fill:#0b3f4d;text-anchor:middle;direction:rtl}
+      .ts{font:11px Tahoma,sans-serif;fill:#5c6472;text-anchor:middle;direction:rtl}
+      .lbl{font:11px Tahoma,sans-serif;fill:#5c6472;text-anchor:middle;direction:rtl}
+      .ln{stroke:#94a3b8;stroke-width:1.3;fill:none;marker-end:url(#ar)}
+    </style>
+    <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#94a3b8"/></marker>
+  </defs>
+  <!-- clients -->
+  <g>
+    <rect class="bx2" x="30" y="20" width="150" height="52"/><text class="t" x="105" y="42">اپ مشتری</text><text class="ts" x="105" y="60">Flutter / PWA</text>
+    <rect class="bx2" x="196" y="20" width="150" height="52"/><text class="t" x="271" y="42">اپ متخصص</text><text class="ts" x="271" y="60">Flutter</text>
+    <rect class="bx2" x="362" y="20" width="150" height="52"/><text class="t" x="437" y="42">پنل عملیات/پشتیبانی</text><text class="ts" x="437" y="60">React + Realtime</text>
+    <rect class="bx2" x="528" y="20" width="150" height="52"/><text class="t" x="603" y="42">پنل B2B / مالی</text><text class="ts" x="603" y="60">React</text>
+    <rect class="bx2" x="694" y="20" width="150" height="52"/><text class="t" x="769" y="42">سایت + CMS</text><text class="ts" x="769" y="60">Next.js / SEO</text>
+  </g>
+  <!-- gateway -->
+  <rect x="30" y="96" width="814" height="44" fill="#0b3f4d" rx="9"/>
+  <text x="437" y="123" style="font:600 13px Tahoma;fill:#fff;text-anchor:middle;direction:rtl">API Gateway + BFF‌ها (احراز، Rate-Limit، نسخه‌بندی، Idempotency)</text>
+  <line class="ln" x1="437" y1="74" x2="437" y2="94"/>
+  <!-- services row1 -->
+  <g>
+    <rect class="bx" x="30" y="168" width="176" height="58"/><text class="t" x="118" y="192">Identity &amp; Access</text><text class="ts" x="118" y="210">OTP/Passkey/RBAC/KYC</text>
+    <rect class="bx" x="222" y="168" width="176" height="58"/><text class="t" x="310" y="192">Catalog &amp; Search</text><text class="ts" x="310" y="210">دسته، مهارت، قیمت پایه</text>
+    <rect class="bx" x="414" y="168" width="176" height="58"/><text class="t" x="502" y="192">Order / Job</text><text class="ts" x="502" y="210">چرخه عمر سفارش</text>
+    <rect class="bx" x="606" y="168" width="176" height="58"/><text class="t" x="694" y="192">Dispatch &amp; Matching</text><text class="ts" x="694" y="210">اسکورینگ + صف + ETA</text>
+  </g>
+  <line class="ln" x1="437" y1="140" x2="437" y2="166"/>
+  <!-- services row2 -->
+  <g>
+    <rect class="bx" x="30" y="248" width="176" height="58"/><text class="t" x="118" y="272">Pricing Engine</text><text class="ts" x="118" y="290">Surge / Quote / تخمین AI</text>
+    <rect class="bx" x="222" y="248" width="176" height="58"/><text class="t" x="310" y="272">Payments &amp; Escrow</text><text class="ts" x="310" y="290">IPG، دفتر کل، تسویه</text>
+    <rect class="bx" x="414" y="248" width="176" height="58"/><text class="t" x="502" y="272">Trust &amp; Quality</text><text class="ts" x="502" y="290">امتیاز، گارانتی، بیمه</text>
+    <rect class="bx" x="606" y="248" width="176" height="58"/><text class="t" x="694" y="272">Fraud &amp; Risk</text><text class="ts" x="694" y="290">تبانی، تقلب، Blacklist</text>
+  </g>
+  <!-- services row3 -->
+  <g>
+    <rect class="bx" x="30" y="328" width="176" height="58"/><text class="t" x="118" y="352">Communication</text><text class="ts" x="118" y="370">چت، تماس امن، ویدیو</text>
+    <rect class="bx" x="222" y="328" width="176" height="58"/><text class="t" x="310" y="352">Notification</text><text class="ts" x="310" y="370">Push/SMS/Email، ترجیح‌ها</text>
+    <rect class="bx" x="414" y="328" width="176" height="58"/><text class="t" x="502" y="352">Media &amp; AI Intake</text><text class="ts" x="502" y="370">ASR، CV، برآورد</text>
+    <rect class="bx" x="606" y="328" width="176" height="58"/><text class="t" x="694" y="352">Analytics &amp; ML</text><text class="ts" x="694" y="370">ClickHouse، Feature Store</text>
+  </g>
+  <!-- infra bar -->
+  <rect class="bx3" x="30" y="404" width="752" height="46" rx="9"/>
+  <text class="t" x="406" y="424">Kafka (Event Bus) • Redis • S3/MinIO • OpenSearch • Postgres/PostGIS • Feature Store • OTel</text>
+  <text class="ts" x="406" y="441">Data &amp; Event Foundation — تنها مسیر ارتباط غیرهمگام بین سرویس‌ها</text>
+</svg>
+</div>
+<p class="muted">هر سرویس: پایگاه داده اختصاصی، قرارداد رویداد نسخه‌دار، SLO مشخص و مالک تیم مشخص. ارتباط همگام فقط برای Query؛ همه تغییر حالت‌ها با رویداد.</p>
+
+<h3>۱.۲ نقش‌ها، پرسوناها و ماتریس دسترسی</h3>
+<table class="tbl">
+<thead><tr><th>نقش</th><th>پرسونا / نیاز اصلی</th><th>کلیدهای دسترسی اصلی</th><th>پوشش</th></tr></thead>
+<tbody>
+<tr><td>مشتری خانگی (Consumer)</td><td>«می‌خواهم سریع، مطمئن و با قیمت روشن سفارش بدهم» — حساس به اعتماد و قیمت</td><td>ثبت سفارش، آپلود مدرک مشکل، پرداخت Escrow، پیگیری زنده، نظر، ادعای خسارت</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>مشتری شرکتی (B2B)</td><td>دفتر/فروشگاه/مجتمع: نیاز به SLA، فاکتور رسمی، چند کاربر، مرکز هزینه</td><td>سازمان، چند کاربر، سقف اعتباری، قرارداد نگهداری دوره‌ای، فاکتور مالیاتی، گزارش مصرف</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>متخصص مستقل (Pro)</td><td>درآمد بیشتر، سفارش متناسب با مهارت و فاصله</td><td>پروفایل، مدارک، تقویم، کیف پول/برداشت، داشبورد درآمد، پذیرش/رد سفارش، گارانتی کار</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>شرکت خدماتی (Service Provider Org)</td><td>مدیریت چند تکنسین، توزیع کار، تسویه سازمانی</td><td>مدیریت تکنسین‌ها، تخصیص داخلی، تعرفه قراردادی، تسویه تجمیعی، کارتابل مدارک</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>اپراتور دیسپچ</td><td>کنترل صف سفارش‌های بدون متخصص، تماس خروجی، تخصیص دستی</td><td>Live Ops Board، تخصیص دستی/Override، تماس امن، افزودن متخصص آفلاین، تعلیق صف</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>کارشناس پشتیبانی</td><td>حل اختلاف، جبران خسارت، پیگیری شکایت</td><td>تاریخچه کامل سفارش/چت، ابزار Refund/کوپن، ارجاع به سطح ۲، ضبط تماس و ویدیو</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>کارشناس کیفیت/بیمه</td><td>ارزیابی خسارت و بازکاری</td><td>پرونده خسارت، ارزیابی تصویری، تعیین مقصر، تخفیف/جریمه متخصص</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>مالی و حسابداری</td><td>تسویه، فاکتور، مالیات، مغایرت‌یابی</td><td>دفتر کل، دستور پرداخت، گزارش مالیاتی (سامانه مودیان)، مدیریت Chargeback</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>مدیر محتوا/دسته‌بندی</td><td>افزودن خدمت جدید، تعرفه، FAQ</td><td>مدیریت Catalog و Rate Card، انتشار مقاله سئو، مدیریت بنر و کمپین</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>Super Admin</td><td>کنترل کامل با لاگ اجباری</td><td>همه موارد + مدیریت نقش‌ها، Feature Flag، Kill-Switch سرویس‌های هوشمند</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>پارتنر بیمه</td><td>اتصال API سنجش خسارت</td><td>دریافت پرونده، ثبت ارزیابی، اعلام پرداخت</td><td><span class="badge b-v2">V2</span></td></tr>
+</tbody>
+</table>
+<p><b>قواعد RBAC:</b> دسترسی‌ها در قالب <code>resource:action:scope</code> تعریف می‌شوند (مثل <code>order:refund:region</code>)؛ همه اقدامات حساس (Refund، تغییر پاسخگویی، تعدیل امتیاز، دیدن PII) در جدول <code>audit_log</code> با Actor، Reason و Correlation-IDثبت می‌شوند. اصل کمینه‌دسترسی + تأیید دو‌نفره (Maker–Checker) برای تراکنش‌های بالای سقف تعیین‌شده.</p>
+</section>
+
+<!-- ===== 02-auth.html (s2) ===== -->
+<section id="s2">
+<h2><span class="num">۲</span>ماژول هویت، ثبت‌نام و مدیریت کاربران</h2>
+<p class="lead">تفکیک کامل «هویت مشتری» از «هویت حرفه‌ای متخصص». متخصص باید چند لایه تأیید را رد کند تا «وقتی با درِ خانه مشتری روبه‌رو می‌شود، از قبل توسط پلتفرم تضمین شده باشد». کل این مسیر باید خودکار و بدون تماس تلفنی باشد.</p>
+
+<h3 id="s2-1">۲.۱ ورود کاربر: از OTP تنها تا احراز چندروشی</h3>
+<table class="tbl">
+<thead><tr><th>روش ورود</th><th>شرح پیاده‌سازی</th><th>کاربرد اصلی</th><th>ریسک/پاداش</th><th>اولویت</th></tr></thead>
+<tbody>
+<tr><td>OTP پیامکی</td><td>کد ۵ رقمی، TTL ۱۲۰ ثانیه، حداکثر ۳ تلاش، محدودیت نرخ بر پایه شماره + IP + Device-Fingerprint، تشخیص SMS-Bombing</td><td>ورود اول، بازیابی، تأیید شماره در B2B</td><td>ریسک SIM-Swap؛ در ورود حساب متخصص بزرگ/مالی حتماً عاملی دوم اضافه شود</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>OAuth (Google/Apple)</td><td>ورود یکپارچه با اتصال حساب به شماره تأییدشده؛ Apple Hide-My-Email پشتیبانی شود</td><td>مشتری، شتاب ورود</td><td>کاهش ۲۰–۴۰٪ افت ثبت‌نام</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>Passkey / WebAuthn</td><td>ثبت کلید عمومی در دستگاه؛ ورود با چهره/اثر انگشت دستگاه بدون کد</td><td>کاربران تکرارشونده در هر دو اپ</td><td>بهترین مقاومت در برابر فیشینگ؛ نیاز به مسیر بازیابی ایمن</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>بیومتریک درون‌برنامه‌ای</td><td>قفل محلی (FaceID/TouchID) روی توکن Refresh + Secure Enclave/Keystore</td><td>محافظت از کیف پول و پروفایل متخصص</td><td>تجربه روان؛ ورود واقعی همچنان OTP/Passkey است</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>ورود با کد دعوت پلتفرم (Referral)</td><td>لینک دعوت + اتصال درخت دعوت برای پاداش</td><td>رشد ویروسی و پاداش</td><td>نیازمند سیستم ضدتقلب در دعوت‌ها</td><td><span class="badge b-v1">V1</span></td></tr>
+</tbody>
+</table>
+
+<h4>مدل توکن و مدیریت نشست</h4>
+<ul>
+<li><b>Access Token</b> کوتاه‌عمر (۱۰–۱۵ دقیقه، JWT امضاشده با RS256 و <code>kid</code> قابل چرخش)، <b>Refresh Token</b> چرخشی (Rotation + Reuse-Detection) ذخیره‌شده به‌صورت Hash در جدول <code>auth_session</code>.</li>
+<li><b>Device Binding:</b> هر نشست به <code>device_id</code>، مدل دستگاه، OS و اثر انگشت نرم‌افزاری گره می‌خورد؛ ورود از دستگاه ناشناس → چالش OTP دوم + اعلان امنیتی.</li>
+<li><b>خروج از همه دستگاه‌ها</b>، مشاهده نشست‌های فعال، گزارش «ورودهای ناموفق». اعلان Push در هر ورود جدید به دستگاه/ایمیل از قبل شناخته‌شده.</li>
+<li>توکن‌ها هرگز در لاگ نوشته نمی‌شوند؛ PII در لاگ Mask می‌شود (شماره، آدرس، کد ملی).</li>
+</ul>
+
+<h3 id="s2-2">۲.۲ Onboarding دیجیتال متخصص: از ۷۲ ساعت به کمتر از ۳۰ دقیقه</h3>
+<div class="flow">
+<svg viewBox="0 0 980 250" role="img" aria-label="پایپ‌لاین احراز هویت متخصص">
+ <defs><marker id="ar2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#94a3b8"/></marker>
+ <style>
+  .s{fill:#f2f9f8;stroke:#0f7a6c;stroke-width:1.4;rx:10}
+  .sa{fill:#eef2ff;stroke:#1d4ed8;stroke-width:1.4;rx:10}
+  .tt{font:600 11.5px Tahoma,sans-serif;fill:#0b3f4d;text-anchor:middle;direction:rtl}
+  .ts2{font:10.5px Tahoma,sans-serif;fill:#5c6472;text-anchor:middle;direction:rtl}
+  .ln2{stroke:#94a3b8;stroke-width:1.3;marker-end:url(#ar2)}
+ </style></defs>
+ <rect class="s" x="830" y="60" width="130" height="60"/><text class="tt" x="895" y="84">۱. شماره + نقش</text><text class="ts2" x="895" y="102">OTP و انتخاب متخصص</text>
+ <rect class="s" x="676" y="60" width="140" height="60"/><text class="tt" x="746" y="84">۲. پروفایل و مهارت</text><text class="ts2" x="746" y="102">دسته، شهر، سابقه</text>
+ <rect class="s" x="516" y="60" width="146" height="60"/><text class="tt" x="589" y="84">۳. مدارک</text><text class="ts2" x="589" y="102">کارت ملی، سوءپیشینه، مهارت</text>
+ <rect class="sa" x="356" y="60" width="146" height="60"/><text class="tt" x="429" y="84">۴. سلفی + Face Match</text><text class="ts2" x="429" y="102">تطبیق با کارت ملی</text>
+ <rect class="sa" x="196" y="60" width="146" height="60"/><text class="tt" x="269" y="84">۵. سنجش مهارت</text><text class="ts2" x="269" y="102">آزمون + ویدیو ۶۰ ثانیه</text>
+ <rect class="s" x="36" y="60" width="146" height="60"/><text class="tt" x="109" y="84">۶. قرارداد + شبا</text><text class="ts2" x="109" y="102">امضای دیجیتال و KYC</text>
+ <rect class="sa" x="330" y="164" width="320" height="60"/><text class="tt" x="490" y="188">۷. تصمیم خودکار (Rule + Risk Score)</text><text class="ts2" x="490" y="206">تأیید فوری • بررسی انسانی • رد با دلیل</text>
+ <line class="ln2" x1="828" y1="90" x2="818" y2="90"/><line class="ln2" x1="674" y1="90" x2="664" y2="90"/>
+ <line class="ln2" x1="514" y1="90" x2="504" y2="90"/><line class="ln2" x1="354" y1="90" x2="344" y2="90"/>
+ <line class="ln2" x1="194" y1="90" x2="184" y2="90"/>
+ <line class="ln2" x1="109" y1="122" x2="300" y2="162"/>
+ <line class="ln2" x1="429" y1="122" x2="460" y2="162"/>
+</svg>
+</div>
+<table class="tbl">
+<thead><tr><th>گام</th><th>مدارک/داده ورودی</th><th>اتوماسیون</th><th>SLA هدف</th></tr></thead>
+<tbody>
+<tr><td>۳. مدارک</td><td>کارت ملی (پشت/رو)، گواهی عدم سوءپیشینه، مدارک مهارت/فنی‌وحرفه‌ای، بیمه‌نامه (اختیاری)</td><td>OCR استخراج شماره ملی/تاریخ، اعتبارسنجی صحت کد ملی (الگوریتم Checksum)، تشخیص دست‌کاری تصویر (ELA/Noise)، خواندن QR گواهی‌های الکترونیکی</td><td>&lt; ۶۰ ثانیه</td></tr>
+<tr><td>۴. احراز تصویری</td><td>ویدیو/سلفی زنده + تطبیق با تصویر کارت ملی</td><td>Liveness Detection (Blink/Turn)، تطبیق چهره (Face Matching ≥ آستانه ۹۰٪)، تشخیص نمایش عکس دیگر روی صفحه</td><td>&lt; ۹۰ ثانیه</td></tr>
+<tr><td>۵. سنجش مهارت</td><td>آزمون چندگزینه‌ای تخصصی + ویدیوی معرفی/توضیح کار</td><td>نمره‌گذاری خودکار آزمون؛ تحلیل ویدیو با ASR برای صحت ادعای مهارت و تشخیص محتوای نامرتبط</td><td>خودکار + بازبینی نمونه‌ای</td></tr>
+<tr><td>۶. قرارداد و پرداخت</td><td>پذیرش شرایط، کد شبا/کارت به نام خود فرد، اطلاعات مالیاتی (کد ملی/اقتصادی)</td><td>اعتبارسنجی شبا، تطبیق نام صاحب حساب با نام متخصص، ثبت امضای دیجیتال و نسخه PDF قرارداد</td><td>خودکار</td></tr>
+<tr><td>۷. تصمیم</td><td>امتیاز ریسک کلی + قواعد دسته‌بندی</td><td>خودکار برای ریسک پایین (فعال‌سازی فوری)، صف انسانی فقط برای &lt;۱۵٪ موارد</td><td>&lt; ۳۰ دقیقه (P95)</td></tr>
+</tbody>
+</table>
+
+<h4>سطوح تأیید و نشان‌ها (Trust Ladder)</h4>
+<table class="tbl">
+<thead><tr><th>سطح</th><th>الزامات</th><th>دسترسی</th><th>نشان در اپ مشتری</th></tr></thead>
+<tbody>
+<tr><td>L0 — ثبت‌نام</td><td>شماره تأییدشده</td><td>مشاهده سفارش‌ها، پیشنهاد قیمت محدود، بدون پذیرش کار</td><td>—</td></tr>
+<tr><td>L1 — پایه</td><td>اطلاعات هویتی + Face Match</td><td>پذیرش سفارش‌های کم‌ریسک (تعمیرات کوچک) با سقف مبلغ</td><td>«تأیید هویت‌شده»</td></tr>
+<tr><td>L2 — حرفه‌ای</td><td>سوءپیشینه + مهارت + قرارداد + شبا</td><td>پذیرش همه سفارش‌ها، دریافت Escrow، ورود به اعزام فوری</td><td>«احراز کامل + متخصص تأییدشده»</td></tr>
+<tr><td>L3 — برگزیده</td><td>≥ ۵۰ کار موفق، امتیاز ≥ ۴.۶، نرخ لغو &lt; ۳٪</td><td>اولویت در صف، سفارش‌های پرارزش، نشان «برتر»</td><td>«متخصص برگزیده» + تخفیف کمیسیون</td></tr>
+<tr><td>L4 — سازمان</td><td>مجوز کسب‌وکار، بیمه‌نامه مسئولیت، حداقل ۳ تکنسین</td><td>تخصیص تیمی، قرارداد B2B، تسویه سازمانی</td><td>«شرکت خدماتی دارای مجوز»</td></tr>
+</tbody>
+</table>
+<div class="callout warn"><b>الزام عملیاتی:</b> دوره اعتبار مدارک باید مدل‌سازی شود (سوءپیشینه حداکثر ۶–۱۲ ماه، بیمه سالانه). ۳۰ روز قبل از انقضا، یادآوری خودکار Push/SMS + قفل تدریجی (ابتدا هشدار، سپس محدودیت پذیرش کارهای جدید) تا مدارک تازه شود.</div>
+
+<h3 id="s2-3">۲.۳ نقش‌ها، حساب‌های سازمانی و چرخه عمر کاربر</h3>
+<h4>حساب شرکتی (B2B)</h4>
+<ul>
+<li>ساختار <b>سازمان → دپارتمان/شعبه → کاربر</b> با نقش‌های <code>org_owner</code>، <code>org_admin</code>، <code>org_finance</code>، <code>org_requester</code> (ثبت سفارش)، <code>org_approver</code> (تأیید سفارش/هزینه).</li>
+<li>فیلدهای اجباری: نام حقوقی، شناسه ملی، کد اقتصادی، آدرس، اطلاعات تماس مالی، امضای دیجیتال/مهر، توافق‌نامه سطح خدمت.</li>
+<li>حالت تسویه: (الف) پرداخت فوری آنلاین، (ب) <b>اعتبار شرکتی (Credit Line)</b> با سقف و دوره ۳۰ روزه، (ج) پیش‌پرداخت شارژ کیف پول سازمانی. سقف اعتبار با موتور ریسک (سابقه پرداخت، گردش، رتبه اعتباری) تعیین می‌شود.</li>
+<li>خروجی‌ها: صورت‌حساب رسمی، گزارش مصرف ماهانه بر پایه شعبه/مرکز هزینه، فایل حسابداری (CSV/Excel) و Webhook برای ERP مشتری.</li>
+</ul>
+<h4>ماتریس نمونه دسترسی (خلاصه)</h4>
+<table class="tbl">
+<thead><tr><th>Action</th><th>مشتری</th><th>متخصص</th><th>اپراتور</th><th>مالی</th><th>ادمین</th></tr></thead>
+<tbody>
+<tr><td><code>order:create</code></td><td>✔</td><td>—</td><td>✔ (تلفنی)</td><td>—</td><td>✔</td></tr>
+<tr><td><code>order:accept</code></td><td>—</td><td>✔ (کار خود/پیشنهاد)</td><td>✔ (تخصیص دستی)</td><td>—</td><td>✔</td></tr>
+<tr><td><code>payment:capture</code></td><td>✔</td><td>—</td><td>—</td><td>✔ (اجباری دو‌نفره)</td><td>✔</td></tr>
+<tr><td><code>payout:approve</code></td><td>—</td><td>—</td><td>—</td><td>✔</td><td>✔</td></tr>
+<tr><td><code>user:pii:view</code></td><td>خود</td><td>محدود به سفارش</td><td>محدود + لاگ</td><td>محدود + لاگ</td><td>✔ + لاگ</td></tr>
+<tr><td><code>review:moderate</code></td><td>—</td><td>—</td><td>✔</td><td>—</td><td>✔</td></tr>
+</tbody>
+</table>
+<h4>چرخه عمر و انطباق</h4>
+<ul>
+<li><b>حالت مهمان:</b> مشاهده قیمت و ثبت پیش‌سفارش بدون ثبت‌نام، با تبدیل اجباری در لحظه پرداخت (کاهش افت قیف).</li>
+<li><b>غیرفعال‌سازی موقت</b> حساب متخصص هنگام بررسی شکایت سنگین؛ <b>تعلیق دائم</b> فقط با تأیید تیم انطباق و ثبت دلیل.</li>
+<li><b>حق حذف/انتقال داده:</b> حذف حساب با بی‌اثرسازی PII (Anonymization) و نگهداری داده مالی برای دوره قانونی؛ صدور نسخه داده کاربر (Data Export) با درخواست.</li>
+<li><b>مدیریت رضایت:</b> رضایت جداگانه برای (الف) تماس تصویری ضبط‌شده، (ب) موقعیت مکانی زنده، (ج) استفاده از تصاویر برای آموزش مدل. هر رضایت قابل ابطال و نسخه‌دار است.</li>
+</ul>
+</section>
+
+<!-- ===== 03-matching.html (s3) ===== -->
+<section id="s3">
+<h2><span class="num">۳</span>موتور سفارش‌گیری و الگوریتم تطبیق هوشمند</h2>
+<p class="lead">دو گلوگاه اصلی بازار خدمات: «مشتری دقیقاً نمی‌داند مشکلش چیست و چقدر می‌ارزد» و «متخصص درست در منطقه درست آزاد نیست». راه‌حل: ورودی چندرسانه‌ای + تریاژ هوشمند برای حل گلوگاه اول، و Dispatch امتیازمحور با صف اولویت‌دار برای گلوگاه دوم.</p>
+
+<h3 id="s3-1">۳.۱ ثبت سفارش چندرسانه‌ای و تشخیص خودکار مشکل</h3>
+<div class="flow">
+<svg viewBox="0 0 980 220" role="img" aria-label="پایپ‌لاین ورودی چندرسانه‌ای">
+ <defs><marker id="ar3" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#94a3b8"/></marker>
+ <style>
+  .m{fill:#f2f9f8;stroke:#0f7a6c;stroke-width:1.4;rx:10}
+  .m2{fill:#eef2ff;stroke:#1d4ed8;stroke-width:1.4;rx:10}
+  .t2{font:600 11.5px Tahoma,sans-serif;fill:#0b3f4d;text-anchor:middle;direction:rtl}
+  .s2{font:10.5px Tahoma,sans-serif;fill:#5c6472;text-anchor:middle;direction:rtl}
+  .l3{stroke:#94a3b8;stroke-width:1.3;marker-end:url(#ar3)}
+ </style></defs>
+ <rect class="m" x="800" y="30" width="150" height="58"/><text class="t2" x="875" y="54">ورودی مشتری</text><text class="s2" x="875" y="72">صوت • عکس • ویدیو • متن</text>
+ <rect class="m2" x="620" y="30" width="160" height="58"/><text class="t2" x="700" y="54">پردازش رسانه</text><text class="s2" x="700" y="72">ASR فارسی • CV • OCR</text>
+ <rect class="m2" x="440" y="30" width="160" height="58"/><text class="t2" x="520" y="54">تشخیص دسته و شدت</text><text class="s2" x="520" y="72">طبقه‌بندی + درجه فوریت</text>
+ <rect class="m" x="270" y="30" width="150" height="58"/><text class="t2" x="345" y="54">تریاژ تعاملی</text><text class="s2" x="345" y="72">۴ تا ۷ پرسش وابسته</text>
+ <rect class="m" x="100" y="30" width="150" height="58"/><text class="t2" x="175" y="54">برآورد قیمت</text><text class="s2" x="175" y="72">بازه + ریسک تغییر</text>
+ <rect class="m2" x="100" y="140" width="850" height="58"/><text class="t2" x="525" y="164">خروجی: «سفارش ساخت‌یافته» — دسته(های) لازم، مهارت، تجهیزات، بازه قیمت، بازه زمان، ریسک، سطح فوریت</text><text class="s2" x="525" y="182">اگر اطمینان مدل &lt; آستانه ⇒ پرچم «نیازمند کارشناس» و ارجاع به صف تریاژ انسانی (چت/تماس)</text>
+ <line class="l3" x1="798" y1="59" x2="786" y2="59"/><line class="l3" x1="618" y1="59" x2="606" y2="59"/>
+ <line class="l3" x1="438" y1="59" x2="426" y2="59"/><line class="l3" x1="268" y1="59" x2="256" y2="59"/>
+ <line class="l3" x1="175" y1="90" x2="175" y2="138"/>
+</svg>
+</div>
+
+<h4>قابلیت‌ها و تصمیم‌های طراحی</h4>
+<table class="tbl">
+<thead><tr><th>قابلیت</th><th>شرح</th><th>نکته مهندسی</th><th>اولویت</th></tr></thead>
+<tbody>
+<tr><td>ضبط صوت با راهنما</td><td>مشتری ۱۵–۶۰ ثانیه توضیح می‌دهد: «آب از زیر سینک می‌آید و کابینت خیس شده». نمایش پرسش‌های راهنمای روی صفحه هنگام ضبط</td><td>ASR فارسی با واژه‌نامه تخصصی (Lexicon: شیر توپی، سیفون، کولر گازی اسپلیت…)، تشخیص سکوت و پیشنهاد ضبط مجدد</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>آپلود عکس/ویدیو</td><td>۱–۶ عکس یا ویدیو ۳۰ ثانیه‌ای با راهنمای زاویه («نمای کلی + نمای نزدیک + پلاک/برند وسیله»)</td><td>فشرده‌سازی در دستگاه، آپلود مستقیم به S3، ترنسکد ویدیو، حذف EXIF مکانی پیش از نمایش عمومی</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>طبقه‌بندی و شدت‌سنجی</td><td>مدل چندکلاسه برای دسته (لوله‌کشی/برق/کولر/نقاشی…) + مدل رگرسیون برای شدت (۱ تا ۵)</td><td>مدل باید <b>Calibration</b> شود تا «اطمینان» قابل استفاده در تصمیم باشد؛ نسخه‌دار و با Shadow-Mode قبل از انتشار</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>برآورد قیمت اولیه</td><td>بازه قیمت (کف/سقف) + شفافیت در مورد علت تغییر قیمت پس از بازدید</td><td>از Rate Card + قیمت‌گذاری پویا؛ نمایش «۹۰٪ سفارش‌های مشابه در این بازه تمام شدند» (Data-driven trust)</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>تریاژ تعاملی</td><td>درخت تصمیم پویا: پاسخ هر سؤال، سؤال بعدی را تعیین می‌کند (مثلاً «برق قطع است کل واحد یا فقط یک پریز؟»)</td><td>درخت به‌صورت داده در CMS تعریف می‌شود (نه کد) تا تیم محصول بدون انتشار اپ تغییر دهد</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>تشخیص مداخله فوری</td><td>کلمات/تصاویر خطر: «گاز»، «آب‌گرفتگی»، «دود و جرقه» → هدایت به مسیر اضطراری + هشدار ایمنی</td><td>قانون سخت‌گیرانه: False-Negative غیرقابل قبول؛ ترکیب Keyword + Audio Classifier</td><td><span class="badge b-mvp">MVP</span></td></tr>
+</tbody>
+</table>
+
+<p><b>نمونه بدنه سفارش ساخت‌یافته (خروجی تریاژ):</b></p>
+<pre class="code">POST /v1/orders
+{
+  "service_category": "plumbing.leak.sink",
+  "skills_required": ["plumbing.basic", "cabinet.water_damage"],
+  "equipment_required": ["pipe_wrench_set", "leak_detector"],
+  "intake": {
+    "text": "آب از زیر سینک می‌آید",
+    "media": [{"id":"md_91a","type":"image","ai_tags":["water_leak","under_sink"],"conf":0.92},
+              {"id":"md_91b","type":"audio","transcript":"...","lang":"fa"}],
+    "severity": 3,
+    "triage_answers": {"cabinet_damage": true, "water_shutoff_available": true}
+  },
+  "urgency": "same_day",                        // scheduled | same_day | emergency
+  "location": {"lat":35.7448,"lng":51.4261,"geohash":"tnk2v"},
+  "quote": {"min": 850000, "max": 1600000, "currency":"IRR", "confidence": 0.68,
+            "basis":"rate_card:v41 + surge:1.00 + complexity:1.15"},
+  "risk_flags": ["price_may_increase_after_inspection"],
+  "requires_human_triage": false
+}</pre>
+
+<h4>ساخت دیتاست (شرط موفقیت هوشمندی)</h4>
+<ul>
+<li>هر سفارش باید برچسب «نتیجه واقعی» بگیرد: دسته نهایی کار، قطعات مصرف‌شده، زمان واقعی، قیمت نهایی، رضایت. این داده‌ها پیکره آموزشی مدل‌های بعدی است.</li>
+<li>ابزار <b>Label Studio</b>-مانند داخلی برای تیم تریاژ: تأیید/اصلاح برچسب تصاویر و متن‌ها، ذخیره‌شده در جداول <code>ai_inference</code> و <code>ai_label</code>.</li>
+<li>معیار پذیرش مدل: <b>Macro-F1 ≥ ۰.۸۵</b> روی داده آزمون انسانی برای دسته‌های &gt; ۲٪ حجم؛ خطای شدت سنجی حداکثر ±۱ درجه.</li>
+</ul>
+
+<h3 id="s3-2">۳.۲ الگوریتم تخصیص هوشمند (Smart Dispatch)</h3>
+<p>تخصیص در سه مرحله انجام می‌شود: <b>(الف)</b> تولید فهرست کاندید با جست‌وجوی مکانی و فیلتر صلاحیت، <b>(ب)</b> امتیازدهی چندمتغیره، <b>(ج)</b> پیشنهاد مرحله‌ای و مدیریت پذیرش/رد.</p>
+
+<h4>الف) تولید کاندیدها (Candidate Generation)</h4>
+<pre class="code">-- فیلتر اولیه: مکانی + صلاحیت + ظرفیت + تعارض زمانی
+WITH cand AS (
+  SELECT p.provider_id,
+         ST_Distance(p.last_location, o.location) / 1000.0 AS dist_km,
+         p.rating_avg, p.acceptance_rate, p.on_time_rate,
+         p.repeat_customer_bonus, p.tier,
+         ci.capacity_free_slots_today,
+         EXISTS (SELECT 1 FROM provider_equipment e
+                 WHERE e.provider_id = p.provider_id
+                   AND e.equipment_id = ANY(o.equipment_required)) AS has_equipment
+  FROM provider_profile p
+  JOIN provider_service_area psa ON psa.provider_id = p.provider_id
+  JOIN city_service_zone z    ON z.zone_id = psa.zone_id AND z.active
+  JOIN order o                ON o.order_id = :order_id
+  JOIN provider_capacity ci   ON ci.provider_id = p.provider_id
+  WHERE p.status = 'ACTIVE'
+    AND p.verified_level >= :min_level
+    AND p.last_location && ST_Expand(o.location::geometry, :radius_meters)::geography
+    AND p.skills @> o.skills_required                       -- مهارت‌ها پوشش داده شود
+    AND NOT EXISTS (SELECT 1 FROM booking b               -- تعارض تقویم
+                    WHERE b.provider_id = p.provider_id
+                      AND b.time_range && o.time_range)
+    AND p.blocked_until IS NULL
+  ORDER BY p.last_location <-> o.location
+  LIMIT 200
+)
+SELECT * FROM cand;</pre>
+
+<h4>ب) تابع امتیازدهی (Ranking Score)</h4>
+<pre class="code">Score(p, o) =
+      w1 * S_distance(p,o)        // نزدیکی: 1 - norm(dist/radius)  ، وزن پیشنهادی 0.26
+    + w2 * S_quality(p)           // کیفیت: ترکیب امتیاز چندبعدی + روند 90 روز اخیر ، 0.18
+    + w3 * S_acceptance(p,o)      // نرخ قبولی در همین دسته/منطقه (نه کلی) ، 0.14
+    + w4 * S_reliability(p)       // آن‌تایم بودن، نرخ لغو، نرخ بازکاری ، 0.12
+    + w5 * S_equipment(p,o)       // تطابق تجهیزات و خودرو/وسایل لازم ، 0.08
+    + w6 * S_price(p,o)           // نزدیکی پیشنهاد قیمت به بازه تخمین پلتفرم ، 0.10
+    + w7 * S_history(p,o)         // سابقه کار قبلی با همین مشتری/ساختمان ، 0.06
+    + w8 * S_fairness(p)          // عدالت: جبران کم‌کاری متخصصان حاشیه‌ای ، 0.04
+    + w9 * S_retention(p)         // ریسک ریزش متخصص (کمبود کار اخیر) ، 0.02
+    - P_penalty(p,o)              // جریمه‌ها: ردهای اخیر همان سفارش، تعلیق موقت، فاصله غیرواقعی، …</pre>
+<div class="callout"><b>نکته کلیدی:</b> وزن‌ها <b>Hyperparameter</b> نیستند که یک‌بار تنظیم شوند؛ هر منطقه و هر دسته وزن متفاوت دارد. موتور باید A/B-Test وزن‌ها را پشتیبانی کند و معیار اصلی بهینه‌سازی، <b>Fulfillment Rate</b> و <b>Time-to-Accept</b> است، نه صرفاً رضایت.</div>
+
+<h4>پارامترها و سیاست‌های عملیاتی</h4>
+<table class="tbl">
+<thead><tr><th>پارامتر</th><th>مقدار پیشنهادی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td>شعاع موج اول</td><td>۳–۵ کیلومتر (شهری)، ۸–۱۲ کیلومتر (خدمات کم‌تکرار)</td><td>افزایش پله‌ای در هر موج</td></tr>
+<tr><td>اندازه موج</td><td>۳–۵ متخصص هم‌زمان (نه بیشتر از ۱۰)</td><td>جلوگیری از «کاهش ارزش پیشنهاد» و رد زیاد</td></tr>
+<tr><td>پنجره پذیرش</td><td>سفارش عادی: ۹۰ ثانیه / اعزام فوری: ۲۰ ثانیه</td><td>پس از انقضا، موج بعدی</td></tr>
+<tr><td>نردبان تشدید (Escalation Ladder)</td><td>۱) موج بعدی با شعاع بیشتر → ۲) افزایش سهم متخصص (Surge Incentive) → ۳) پیشنهاد زمان جایگزین به مشتری → ۴) صف دستی اپراتور</td><td>هر پله TTL و Trigger مشخص دارد</td></tr>
+<tr><td>قفل پذیرش</td><td>تراکنش اتمی روی <code>job_offer</code>؛ اول-پذیرنده-برنده</td><td>جلوگیری از پذیرش دوگانه</td></tr>
+<tr><td>سقف رد متوالی</td><td>پس از ۳ رد در یک سفارش، متخصص تا ۳۰ دقیقه در آن سفارش نامزد نمی‌شود</td><td>کاهش نویز و نارضایتی</td></tr>
+<tr><td>پاداش پذیرش سریع</td><td>افزایش سهم سودی متخصص در سفارش‌های کم‌عمر/دور</td><td>ابزار سیاستی برای مناطق کم‌عرضه</td></tr>
+</tbody>
+</table>
+
+<h4>ج) چرخه عمر پیشنهاد و سفارش</h4>
+<div class="flow">
+<svg viewBox="0 0 980 200" role="img" aria-label="چرخه عمر تخصیص">
+ <defs><marker id="ar4" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#94a3b8"/></marker>
+ <style>.t3{font:600 11.5px Tahoma,sans-serif;fill:#0b3f4d;text-anchor:middle;direction:rtl}
+ .s3{font:10.5px Tahoma,sans-serif;fill:#5c6472;text-anchor:middle;direction:rtl}
+ .q{fill:#f2f9f8;stroke:#0f7a6c;stroke-width:1.4;rx:10}.q2{fill:#fff8ed;stroke:#b45309;stroke-width:1.4;rx:10}
+ .l4{stroke:#94a3b8;stroke-width:1.3;marker-end:url(#ar4)}</style></defs>
+ <rect class="q" x="800" y="40" width="150" height="56"/><text class="t3" x="875" y="63">CREATED</text><text class="s3" x="875" y="81">سفارش ثبت و قیمت‌گذاری شد</text>
+ <rect class="q" x="630" y="40" width="150" height="56"/><text class="t3" x="705" y="63">DISPATCHING</text><text class="s3" x="705" y="81">موج پیشنهاد در جریان</text>
+ <rect class="q2" x="460" y="40" width="150" height="56"/><text class="t3" x="535" y="63">ASSIGNED</text><text class="s3" x="535" y="81">قفل پذیرش + تماس/چت امن</text>
+ <rect class="q" x="290" y="40" width="150" height="56"/><text class="t3" x="365" y="63">EN_ROUTE</text><text class="s3" x="365" y="81">ردیابی زنده + ETA</text>
+ <rect class="q" x="120" y="40" width="150" height="56"/><text class="t3" x="195" y="63">IN_PROGRESS</text><text class="s3" x="195" y="81">Check-in/out + عکس قبل/بعد</text>
+ <rect class="q" x="290" y="140" width="380" height="50"/><text class="t3" x="480" y="163">COMPLETED → QUALITY_WINDOW (۴۸ ساعت) → CLOSED / DISPUTED</text><text class="s3" x="480" y="180">آزادسازی Escrow، ثبت امتیاز چندبعدی، فعال‌سازی گارانتی</text>
+ <rect class="q2" x="690" y="140" width="290" height="50"/><text class="t3" x="835" y="163">CANCELLED / NO_SHOW / EXPIRED</text><text class="s3" x="835" y="180">جریمه/تخفیف متخصص بر اساس سیاست</text>
+ <line class="l4" x1="798" y1="68" x2="784" y2="68"/><line class="l4" x1="628" y1="68" x2="614" y2="68"/>
+ <line class="l4" x1="458" y1="68" x2="444" y2="68"/><line class="l4" x1="288" y1="68" x2="274" y2="68"/>
+ <line class="l4" x1="195" y1="98" x2="330" y2="138"/><line class="l4" x1="705" y1="98" x2="790" y2="138"/>
+</svg>
+</div>
+
+<h3 id="s3-3">۳.۳ اعزام فوری (Emergency Dispatch) و زمان‌بندی</h3>
+<table class="tbl">
+<thead><tr><th>ویژگی</th><th>طراحی</th></tr></thead>
+<tbody>
+<tr><td>دسته‌های واجد شرط</td><td>لوله‌کشی/نشت گاز و آب، برق و اتصال کوتاه، کلیدسازی و قفل‌شکستگی، تخلیه چاه اضطراری، تعمیر آسانسور گیرکرده (با هشدار ایمنی)، خدمات درمانی غیراورژانسی (بعداً)</td></tr>
+<tr><td>تجربه مشتری</td><td>دکمه «همین حالا» → تخمین زمان رسیدن («حدود ۳۵ دقیقه») → نمایش لیست کوتاه متخصصان نزدیک با ETA → تأیید و پرداخت پیش‌پرداخت اجباری (ضدسوءاستفاده)</td></tr>
+<tr><td>تفاوت با سفارش عادی</td><td>پنجره پذیرش کوتاه (۲۰ ثانیه)، شعاع بزرگ‌تر، سهم متخصص بالاتر (تا ۱۰۰٪ مبلغ به‌عنوان انگیزه در پیک)، اولویت در پوش نوتیفیکیشن (تلفن را حتی در حالت مزاحم کم‌صدا نشان دهد تا حد مجاز پلتفرم)</td></tr>
+<tr><td>KI/ETA</td><td>مدل ETA بر پایه شبکه معابر (ماشین/موتور)، ترافیک لحظه‌ای، زمان آماده‌سازی ابزار؛ نمایش بازه (نه عدد قطعی) برای کاهش انتظار نامطلوب</td></tr>
+<tr><td>سقف ایمنی</td><td>درخواست‌های خطرناک (گاز/آتش) باید پیام «تماس با اورژانس/آتش‌نشانی ۱۲۵/۱۱۵» را قبل از ادامه نشان دهد</td></tr>
+<tr><td>زمان‌بندی و تکرارشونده</td><td>رزرو بازه (Slot) با ظرفیت هر متخصص، سفارش دوره‌ای (نظافت هفتگی، سرویس ماهانه کولر)، سفارش چندمتخصصی هم‌زمان (نقاشی + برق)، و «بازگشت به متخصص قبلی» با یک کلیک</td></tr>
+</tbody>
+</table>
+<div class="callout warn"><b>ریسک عملیاتی:</b> اعزام فوری بدون عرضه کافی، مشتری را ناامید می‌کند. شرط راه‌اندازی این قابلیت در هر شهر: حداقل <b>۸ متخصص فعال در شعاع ۵ کیلومتر</b> و نرخ پذیرش شبانه‌روزی بالای ۷۰٪. قبل از آن، دسته‌بندی فقط «نوبت روز بعد» ارائه دهد.</div>
+</section>
+
+<!-- ===== 04-pricing-fintech.html (s4) ===== -->
+<section id="s4">
+<h2><span class="num">۴</span>معماری قیمت‌گذاری و تراکنش‌های مالی</h2>
+<p class="lead">پول، ستون فقرات اعتماد در مارکت‌پلیس است. هدف این ماژول: <b>شفافیت قیمت قبل از سفارش</b>، <b>نگهداشت پول تا انجام کار (Escrow)</b>، <b>مسیر پرداخت‌های بزرگ (Milestone + BNPL)</b> و <b>انطباق مالیاتی</b>.</p>
+
+<h3 id="s4-1">۴.۱ موتور قیمت‌گذاری پویا</h3>
+<h4>مدل‌های قیمت‌گذاری قابل پشتیبانی (همه در یک موتور)</h4>
+<table class="tbl">
+<thead><tr><th>مدل</th><th>کجا استفاده می‌شود</th><th>مکانیزم</th></tr></thead>
+<tbody>
+<tr><td>قیمت ثابت (Fixed)</td><td>خدمات استاندارد و قابل تکرار: نصب کولر، بازکردن قفل ساده، سرویس کامل کولر</td><td>Rate Card نسخه‌دار با مولفه‌های واضح</td></tr>
+<tr><td>بازه تخمینی (Estimated Band)</td><td>تعمیرات با عدم قطعیت: نشت آب، ایراد برد</td><td>کف/سقف + تعهد «تغییر قیمت فقط با تأیید مشتری»</td></tr>
+<tr><td>برآورد بازدیدی (Inspection-based)</td><td>بازسازی، نقاشی متری، نصب پکیج</td><td>هزینه بازدید (قابل کسر از فاکتور) + پیش‌فاکتور رسمی پس از بازدید</td></tr>
+<tr><td>مزایده/پیشنهاد (Bid)</td><td>پروژه‌های بزرگ و تخصصی</td><td>چند متخصص پیشنهاد می‌دهند؛ مشتری مقایسه و انتخاب می‌کند</td></tr>
+<tr><td>ساعتی/روز-مرد (Hourly / Man-day)</td><td>کارهای مبهم یا B2B قراردادی</td><td>نرخ ساعتی تصویب‌شده + تایم‌شیت دیجیتال با Check-in/out</td></tr>
+<tr><td>قرارداد نگهداری (Retainer)</td><td>B2B: مجتمع اداری، رستوران</td><td>بسته ماهانه با SLA، سقف ساعت، تعرفه تخفیف‌دار</td></tr>
+</tbody>
+</table>
+
+<h4>فرمول قیمت پویا</h4>
+<pre class="code">Final_Price =
+    ( Base_Rate(category, sub_service, unit)            // از Rate Card نسخه‌دار
+    * Complexity_Factor(order)                          // 1.0 .. 2.5 بر پایه پاسخ‌های تریاژ و شدت AI
+    * Urgency_Factor(urgency)                           // now=1.35 | same_day=1.15 | next_day=1.00 | scheduled=0.95
+    * Surge_Factor(zone, time_window)                   // تقاضا/عرضه منطقه‌ای، سقف 1.5
+    + Travel_Fee(distance_km, mode)                     // نرخ پله‌ای، شفاف روی فاکتور
+    + Materials_Estimate(category)                      // اقلام مصرفی؛ تسویه با رسید
+    + AddOns(extra_services[]) )
+    * Discount_Factors(membership, coupon, referral, loyalty, B2B_contract)
+    ;  Surge_Factor = clamp( 1 + k * (demand_index/ supply_index - 1), 0.95, 1.50 )
+    ;  demand_index: سفارش‌های ثبت‌شده در ۳۰ دقیقه گذشته در همان Zone
+    ;  supply_index: متخصصان فعال همان Zone با ظرفیت آزاد</pre>
+<p><b>مهار (Guardrails) اجباری:</b> سقف افزایش ۱.۵ برابری؛ نمایش دلیل افزایش («تقاضای بالا در محله شما»)، عدم اعمال Surge روی خدمات امدادی و روی مشتریان دارای اشتراک؛ ثبت هر تغییر قیمت در جدول <code>price_quote_revision</code> با دلیل و تأیید مشتری.</p>
+
+<pre class="code">// توضیح صورتحساب کاربرپسند (نمونه خروجی به مشتری)
+{
+  "base":            {"title":"اجرت پایه تعمیر نشت لوله", "amount": 900000},
+  "complexity":      {"title":"پیچیدگی بالای کار (اعلام کارشناس)", "amount": 150000},
+  "travel":          {"title":"هزینه ایاب/ذهاب (۴.۲ کیلومتر)", "amount": 60000},
+  "materials":       {"title":"اقلام مصرفی (واشر و سیفون)", "amount": 280000, "receipt_required": true},
+  "discount":        {"title":"تخفیف اشتراک طلایی", "amount": -50000},
+  "surcharge_waived":{"title":"معاف از افزایش تقاضا (خدمت امدادی)", "amount": 0},
+  "tax":             {"title":"مالیات ارزش افزوده (۱۰٪)", "amount": 134000},
+  "total":           {"title":"قابل پرداخت", "amount": 1474000}
+}</pre>
+
+<h4>طراحی فنی و ابزارهای آزمایش</h4>
+<ul>
+<li>قیمت‌گذاری به‌صورت سرویس مستقل با <b>Deterministic</b> بودن خروجی برای یک ورودی (قابل بازتولید و حسابرسی): هر تخمین با <code>rate_card_version</code> و <code>engine_version</code> امضا می‌شود.</li>
+<li><b>Kill-Switch</b> برای Surge و برای کل موتور پویا؛ بازگشت به قیمت ثابت در هر لحظه (سناریوی بحران: یخبندان، آلودگی هوا، پیک خبری).</li>
+<li>قابلیت <b>آزمایش قیمت</b> (Pricing Experiment) با Feature Flag: درصد کاربران آزمایشی، اندازه‌گیری نرخ تبدیل، درآمد هر بازدید (RPV) و نرخ شکایت قیمت.</li>
+</ul>
+
+<h3 id="s4-2">۴.۲ کیف پول، Escrow و پرداخت مرحله‌ای (Milestone)</h3>
+<div class="flow">
+<svg viewBox="0 0 980 250" role="img" aria-label="چرخه پول در Escrow">
+ <defs><marker id="ar5" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#94a3b8"/></marker>
+ <style>.t4{font:600 11.5px Tahoma,sans-serif;fill:#0b3f4d;text-anchor:middle;direction:rtl}
+ .s4{font:10.5px Tahoma,sans-serif;fill:#5c6472;text-anchor:middle;direction:rtl}
+ .e{fill:#f2f9f8;stroke:#0f7a6c;stroke-width:1.4;rx:10}.e2{fill:#eef2ff;stroke:#1d4ed8;stroke-width:1.4;rx:10}
+ .e3{fill:#fff8ed;stroke:#b45309;stroke-width:1.4;rx:10}.l5{stroke:#94a3b8;stroke-width:1.3;marker-end:url(#ar5)}</style></defs>
+ <rect class="e2" x="790" y="40" width="170" height="58"/><text class="t4" x="875" y="64">PENDING_PAYMENT</text><text class="s4" x="875" y="82">سفارش ثبت، بدون تعهد مالی</text>
+ <rect class="e" x="590" y="40" width="180" height="58"/><text class="t4" x="680" y="64">HELD_IN_ESCROW</text><text class="s4" x="680" y="82">مبلغ در حساب واسط پلتفرم</text>
+ <rect class="e" x="390" y="40" width="180" height="58"/><text class="t4" x="480" y="64">PARTIALLY_RELEASED</text><text class="s4" x="480" y="82">آزادسازی در Milestone‌ها</text>
+ <rect class="e" x="190" y="40" width="180" height="58"/><text class="t4" x="280" y="64">RELEASED_TO_PROVIDER</text><text class="s4" x="280" y="82">پس از تأیید مشتری/انقضای پنجره</text>
+ <rect class="e" x="20" y="40" width="150" height="58"/><text class="t4" x="95" y="64">SETTLED</text><text class="s4" x="95" y="82">تسویه به شبا / کیف پول</text>
+ <rect class="e3" x="330" y="150" width="320" height="54"/><text class="t4" x="490" y="172">DISPUTED → FREEZE</text><text class="s4" x="490" y="190">توقف آزادسازی تا رأی تیم کیفیت</text>
+ <rect class="e3" x="670" y="150" width="290" height="54"/><text class="t4" x="815" y="172">REFUND / PARTIAL_REFUND</text><text class="s4" x="815" y="190">بازگشت به کیف پول یا درگاه</text>
+ <line class="l5" x1="788" y1="69" x2="772" y2="69"/><line class="l5" x1="588" y1="69" x2="572" y2="69"/>
+ <line class="l5" x1="388" y1="69" x2="372" y2="69"/><line class="l5" x1="188" y1="69" x2="172" y2="69"/>
+ <line class="l5" x1="680" y1="98" x2="560" y2="148"/><line class="l5" x1="650" y1="170" x2="668" y2="170"/>
+</svg>
+</div>
+<h4>دفتر کل دوعاملی (Double-Entry Ledger) — قلب صحت مالی</h4>
+<p>هیچ سرویسی «موجودی» را مستقیم تغییر نمی‌دهد؛ همه از طریق ثبت قیدهای دوعاملی انجام می‌شود. موجودی کیف پول یک <b>View محاسبه‌شده</b> از قیدهاست (با Snapshot دوره‌ای برای کارایی).</p>
+<pre class="code">-- جدول ledger_entry: هر تراکنش = چند قید که جمع بدهکار و بستانکار برابر است
+INSERT INTO ledger_entry (txn_id, account_code, direction, amount, currency, ref_type, ref_id)
+VALUES
+ ('txn_7f21', '1100-CUSTOMER-FUNDS',      'DEBIT',  1474000, 'IRR', 'order', 'ord_5521'), -- دریافت از PSP
+ ('txn_7f21', '2200-ESCROW-LIABILITY',    'CREDIT', 1474000, 'IRR', 'order', 'ord_5521');
+
+-- آزادسازی پس از تأیید کار (کسر کمیسیون پلتفرم و مالیات)
+ ('txn_7f3c', '2200-ESCROW-LIABILITY',    'DEBIT',  1000000, 'IRR', 'order', 'ord_5521'),
+ ('txn_7f3c', '2300-PROVIDER-WALLET',     'CREDIT',  850000, 'IRR', 'order', 'ord_5521'),
+ ('txn_7f3c', '4100-COMMISSION-REVENUE',  'CREDIT',  150000, 'IRR', 'order', 'ord_5521');
+-- تسویه به شبا: 2300 → 2100-BANK-CLEARING + کاهش 2400-PAYABLE-TAX</pre>
+<p><b>قواعد کلیدی:</b> هر قید غیرقابل تغییر (Immutable) است؛ اصلاح با «قید معکوس» انجام می‌شود نه ویرایش. هر عملیات با <b>Idempotency-Key</b> یکتا و <code>correlation_id</code> ثبت می‌شود. روزانه گزارش مغایرت (Reconciliation) بین PSP، دفتر کل و صورتحساب بانکی تولید می‌شود.</p>
+
+<h4>پروژه بزرگ: Milestone Payment</h4>
+<table class="tbl">
+<thead><tr><th>مرحله</th><th>سهم</th><th>شرط آزادسازی</th><th>چه‌کسی تأیید می‌کند</th></tr></thead>
+<tbody>
+<tr><td>Milestone 1 — شروع و مصالح</td><td>۳۰٪</td><td>تحویل برنامه زمان‌بندی + عکس وضعیت اولیه + ثبت شروع کار (Check-in)</td><td>مشتری (تأیید در اپ) یا خودکار پس از ۲۴ ساعت بی‌واکنشی</td></tr>
+<tr><td>Milestone 2 — پیشرفت</td><td>۴۰٪</td><td>عکس/ویدیو پیشرفت + تأیید مرزی کارشناس کیفیت (برای تیکت &gt; سقف)</td><td>مشتری + بررسی خودکار تصویری</td></tr>
+<tr><td>Milestone 3 — تحویل</td><td>۳۰٪</td><td>بازدید نهایی/چک‌لیست تحویل + پنجره اعتراض ۴۸ ساعته</td><td>خودکار پس از پنجره، مگر اعتراض</td></tr>
+<tr><td>تضمین بازکاری (Garanti)</td><td>۵–۱۰٪ توقیف</td><td>آزادسازی پس از ۷–۳۰ روز بدون بازکاری (بسته به دسته)</td><td>خودکار</td></tr>
+</tbody>
+</table>
+<p><b>Change Order:</b> هر افزایش قیمت وسط کار باید در اپ به‌صورت «درخواست تغییر» با علت و عکس ثبت و توسط مشتری امضا/تأیید شود؛ در غیر این صورت مبلغ اضافه از Escrow آزاد نمی‌شود. این یک قاعده سخت است و بیشترین اختلافات مالی را حذف می‌کند.</p>
+
+<h3 id="s4-3">۴.۳ مالیات، فاکتور رسمی و پرداخت اقساطی (BNPL)</h3>
+<table class="tbl">
+<thead><tr><th>موضوع</th><th>الزام/طراحی فنی</th><th>نکته اجرایی</th></tr></thead>
+<tbody>
+<tr><td>صورتحساب الکترونیکی (سامانه مؤدیان)</td><td>تولید صورتحساب با شناسه یکتای حافظه مالیاتی، ارسال به سامانه، دریافت شماره منحصربه‌فرد و کد رهگیری؛ نگهداری XML/JSON ارسالی</td><td>جدول <code>tax_invoice</code> + صف ارسال با Retry؛ حالت «صادرشده/در انتظار اعتبارسنجی/ردشده» و صف اصلاح</td></tr>
+<tr><td>مالیات بر ارزش افزوده</td><td>نرخ پارامتری (پیش‌فرض ۱۰٪)، محاسبه در سطح قلم فاکتور، تفکیک خدمات مشمول/معاف</td><td>نرخ و قواعد در جدول <code>tax_rule</code> نسخه‌دار، نه در کد</td></tr>
+<tr><td>مالیات تکلیفی/وظیفه کسر</td><td>در پرداخت به اشخاص حقوقی، کسر و واریز طبق مقررات جاری</td><td>پارامتری و قابل به‌روزرسانی توسط تیم مالی</td></tr>
+<tr><td>فاکتور B2B</td><td>فاکتور با مشخصات کامل حقوقی خریدار، شماره سفارش خرید (PO)، مهر/امضای دیجیتال</td><td>قالب PDF دوزبانه + فایل XML؛ ارسال خودکار به ایمیل مالی مشتری</td></tr>
+<tr><td>پرداخت اقساطی (BNPL)</td><td>اتصال API به سرویس‌دهنده اعتبار (اسنپ‌پی/دیجی‌پی/فینوتک و…)، Pre-Score مشتری، سهم پیش‌پرداخت، اقساط ۳/۶/۱۲ ماهه</td><td>پرداخت تسویه با پلتفرم کامل و نقدی است؛ ریسک اقساط با BNPL-Provider می‌ماند (کلید کاهش ریسک)</td></tr>
+<tr><td>Refund / Chargeback</td><td>سیاست بازگشت: به کیف پول فوری، به درگاه ۳–۷ روز کاری؛ مدیریت Chargeback با ارائه مدارک سفارش (عکس، چت، GPS، امضا)</td><td>بسته مدارک خودکار (Evidence Pack) برای هر سفارش تولید شود</td></tr>
+<tr><td>کیف پول</td><td>سه کیف پول: مشتری (شارژ/کوپن/بازگشت)، متخصص (درآمد/برداشت)، سازمانی (اعتبار)</td><td>برداشت متخصص: سقف روزانه، تأیید دو مرحله‌ای، زمان‌بندی تسویه (T+1 کاری)</td></tr>
+</tbody>
+</table>
+<div class="callout ok"><b>اثر تجاری مورد انتظار:</b> ترکیب Escrow + فاکتور رسمی + BNPL، درِ ورود مشتریان B2B و سفارش‌های بالای ۵۰ میلیون تومان (بازسازی/نقاشی/کابینت) را باز می‌کند؛ همین بخش‌ها بالاترین حاشیه سود پلتفرم را دارند.</div>
+</section>
+
+<!-- ===== 05-trust.html (s5) ===== -->
+<section id="s5">
+<h2><span class="num">۵</span>مرکز کنترل کیفیت، رتبه‌بندی و الگوریتم‌های اعتماد</h2>
+<p class="lead">اعتماد، دارایی اصلی پلتفرم است و باید <b>اندازه‌گیری، محاسبه و تضمین</b> شود. سه پایه: امتیازدهی چندبعدی و صادقانه، تضمین/بیمه خودکار، و کشف تقلب و تبانی.</p>
+
+<h3 id="s5-1">۵.۱ امتیازدهی چندبعدی و صحت‌سنجی نظرات</h3>
+<table class="tbl">
+<thead><tr><th>بُعد</th><th>وزن پیشنهادی</th><th>سؤال راهنمای مشتری در اپ</th><th>پایش خودکار</th></tr></thead>
+<tbody>
+<tr><td>وقت‌شناسی و حضور</td><td>۲۵٪</td><td>«آیا سر ساعت آمد؟»</td><td>مقایسه زمان پذیرش/رسیدن با GPS و Slot تعهدشده</td></tr>
+<tr><td>کیفیت فنی کار</td><td>۳۰٪</td><td>«مشکل درست حل شد؟»</td><td>نرخ بازکاری ۷/۳۰ روزه، سفارش مجدد همان ایراد</td></tr>
+<tr><td>تمیزی و مرتب بودن محیط</td><td>۱۵٪</td><td>«محل کار مرتب تحویل شد؟»</td><td>مقایسه عکس پس از کار با چک‌لیست تصویری (اختیاری)</td></tr>
+<tr><td>تطابق قیمت با فاکتور</td><td>۱۵٪</td><td>«مبلغ نهایی با قیمت اعلام‌شده یکی بود؟»</td><td>دلتای قیمت تخمین/نهایی، تعداد Change Order تأییدنشده</td></tr>
+<tr><td>رفتار واخلاق حرفه‌ای</td><td>۱۵٪</td><td>«برخورد محترمانه بود؟»</td><td>شکایت رفتاری، پیام‌های چت با مدل تخلف‌سنجی</td></tr>
+</tbody>
+</table>
+<h4>مدل امتیاز نمایش‌داده‌شده به مشتری</h4>
+<pre class="code">Provider_Display_Rating =
+    0.5 * Rating_Last90Days_WeightedByOrderValue
+  + 0.3 * Rating_AllTime_BayesianShrunk     // جلوگیری از سوءاستفاده با تعداد کم نظر
+  + 0.2 * Platform_Quality_Score            // کیفیت عینی: آن‌تایم، بازکاری، لغو، تغییر قیمت
+;  Bayesian_shrink: (n/(n+m)) * avg + (m/(n+m)) * prior(3.9)  با m=10
+;  نظرات &gt; ۶۰ روز وزن کمتری می‌گیرند؛ متخصص پس از ۳۰ کار خوب می‌تواند «آخرین امتیاز» را در اولویت نشان دهد</pre>
+<h4>ضدتقلب در نظرات (Review Authenticity)</h4>
+<ul>
+<li> نشانه‌های مشکوک: ثبت نظر بدون GPS هم‌مکان در بازه سفارش، حساب‌های تازه‌ساخته، نظر در چند ثانیه پس از پیام «لطفاً نظر بدهید»، نوع‌شناسی متنی غیرواقعی، نظر اجباری (Rating Hostage) و تهدید متخصص.</li>
+<li><b>راه‌حل ساختاری:</b> نظرات فقط برای سفارش‌های واقعاً اجراشده فعال است (Verified Review)، امکان ویرایش پس از ۷۲ ساعت مسدود می‌شود، و «پاسخ متخصص» و «اعتراض به نظر» با ارزیابی کارشناس پشتیبانی پشتیبانی می‌شود.</li>
+<li><b>نشان صادق‌سازی:</b> نمایش برچسب «خرید تأییدشده»، «عکس واقعی کار»، و تعداد سفارش‌های تکراری همین مشتری.</li>
+</ul>
+
+<h3 id="s5-2">۵.۲ تضمین، بیمه و پیوند کیفیت (Warranty &amp; Insurance Pipeline)</h3>
+<div class="flow">
+<svg viewBox="0 0 980 200" role="img" aria-label="پایپ‌لاین تضمین و بیمه">
+ <defs><marker id="ar6" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#94a3b8"/></marker>
+ <style>.t5{font:600 11.5px Tahoma,sans-serif;fill:#0b3f4d;text-anchor:middle;direction:rtl}
+ .s5{font:10.5px Tahoma,sans-serif;fill:#5c6472;text-anchor:middle;direction:rtl}
+ .i{fill:#f2f9f8;stroke:#0f7a6c;stroke-width:1.4;rx:10}.i2{fill:#fff8ed;stroke:#b45309;stroke-width:1.4;rx:10}
+ .l6{stroke:#94a3b8;stroke-width:1.3;marker-end:url(#ar6)}</style></defs>
+ <rect class="i" x="800" y="34" width="150" height="58"/><text class="t5" x="875" y="58">چک‌لیست پیش از کار</text><text class="s5" x="875" y="76">عکس محیط + لیست اقلام گران‌بها</text>
+ <rect class="i" x="620" y="34" width="160" height="58"/><text class="t5" x="700" y="58">عکس قبل/بعد</text><text class="s5" x="700" y="76">ثبت خودکار الزامی متخصص</text>
+ <rect class="i" x="440" y="34" width="160" height="58"/><text class="t5" x="520" y="58">فعال‌سازی تضمین</text><text class="s5" x="520" y="76">بیمه مسئولیت + گارانتی دسته</text>
+ <rect class="i2" x="240" y="34" width="180" height="58"/><text class="t5" x="330" y="58">ثبت ادعا (Claim)</text><text class="s5" x="330" y="76">۴۸ ساعت تا ۷ روز، حداکثر ۲۹۰ روز</text>
+ <rect class="i2" x="40" y="34" width="180" height="58"/><text class="t5" x="130" y="58">ارزیابی و تصمیم</text><text class="s5" x="130" y="76">الگوریتمی یا انسانی</text>
+ <rect class="i" x="240" y="126" width="710" height="52"/><text class="t5" x="595" y="148">جبران: تعمیر مجدد رایگان • بازگشت پول • پرداخت بیمه • جریمه/کاهش رتبه متخصص</text><text class="s5" x="595" y="166">بازخورد به ریسک‌سنجی متخصص و بهینه‌سازی سیاست‌های دسته‌بندی</text>
+ <line class="l6" x1="798" y1="63" x2="784" y2="63"/><line class="l6" x1="618" y1="63" x2="604" y2="63"/>
+ <line class="l6" x1="438" y1="63" x2="424" y2="63"/><line class="l6" x1="238" y1="63" x2="224" y2="63"/>
+ <line class="l6" x1="330" y1="92" x2="430" y2="124"/>
+</svg>
+</div>
+<table class="tbl">
+<thead><tr><th>مؤلفه</th><th>طراحی</th><th>اثر</th></tr></thead>
+<tbody>
+<tr><td>بیمه خودکار هر سفارش</td><td>بیمه‌نامه گروهی پلتفرم با شرکت بیمه‌گذار؛ حق بیمه در کمیسیون لحاظ می‌شود؛ سقف پوشش بر پایه ارزش سفارش</td><td>هزینه جبران خسارت غیرمنتظره به هزینه قابل پیش‌بینی تبدیل می‌شود</td></tr>
+<tr><td>گارانتی دسته‌ای</td><td>لوله‌کشی ۳۰ روز، برق ۹۰ روز، کولر/سرویس ۷ روز، بازسازی ۳۰ روز، نصب ۱۴ روز (قابل تنظیم در CMS)</td><td>ابزار رقابتی و آسان برای بازاریابی</td></tr>
+<tr><td>پرونده ادعا</td><td>فرم چندمرحله‌ای با عکس/ویدیو، توصیف خسارت، برآورد مبلغ، اظهار خسارت قبلی</td><td>کاهش اختلاف با مستندسازی زودهنگام</td></tr>
+<tr><td>ارزیابی اولیه خودکار</td><td>مدل ریسک: احتمال صحت ادعا بر پایه سابقه مشتری/متخصص، سابقه خسارت، هم‌خوانی ویدیو، فاصله زمانی ادعا با پایان کار</td><td>تسریع پرداخت موارد کم‌ریسک، تمرکز کارشناس روی موارد مشکوک</td></tr>
+<tr><td>اسناد و شواهد</td><td>عکس‌های قبل/بعد اجباری، لاگ GPS ورود/خروج، چت، زمان دقیق، سرور-تایم‌استمپ</td><td>کاهش «حرف در مقابل حرف» و کاهش خسارت‌های جعلی</td></tr>
+<tr><td>تسویه خسارت</td><td>پرداخت به مشتری (کیف پول/واریز) یا اجرای رایگان تعمیر توسط متخصص دیگر، با پس‌گرفت (Recovery) از متخصص مقصر</td><td>ایجاد انگیزه کیفیت در متخصص</td></tr>
+</tbody>
+</table>
+
+<h3 id="s5-3">۵.۳ کشف تقلب و تبانی (Fraud &amp; Collusion Detection)</h3>
+<table class="tbl">
+<thead><tr><th>الگوی تقلب</th><th>نشانه‌های قابل داده‌کاوی</th><th>اقدام خودکار</th></tr></thead>
+<tbody>
+<tr><td>دورزدن کمیسیون (تبانی مشتری–متخصص)</td><td>لغو سفارش پس از چت طولانی؛ ذکر شماره تلفن/کد/آدرس در متن یا <b>تبدیل گفتار به متن تماس</b> با Regex شماره‌ها؛ پرداخت خارج از پلتفرم؛ سفارش‌های مکرر کوتاه با همان زوج بدون بازگشت؛ معامله با «قیمت صفر»</td><td>هشدار به متخصص (نقض قرارداد)، کاهش رتبه، تعلیق موقت؛ کمپین «پاداش وفاداری درون پلتفرم» برای کاهش انگیزه</td></tr>
+<tr><td>نظرات جعلی و سیکل تبانی</td><td>گراف سفارش‌ها و شبکه‌های کوچک بسته (Community Dense Subgraph)؛ الگوی جایگشتی مشتری↔متخصص؛ زمان‌های کوتاه غیرواقعی؛ IP/دستگاه مشترک</td><td>حذف نظر، خنثی‌سازی امتیاز، نشانه‌گذاری حساب</td></tr>
+<tr><td>کلاهبرداری متخصص</td><td>قیمت‌های تغییر ناموجه، قطعات با فاکتور مشکوک، تکرار همان شکایت، عدم عکس قبل/بعد، GPS جعلی (Mock Location)</td><td>بررسی پرونده، تعلیق، کسر از کیف پول، رد صلاحیت (Delisting)</td></tr>
+<tr><td>سوءاستفاده مشتری</td><td>ادعاهای پرتکرار خسارت، Noshows مکرر، شارژ‌بک‌های چندباره، کدهای تخفیف انبوه</td><td>محدودیت پرداخت در محل، پیش‌پرداخت اجباری، بلاک تخفیف</td></tr>
+<tr><td>تقلب هویتی در ثبت‌نام</td><td>کارت ملی تکراری/دست‌کاری‌شده، شبا شخص دیگر، چند حساب با یک دستگاه</td><td>Red Flag در Onboarding، الزام بررسی انسانی</td></tr>
+<tr><td>حساب‌های هم‌مکان (Sybil)</td><td>گراف دستگاه–شبا–آدرس–IP؛ الگوریتم‌های Community Detection (Louvain) و GNNSage برای Embedding</td><td>خوشه‌بندی و برخورد یکسان با کل گروه</td></tr>
+</tbody>
+</table>
+<h4>معماری سرویس ریسک</h4>
+<pre class="code">features (stream + batch) → risk_scoring_service → decision (ALLOW | REVIEW | BLOCK)
+      ▲                              ▲                        │
+   Kafka topics                 rules DSL (JSON)         action_log + human queue
+(order.*, chat.*, payment.*,   + ML model (XGBoost)      (نمایش به کارشناس ریسک)
+ location.*, device.*)          + graph features
+SLA: تصمیم آنلاین &lt; ۱۵۰ms — حالت Degraded: فقط قوانین ساده (Fail-Open با لاگ)</pre>
+<p><b>حاکمیت مدل:</b> هر مدل نیازمند کارت مدل (Model Card) شامل هدف، داده آموزشی، محدودیت‌ها، معیارهای دقت و مسیر اعتراض کاربر است. تصمیم‌های مسدودکننده باید <b>قابل اعتراض</b> و قابل بازبینی انسانی باشند؛ در غیر این‌صورت ریسک حقوقی و نارضایتی ایجاد می‌شود.</p>
+
+<h3>۵.۴ چرخه حل اختلاف و بازکاری (Dispute &amp; Rework)</h3>
+<ol>
+<li><b>گزارش مشتری</b> در پنجره ۴۸ ساعته پس از پایان کار (یا در پنجره گارانتی) → توقف آزادسازی Escrow.</li>
+<li><b>گفتگوی خودکار</b>: درخواست عکس/ویدیو از دو طرف + پیشنهاد راه‌حل در سه گزینه (تعمیر مجدد رایگان، بازگشت جزئی، بازگشت کامل).</li>
+<li><b>پاسخ متخصص</b> در مهلت ۱۲ ساعت؛ عدم پاسخ = تصمیم به نفع مشتری.</li>
+<li><b>کارشناس کیفیت</b> برای موارد بالای سقف مبلغ یا تکرارشونده؛ امکان تشکیل جلسه ویدیویی سهم‌طرفه با ضبط.</li>
+<li><b>اجرا</b> توسط موتور پول (Refund/Release/Penalty) و ثبت اثر روی رتبه و ریسک متخصص.</li>
+<li><b>بستن پرونده</b> با ثبت دلیل در <code>dispute_resolution</code> و به‌روزرسانی Playbook پشتیبانی.</li>
+</ol>
+<p class="muted">KPI این چرخه: نرخ حل در تماس اول (FCR)، میانگین زمان حل (AHT)، نرخ اختلاف بازشده در هر ۱۰۰۰ سفارش، نرخ تکرار اختلاف در همان متخصص.</p>
+</section>
+
+<section id="s6">
+<h2><span class="num">۶</span>پشتیبانی، ارتباطات و CRM</h2>
+<p class="lead">پشتیبانی در مارکت‌پلیس خدمات، «هزینه» نیست؛ خط تولید اعتماد است. هدف: پاسخ لحظه‌ای خودکار برای ۵۰٪ سوالات، ابزار دقیق برای اپراتور برای بقیه.</p>
+
+<h3>۶.۱ چت امن، تماس پوشانده‌شده و تماس تصویری</h3>
+<table class="tbl">
+<thead><tr><th>قابلیت</th><th>شرح</th><th>الزامات فنی</th><th>اولویت</th></tr></thead>
+<tbody>
+<tr><td>چت درون‌برنامه‌ای</td><td>متن، عکس، فایل، موقعیت مکانی؛ قالب پیام سریع («رسیدم»، «۱۵ دقیقه تأخیر دارم»)</td><td>WebSocket + ذخیره‌سازی پیام، وضعیت تحویل/خوانده‌شده، پشتیبانی آفلاین با Push</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>شماره پوشانده‌شده (Number Masking)</td><td>تماس دوطرفه از طریق شماره واسط؛ آزادسازی دائمی شماره پس از اتمام سفارش (اختیاری با رضایت)</td><td>Provider تلفنی (VoIP/SIP) + Webhook CDR؛ مسدودسازی خودکار در سفارش‌های لغوشده</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>ضبط و رونویسی تماس</td><td>تبدیل به متن با ASR فارسی برای جست‌وجو، رسیدگی به اختلاف و کشف تبانی</td><td>ذخیره رمزنگاری‌شده، مدت نگهداری مشخص، رضایت اعلامی در ابتدای تماس</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>تماس تصویری درون‌برنامه‌ای (Remote Inspection)</td><td>بازدید از راه دور قبل از اعزام: مشتری با گوشی مشکل را نشان می‌دهد؛ متخصص تشخیص اولیه و برآورد دقیق‌تر می‌دهد</td><td>WebRTC (SFU برای چندنفره)، ضبط جلسه با رضایت، برچسب‌گذاری زمانی، هزینه بازدید ویدیویی قابل کسر از فاکتور</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>جلسه کارشناسی سه‌نفره</td><td>مشتری + متخصص + کارشناس پشتیبانی برای تشخیص اختلاف فنی</td><td>اتاق مجازی با کنترل میزبان و اتاق انتظار</td><td><span class="badge b-v2">V2</span></td></tr>
+<tr><td>حریم خصوصی تماس</td><td>قطع خودکار تماس پس از بسته شدن سفارش، مسدودسازی تماس‌های ناخواسته، گزارش سوءاستفاده</td><td>لاگ همه تماس‌ها با سفارش مرتبط</td><td><span class="badge b-v1">V1</span></td></tr>
+</tbody>
+</table>
+
+<h3>۶.۲ چت‌بات و دستیار هوشمند پیش‌پشتیبانی</h3>
+<ul>
+<li><b>دامنه عملکرد:</b> وضعیت سفارش («متخصص کجاست؟»)، قیمت و زمان تقریبی، سیاست‌های لغو/بازگشت، راهنمای استفاده از اپ، عیب‌یابی ساده، ثبت پیش‌سفارش، پیگیری بازگشت پول، و مسائل بیمه/گارانتی.</li>
+<li><b>معماری:</b> Intent Classifier + Retrieval-Augmented Generation روی پایگاه دانش فارسی (FAQ، Playbook پشتیبانی، قوانین) + Tool Calling برای پرس‌وجوی وضعیت سفارش در APIها (خواندنی، با محدودیت دسترسی).</li>
+<li><b>قواعد طلایی:</b> بدون هیچ اقدام مالی غیرقابل‌بازگشت توسط بات؛ هر پاسخ با منبع داخلی قابل ارجاع؛ در سه حالت «عدم اطمینان»، «خشم کاربر» یا «موضوع مالی» → انتقال به اپراتور انسانی با خلاصه گفتگو.</li>
+<li><b>معیار:</b> نرخ حل بدون انتقال (Deflection) ≥ ۴۵٪، رضایت پس از چت (CSAT) ≥ ۴، نرخ خطای اطلاعاتی &lt; ۲٪ با بازبینی نمونه‌ای.</li>
+</ul>
+
+<h3>۶.۳ میز پشتیبانی، CRM و اتاق بحران</h3>
+<table class="tbl">
+<thead><tr><th>مؤلفه</th><th>ویژگی‌ها</th></tr></thead>
+<tbody>
+<tr><td>تیکتینگ چندکاناله</td><td>کانال‌های چت، تماس، ایمیل، فرم وب، شبکه‌های اجتماعی، درون سفارش؛ یکسان‌سازی در یک Thread واحد با تاریخچه کامل</td></tr>
+<tr><td>SLA و مسیر تشدید</td><td>سطح ۱ (پاسخ &lt; ۲ دقیقه در ساعت کاری)، سطح ۲ فنی (&lt; ۳۰ دقیقه)، سطح ۳ کیفیت/حقوقی (۴ ساعت)، رانش خودکار بر پایه اولویت و ارزش سفارش</td></tr>
+<tr><td>کارتابل اپراتور</td><td>نمای واحد: سفارش، موقعیت زنده متخصص، تاریخچه چت/تماس، پرونده سفارش‌های قبلی، دکمه‌های عملیات (کوپن، بازگشت پول، ارجاع، تعلیق موقت)</td></tr>
+<tr><td>اتاق بحران (Crisis Cockpit)</td><td>نمای زنده شهر: سفارش‌های تأخیردار، متخصصان بدون حرکت، هشدارهای ایمنی، تجمع شکایت در یک دسته/منطقه، وضعیت درگاه پرداخت و Push؛ ابزار «پیام عمومی به متخصصان منطقه» و «توقف موقت عرضه خدمات»</td></tr>
+<tr><td>صدای مشتری (VOC)</td><td>تحلیل نظرات و شکایت‌ها با NLP: استخراج موضوعات نوظهور، دسته‌بندی علل ریشه‌ای، اتوماسیون یادگیری در Playbook</td></tr>
+<tr><td>CRM رشد</td><td>بخش‌بندی مشتری (RFM)، کمپین بازگشت، یادآوری سرویس دوره‌ای (سرویس کولر قبل از تابستان)، پیشنهاد پکیج، مدیریت وفاداری و امتیاز</td></tr>
+</tbody>
+</table>
+<div class="callout"><b>حاکمیت دسترسی پشتیبانی:</b> هر اپراتور فقط به داده لازم برای پرونده جاری دسترسی دارد؛ شماره کامل و آدرس دقیق مشتری فقط پس از پذیرش سفارش و فقط برای متخصص و اپراتور مرتبط نمایش داده می‌شود. همه دسترسی‌ها در <code>audit_log</code> ثبت می‌شود.</div>
+</section>
+
+<!-- ===== 07-infra.html (s7) ===== -->
+<section id="s7">
+<h2><span class="num">۷</span>زیرساخت فنی و قابلیت‌های پیشرفته</h2>
+<h3>۷.۱ پشته فناوری پیشنهادی</h3>
+<table class="tbl">
+<thead><tr><th>لایه</th><th>انتخاب</th><th>چرا</th><th>جایگزین</th></tr></thead>
+<tbody>
+<tr><td>اپ موبایل مشتری/متخصص</td><td>Flutter (کدبیس مشترک) + ماژول‌های بومی برای Face-Liveness، Keystore و Push</td><td>سرعت تحویل در دو پلتفرم، عملکرد نزدیک به بومی برای نقشه و دوربین</td><td>React Native؛ Swift/Kotlin برای فقط یک پلتفرم</td></tr>
+<tr><td>وب (سایت، پنل‌ها، PWA)</td><td>Next.js (SSR/ISR برای سئو) + TypeScript؛ پنل‌ها با React + TanStack Query</td><td>سئوی قوی برای صفحات خدمات شهری، اشتراک کامپوننت با پنل‌ها</td><td>Nuxt؛ Remix</td></tr>
+<tr><td>سرویس‌های بک‌اند</td><td>Go برای سرویس‌های پرترافیک (Dispatch، Location، Notification) + Python (FastAPI) برای سرویس‌های AI/تحلیل + یک زبان واحد برای تیم‌های CRUD (پیشنهاد: Go یا Node/NestJS)</td><td>کارایی و هزینه زیرساخت پایین در Dispatch؛ سرعت توسعه در AI</td><td>Java/Spring (اگر تیم سازمانی است)، Node/NestJS</td></tr>
+<tr><td>داده</td><td>PostgreSQL 16 + PostGIS (منبع حقیقت)، Redis (کش/صف کوتاه/Geo)، OpenSearch (جست‌وجو و لاگ)، ClickHouse (تحلیل)، S3-compatible (رسانه)، Kafka (رویداد)</td><td>ترکیب تراکنشی + تحلیلی + جست‌وجو با TCO متعادل</td><td>Cassandra برای Location در مقیاس بسیار بالا (فاز ۳)</td></tr>
+<tr><td>زیرساخت</td><td>Kubernetes (RKE2/K8s مدیریت‌شده)، GitOps (Argo CD)، IaC (Terraform)، CDN/WAF، Object Storage بومی</td><td>تحمل خطا، استقرار چند محیطی، DR</td><td>Docker Swarm/Nomad برای شروع سبک‌تر</td></tr>
+<tr><td>مشاهده‌پذیری</td><td>OpenTelemetry + Prometheus + Grafana + Loki/Tempo؛ RUM/Sentry برای موبایل</td><td>ردیابی سراسری Correlation-ID از اپ تا DB</td><td>پشته ELK + Datadog (هزینه بالاتر)</td></tr>
+<tr><td>ML</td><td>Feature Store (Feast/سفارشی روی Redis+ClickHouse) + مدل‌های سرو‌شده با Triton/ONNX Runtime + بستر آموزش جدا</td><td>کاهش شکاف آموزش/سرویس و انتشار امن مدل</td><td>سرویس‌های SaaS بیرونی</td></tr>
+</tbody>
+</table>
+<div class="callout warn"><b>محدودیت‌های واقعی بازار ایران:</b> کیفیت نوسانی شبکه موبایل، تنوع دستگاه‌های Android قدیمی، محدودیت دسترسی به سرویس‌های ابری جهانی، نیاز به آدرس IP/دیتاسنتر داخلی و محدودیت درگاه‌های پرداخت. معماری باید <b>کم‌بایت، آفلاین‌پذیر (Offline-first برای متخصص)</b> و دارای مسیر جایگزین برای سرویس‌های وابسته باشد (مثلاً دو تأمین‌کننده Push/SMS و نقشه).</div>
+
+<h3>۷.۲ نقشه و ردیابی زنده (Live Tracking)</h3>
+<ul>
+<li><b>جریان موقعیت:</b> اپ متخصص هر ۵–۱۵ ثانیه (و در حالت حرکت با فاصله محور) موقعیت را با حداقل بایت ارسال می‌کند → Kafka → سرویس Location → Redis Geo + سری‌زمانی برای بازپخش مسیر.</li>
+<li><b>نمایش به مشتری:</b> مسیر، ETA پویا، نام/عکس متخصص، پلاک خودرو یا مدل موتور، دکمه تماس امن و چت. «اشتراک مسیر زنده» با یک پیوند امن برای اعضای خانواده (اختیاری).</li>
+<li><b>حریم خصوصی متخصص:</b> ثبت موقعیت فقط در بازه فعال سفارش (از پذیرش/حرکت تا پایان کار)، نمایش متناسب با مرحله سفارش (مثلاً پیش از حرکت، فقط ETA)، توقف صریح با دکمه و امکان حذف سرگذشت مسیر پس از دوره نگهداری.</li>
+<li><b>مسیریابی:</b> سرویس مسیریابی داخلی یا نقشه‌های بومی (نشان، بلد، Map.ir) با امکان انتخاب صریح؛ محاسبه ETA بر پایه ترافیک لحظه‌ای و وسیله (موتور/خودرو).</li>
+<li><b>ضدتقلب موقعیت:</b> تشخیص Mock Location، جهش‌های غیرممکن (سرعت باورنکردنی)، عدم مطابقت با WiFi/شبکه ثبت‌شده → پرچم ریسک.</li>
+</ul>
+
+<h3>۷.۳ داشبورد تحلیلی متخصص</h3>
+<table class="tbl">
+<thead><tr><th>ویجت</th><th>محتوا</th><th>هدف رفتاری</th></tr></thead>
+<tbody>
+<tr><td>درآمد</td><td>درآمد امروز/هفته/ماه، سهم کمیسیون، پیش‌بینی درآمد پایان ماه، جزئیات هر سفارش</td><td>شفافیت و کاهش برداشت‌های اشتباه</td></tr>
+<tr><td>ساعات پرکار (Heatmap)</td><td>نقشه حرارتی روز/ساعت محله‌های پرتقاضا، اوج‌های هفتگی</td><td>هدایت متخصص به زمان/مکان با تقاضای بیشتر (افزایش درآمد و عرضه در پیک)</td></tr>
+<tr><td>نرخ موفقیت</td><td>نرخ پذیرش، نرخ تکمیل، نرخ لغو، امتیاز هر بُعد، پارگی گارانتی</td><td>مسیر رشد به سطح L3 و کمیسیون کمتر</td></tr>
+<tr><td>پیشنهاد افزایش درآمد</td><td>«اگر دوشنبه‌ها ۱۸–۲۱ فعال باشی، حدود ۲۴٪ سفارش بیشتر می‌گیری»، پیشنهاد آموزش دسته جدید، قابلیت چند مهارتی (Upskill)</td><td>افزایش عرضه در ساعات کمبود و تنوع مهارت</td></tr>
+<tr><td>برنامه وفاداری</td><td>سطح، پاداش، تخفیف کمیسیون، اولویت صف</td><td>نگهداشت عرضه رقیب‌پذیر</td></tr>
+<tr><td>سلامت پروفایل</td><td>عکس، توضیحات، نمونه‌کار، مدارک در حال انقضا، و پیشنهاد بهبود (مانند «افزودن نمونه‌کار ۲۳٪ بیشتر پذیرش می‌آورد»)</td><td>کیفیت پروفایل و تبدیل</td></tr>
+</tbody>
+</table>
+
+<h3>۷.۴ Push Notification و اطلاع‌رسانی</h3>
+<ul>
+<li><b>کانال‌ها:</b> Push (FCM/APNs + سرویس جایگزین بومی)، SMS (دو تأمین‌کننده برای تحمل خطا)، ایمیل، WhatsApp/Telegram برای فاکتور و رسید (اختیاری)، پیام درون‌برنامه‌ای.</li>
+<li><b>سرویس Notification مستقل:</b> قالب‌ها در CMS، اولویت‌بندی صف (ERO/معمولی)، ضداسپم (سقف روزانه، ساعات مجاز، ترجیحات کاربر)، زمان‌بندی بر پایه منطقه زمانی، پیگیری رویداد ارسال/تحویل/کلیک.</li>
+<li><b>رویدادهای حیاتی (با اولویت بالا):</b> پیشنهاد فوری سفارش، لغو سفارش، تغییر زمان، تخصیص مجدد، ورود متخصص به محله، اعلان امنیتی ورود جدید.</li>
+<li><b>قاعده:</b> هر رویداد مهم باید «مسیر جایگزین» داشته باشد؛ اگر Push نشد → SMS؛ اگر پیامک هم نرسید → تماس خودکار اپراتور برای سفارش‌های بالای سقف.</li>
+</ul>
+
+<h3>۷.۵ لایه Cache و بهینه‌سازی عملکرد</h3>
+<table class="tbl">
+<thead><tr><th>نقطه</th><th>استراتژی</th><th>TTL</th></tr></thead>
+<tbody>
+<tr><td>دسته‌بندی/خدمت‌ها/Rate Card</td><td>Cache در CDN + Redis، نسخه‌دار (Invalidate با رویداد انتشار)</td><td>ساعت‌ها–روز</td></tr>
+<tr><td>پروفایل متخصص برای اپ مشتری</td><td>Cache-Aside با کلید <code>pro:{id}:{version}</code></td><td>۵–۱۵ دقیقه</td></tr>
+<tr><td>موقعیت متخصص</td><td>Redis Geo، بدون Cache طولانی؛ TTL کوتاه ۶۰–۱۲۰ ثانیه</td><td>ثانیه</td></tr>
+<tr><td>نتیجه تخمین قیمت</td><td>Cache با امضای ورودی (هش) برای درخواست‌های تکراری</td><td>۵ دقیقه</td></tr>
+<tr><td>Resultهای تکراری لیست سفارش</td><td>Cache صفحه‌بندی‌شده با نسخه‌بندی کاربر</td><td>۳۰–۶۰ ثانیه</td></tr>
+<tr><td>ضدبار حساس</td><td>Rate-Limit مبتنی بر Redis + Circuit Breaker + Degradation Mode (خاموشی موقت قابلیت‌های غیرحیاتی مثل پیشنهادهای شخصی‌سازی)</td><td>—</td></tr>
+</tbody>
+</table>
+
+<h3>۷.۶ ظرفیت‌سنجی نمونه (مبنای انتخاب زیرساخت)</h3>
+<table class="tbl">
+<thead><tr><th>شاخص</th><th>سال ۱ (هدف)</th><th>سال ۲–۳ (مقیاس)</th><th>اثر معماری</th></tr></thead>
+<tbody>
+<tr><td>کاربران ماهانه</td><td>۵۰۰ هزار</td><td>۳ میلیون</td><td>CDN، SSR، جداسازی خواندن/نوشتن</td></tr>
+<tr><td>سفارش روزانه</td><td>۱۵ هزار</td><td>۱۰۰ هزار</td><td>پارتیشن‌بندی سفارش و رویداد، صف افقی Dispatch</td></tr>
+<tr><td>حداکثر RPS API</td><td>۸۰۰</td><td>۸ هزار</td><td>HPA روی K8s، Cache، اتصال Pooling (PgBouncer)</td></tr>
+<tr><td>هم‌زمانی سوکت (Live/چت)</td><td>۲۰ هزار</td><td>۱۵۰ هزار</td><td>کانال‌های جداگانه + Redis Pub/Sub یا NATS</td></tr>
+<tr><td>رخداد موقعیت در ثانیه</td><td>~۵۰۰</td><td>~۱۰ هزار</td><td>Batch نوشتن، نمونه‌گیری، ذخیره سرد</td></tr>
+<tr><td>نرخ خطای هدف</td><td>&lt; ۰.۵٪</td><td>&lt; ۰.۳٪</td><td>Retry ایمن (Idempotency)، Circuit Breaker</td></tr>
+</tbody>
+</table>
+
+<h3>۷.۷ چرخه توسعه، کیفیت و استقرار</h3>
+<ul>
+<li><b>محیط‌ها:</b> Dev → Staging (داده شبه‌واقعی) → Canary → Production؛ Feature Flag برای هر قابلیت هوشمند و Kill-Switch برای موتور قیمت، Dispatch، Fraud و AI Intake.</li>
+<li><b>CI/CD:</b> تست واحد &gt; ۷۰٪ روی سرویس‌های مالی و Dispatch + تست یکپارچگی قرارداد رویداد (Contract Tests) + تست مهاجرت DB + اسکن امنیت (SAST/DAST/Dependency).</li>
+<li><b>DR و پایداری:</b> RPO ≤ ۵ دقیقه، RTO ≤ ۳۰ دقیقه؛ پشتیبان‌گیری روزانه + PITR؛ تمرین بازیابی فصلی؛ Multi-AZ برای سرویس‌های حیاتی.</li>
+<li><b>تیم و مالکیت:</b> هر سرویس مالک (CODEOWNERS) و شاخص SLO دارد؛ فرهنگ Post-mortem بدون سرزنش (Blameless) و بستن سهماهه اقدامات اصلاحی.</li>
+</ul>
+</section>
+
+<!-- ===== 08-data-model.html (s8) ===== -->
+<section id="s8">
+<h2><span class="num">۸</span>معماری داده — مدل موجودیت‌ها و فهرست جداول</h2>
+<p class="lead">فایل اجرایی کامل: <code>achareh-plus/db/schema.sql</code> (PostgreSQL 16 + PostGIS). این بخش نقشه فکری و فهرست جداول را ارائه می‌کند.</p>
+
+<h3>۸.۱ قواعد عمومی مدل داده</h3>
+<div class="grid two">
+<div class="card"><h4>قواعد پایه</h4>
+<ul>
+<li>کلید اصلی: <code>UUIDv7</code> (مرتب بر پایه زمان ⇒ ایندکس کاراتر)؛ برای جداول پرسرویداد، کلید مرکب <code>(created_at, id)</code>.</li>
+<li>مبالغ: <code>BIGINT</code> در واحد خرد (ریال) + ستون <code>currency CHAR(3)</code>؛ هیچ‌گاه <code>FLOAT</code> برای پول.</li>
+<li>زمان: همه <code>timestamptz</code> به UTC؛ نمایش بر پایه منطقه کاربر در لایه اپ.</li>
+<li>حذف نرم: <code>deleted_at</code>؛ نگه‌داری سابقه تغییرات روی جداول مالی و پروفایل متخصص با <code>audit_log</code>.</li>
+<li>هر جدول: <code>created_at</code>, <code>updated_at</code>, <code>created_by</code> (هر جا معنا دارد).</li>
+<li>Enumها به‌صورت <code>CHECK</code> + جدول Lookup برای مقادیر قابل مدیریت از پنل.</li>
+</ul></div>
+<div class="card"><h4>پارتیشن‌بندی و نگه‌داری</h4>
+<ul>
+<li>پارتیشن ماهانه: <code>order_event</code>, <code>provider_location_ping</code>, <code>notification_log</code>, <code>ai_inference</code>, <code>audit_log</code> (۷ سال برای مالی، ۱۸ ماه برای فنی).</li>
+<li>جداول داغ (سفارش باز، موقعیت متخصص) در حافظه/Redis و جدول اصلی فقط وضعیت پایدار.</li>
+<li>آرشیو سرد: انتقال سفارش‌های بسته‌شده &gt; ۲۴ ماه به جداول آرشیو (کم‌هزینه، فقط‌خواندنی).</li>
+<li>حذف/بی‌اثرسازی PII پس از دوره نگه‌داری قانونی؛ نگه‌داری فیلدهای تجمیعی برای تحلیل.</li>
+</ul></div>
+</div>
+
+<h3>۸.۲ نمای ERD سطح‌بالا</h3>
+<div class="flow">
+<svg viewBox="0 0 980 560" role="img" aria-label="ERD سطح‌بالا">
+ <defs><style>
+  .ent{fill:#f2f9f8;stroke:#0f7a6c;stroke-width:1.4;rx:8}
+  .ent2{fill:#eef2ff;stroke:#1d4ed8;stroke-width:1.4;rx:8}
+  .ent3{fill:#fff8ed;stroke:#b45309;stroke-width:1.4;rx:8}
+  .h{font:700 11.5px Tahoma,sans-serif;fill:#0b3f4d;text-anchor:middle;direction:rtl}
+  .f{font:10.5px Tahoma,sans-serif;fill:#455060;text-anchor:middle;direction:rtl}
+  .r{stroke:#94a3b8;stroke-width:1.1;fill:none}
+ </style></defs>
+ <!-- identity -->
+ <rect class="ent2" x="770" y="20" width="190" height="92"/>
+ <text class="h" x="865" y="40">users / auth</text>
+ <text class="f" x="865" y="58">user • user_profile</text><text class="f" x="865" y="74">auth_credential • auth_session</text><text class="f" x="865" y="90">device • otp_challenge</text>
+ <!-- provider -->
+ <rect class="ent2" x="770" y="140" width="190" height="108"/>
+ <text class="h" x="865" y="160">provider</text>
+ <text class="f" x="865" y="178">provider_profile • provider_document</text><text class="f" x="865" y="194">provider_skill • provider_equipment</text><text class="f" x="865" y="210">provider_service_area • availability</text><text class="f" x="865" y="226">provider_tier_history</text>
+ <!-- catalog -->
+ <rect class="ent3" x="770" y="276" width="190" height="92"/>
+ <text class="h" x="865" y="296">catalog &amp; pricing</text>
+ <text class="f" x="865" y="314">service_category • service_item</text><text class="f" x="865" y="330">rate_card • price_rule</text><text class="f" x="865" y="346">price_quote • price_quote_revision</text>
+ <!-- order -->
+ <rect class="ent" x="470" y="20" width="210" height="126"/>
+ <text class="h" x="575" y="40">order (سفارش)</text>
+ <text class="f" x="575" y="58">order • order_item • order_media</text><text class="f" x="575" y="74">order_triage_answer • order_address</text><text class="f" x="575" y="90">order_timeline • order_event</text><text class="f" x="575" y="106">order_checklist • order_addon</text><text class="f" x="575" y="122">recurring_plan • booking_slot</text>
+ <!-- dispatch -->
+ <rect class="ent" x="470" y="176" width="210" height="108"/>
+ <text class="h" x="575" y="196">dispatch</text>
+ <text class="f" x="575" y="214">dispatch_request • job_offer</text><text class="f" x="575" y="230">assignment • assignment_rejection</text><text class="f" x="575" y="246">dispatch_wave • provider_score_snapshot</text><text class="f" x="575" y="262">emergency_request</text>
+ <!-- finance -->
+ <rect class="ent3" x="180" y="20" width="230" height="150"/>
+ <text class="h" x="295" y="40">payments &amp; ledger</text>
+ <text class="f" x="295" y="58">payment_intent • payment_txn • refund</text><text class="f" x="295" y="74">ledger_account • ledger_entry</text><text class="f" x="295" y="90">escrow_hold • escrow_release</text><text class="f" x="295" y="106">wallet • wallet_transaction</text><text class="f" x="295" y="122">payout_batch • payout_item • payout_schedule</text><text class="f" x="295" y="138">invoice • tax_invoice • bnpl_contract</text>
+ <!-- trust -->
+ <rect class="ent" x="180" y="200" width="230" height="120"/>
+ <text class="h" x="295" y="220">trust &amp; quality</text>
+ <text class="f" x="295" y="238">review • review_dimension • review_appeal</text><text class="f" x="295" y="254">quality_check • rework_case</text><text class="f" x="295" y="270">warranty • insurance_policy</text><text class="f" x="295" y="286">claim • claim_assessment • dispute</text><text class="f" x="295" y="302">dispute_message • dispute_resolution</text>
+ <!-- risk -->
+ <rect class="ent3" x="180" y="360" width="230" height="100"/>
+ <text class="h" x="295" y="380">risk &amp; fraud</text>
+ <text class="f" x="295" y="398">risk_signal • risk_score • risk_case</text><text class="f" x="295" y="414">entity_link (graph) • blacklist_entry</text><text class="f" x="295" y="430">collusion_alert • behavioral_baseline</text>
+ <!-- comms -->
+ <rect class="ent2" x="470" y="330" width="210" height="126"/>
+ <text class="h" x="575" y="350">communication &amp; CRM</text>
+ <text class="f" x="575" y="368">conversation • message • message_attachment</text><text class="f" x="575" y="384">masked_call • call_recording • transcript</text><text class="f" x="575" y="400">video_session • video_recording</text><text class="f" x="575" y="416">support_ticket • ticket_event • csat_survey</text><text class="f" x="575" y="432">crm_segment • campaign • coupon</text>
+ <!-- infra -->
+ <rect class="ent" x="470" y="486" width="210" height="60"/>
+ <text class="h" x="575" y="506">platform</text><text class="f" x="575" y="524">notification_log • feature_flag • audit_log</text>
+ <!-- ai -->
+ <rect class="ent3" x="180" y="486" width="230" height="60"/>
+ <text class="h" x="295" y="506">AI &amp; analytics</text><text class="f" x="295" y="524">ai_inference • ai_label • analytics_daily_agg</text>
+ <!-- relations -->
+ <path class="r" d="M770 66 H690 V80 H680"/>
+ <path class="r" d="M770 194 H700 V120 H680"/>
+ <path class="r" d="M770 300 H720 V150 H640 V120"/>
+ <path class="r" d="M580 146 V174"/>
+ <path class="r" d="M470 90 H410"/>
+ <path class="r" d="M580 284 V328"/>
+ <path class="r" d="M410 84 V240 H470"/>
+ <path class="r" d="M410 260 H430 V400 H470"/>
+ <path class="r" d="M575 456 V484"/>
+ <path class="r" d="M410 500 H468"/>
+ <text class="f" x="700" y="500" style="font:10.5px Tahoma;fill:#5c6472">هر سرویس = یک Schema مستقل در DB مشترک (فاز ۱) یا DB جدا (فاز ۳)</text>
+</svg>
+</div>
+
+<h3>۸.۳ فهرست جداول به تفکیک سرویس</h3>
+<p class="muted">در ادامه، جداول اصلی هر سرویس فهرست شده‌اند (برخی جداول کمکی و پیوندی در ردیف‌های ترکیبی گروه‌بندی شده‌اند). اسکیمای اجرایی <code>db/schema.sql</code> در مجموع <b>۱۱۳ جدول</b> ایجاد می‌کند.</p>
+
+<h4>الف) هویت و دسترسی (Identity) — ۱۱ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>user</code></td><td>id, phone_e164 (uniq, encrypted), phone_verified_at, email, national_id_hash, status, locale, created_at</td><td>هویت واحد؛ شماره به‌صورت رمزنگاری‌شده + ایندکس هش برای جست‌وجو</td></tr>
+<tr><td><code>user_profile</code></td><td>user_id, full_name, avatar_url, gender, birth_date, addresses(jsonb), preferences(jsonb)</td><td>پروفایل نمایشی و ترجیحات</td></tr>
+<tr><td><code>auth_credential</code></td><td>id, user_id, type(OTP/OAUTH_GOOGLE/OAUTH_APPLE/PASSKEY/PASSWORD), secret_hash, public_key, metadata(jsonb), last_used_at</td><td>هر روش ورود یک ردیف؛ Passkey کلید عمومی</td></tr>
+<tr><td><code>auth_session</code></td><td>id, user_id, device_id, refresh_token_hash, issued_at, expires_at, revoked_at, ip, ua, risk_score</td><td>Rotation و Reuse-Detection</td></tr>
+<tr><td><code>otp_challenge</code></td><td>id, phone_e164, code_hash, purpose, attempts, expires_at, consumed_at, ip, device_fingerprint</td><td>ضد SMS-Bombing و محدودیت نرخ</td></tr>
+<tr><td><code>device</code></td><td>id, user_id, platform, model, os_version, app_version, push_token, fingerprint, trusted</td><td>پیوند نشست و Push</td></tr>
+<tr><td><code>role</code> / <code>permission</code> / <code>role_permission</code> / <code>user_role</code></td><td>code, scope, resource, action</td><td>RBAC مبتنی بر <code>resource:action:scope</code></td></tr>
+<tr><td><code>org_account</code></td><td>id, legal_name, national_entity_id, economic_code, credit_limit, payment_terms, contract_rate_card_id, status</td><td>حساب شرکتی B2B</td></tr>
+<tr><td><code>org_member</code></td><td>org_id, user_id, org_role, cost_center, approval_limit</td><td>چندکاربری سازمانی</td></tr>
+<tr><td><code>consent_record</code></td><td>user_id, consent_type, version, granted_at, revoked_at, ip</td><td>رضایت‌نامه نسخه‌دار</td></tr>
+<tr><td><code>audit_log</code></td><td>id, actor_id, actor_role, action, resource_type, resource_id, before(jsonb), after(jsonb), reason, ip, correlation_id, created_at</td><td>پارتیشن ماهانه؛ ۷ سال نگه‌داری</td></tr>
+</tbody>
+</table>
+
+<h4>ب) متخصص و تأیید صلاحیت (Provider) — ۱۲ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>provider_profile</code></td><td>user_id(PK), display_name, bio, verified_level(0..4), status, tier, rating_avg, rating_count, acceptance_rate, on_time_rate, cancel_rate, last_location(geography), last_location_at, capacity_per_day</td><td>هسته عرضه؛ ایندکس GiST روی موقعیت</td></tr>
+<tr><td><code>provider_org_link</code></td><td>provider_id, org_id, employment_type, revenue_share</td><td>متخصص زیر نظر شرکت خدماتی</td></tr>
+<tr><td><code>provider_document</code></td><td>id, provider_id, kind(NATIONAL_ID, CRIMINAL_RECORD, SKILL_CERT, INSURANCE, BUSINESS_LICENSE), file_id, ocr_data(jsonb), issue_date, expiry_date, verification_status, verified_by, verification_notes</td><td>چرخه اعتبار مدارک و یادآوری انقضا</td></tr>
+<tr><td><code>identity_verification</code></td><td>id, provider_id, selfie_file_id, face_match_score, liveness_score, tamper_score, decision, decided_by, decided_at</td><td>خروجی AI Face Match برای حسابرسی</td></tr>
+<tr><td><code>skill_test_attempt</code></td><td>id, provider_id, category_id, score, passed, video_file_id, reviewed_by</td><td>آزمون و ویدیو معرفی</td></tr>
+<tr><td><code>provider_skill</code></td><td>provider_id, skill_code, level, verified_at, experience_years</td><td>تطبیق مهارت با سفارش</td></tr>
+<tr><td><code>provider_equipment</code></td><td>provider_id, equipment_code, quantity, verified_at, photo_file_id</td><td>ورودی الگوریتم تطبیق</td></tr>
+<tr><td><code>provider_service_area</code></td><td>provider_id, zone_id | polygon(geography), radius_km, priority</td><td>پوشش جغرافیایی چندگانه</td></tr>
+<tr><td><code>provider_availability</code></td><td>provider_id, weekday, from_time, to_time, is_recurring, date_override, is_available</td><td>تقویم و ظرفیت</td></tr>
+<tr><td><code>provider_capacity</code></td><td>provider_id, date, accepted_count, slots_total, active_order_id</td><td>کنترل هم‌زمانی پذیرش</td></tr>
+<tr><td><code>provider_sanction</code></td><td>id, provider_id, type(WARN/SUSPEND/BAN/PENALTY), reason, from_date, to_date, amount, applied_by, appeal_status</td><td>تعلیق و جریمه با فرایند اعتراض</td></tr>
+<tr><td><code>provider_tier_history</code></td><td>provider_id, tier, from_date, to_date, reason, commission_rate</td><td>تاریخ تغییر سطح و کمیسیون</td></tr>
+</tbody>
+</table>
+
+<h4>ج) کاتالوگ و قیمت‌گذاری (Catalog &amp; Pricing) — ۹ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>service_category</code></td><td>id, slug, title_fa, parent_id, icon, seo_meta, active, warranty_days_default, insurance_required</td><td>درخت دسته‌بندی خدمات</td></tr>
+<tr><td><code>service_item</code></td><td>id, category_id, title_fa, unit(MANUAL/FIXED/HOURLY/SQ_METER), pricing_model(FIXED/BAND/INSPECTION/BID/HOURLY/RETAINER), duration_estimate_min, required_skills[], required_equipment[], triage_flow_id</td><td>تعریف خدمت قابل سفارش</td></tr>
+<tr><td><code>rate_card</code> / <code>rate_card_item</code></td><td>version, effective_from, region_id, service_item_id, base_price, min_price, max_price, travel_fee_rule(jsonb), materials_included</td><td>نسخه‌دار و منطقه‌ای</td></tr>
+<tr><td><code>price_rule</code></td><td>id, name, scope(jsonb), formula(jsonb), priority, active, valid_from, valid_to</td><td>قواعد پویا (Surge، پیچیدگی، تخفیف) به‌صورت داده</td></tr>
+<tr><td><code>demand_supply_metric</code></td><td>zone_id, window_start, orders_count, active_providers, demand_index, surge_factor</td><td>ورودی Surge (سری‌زمانی، ۵ دقیقه‌ای)</td></tr>
+<tr><td><code>price_quote</code></td><td>id, order_id, model, min_amount, max_amount, final_amount, currency, breakdown(jsonb), engine_version, rate_card_version, confidence, expires_at</td><td>تخمین با امکان بازتولید</td></tr>
+<tr><td><code>price_quote_revision</code></td><td>quote_id, revised_by, reason_code, old_amount, new_amount, approved_by_customer, approved_at, media_file_id</td><td>Change Order و تغییر قیمت</td></tr>
+<tr><td><code>promotion</code> / <code>coupon</code></td><td>code, kind(PERCENT/AMOUNT/FREE_ADDON), scope, max_uses, per_user_limit, min_basket, valid_from/to, applies_to_org</td><td>تخفیف و کمپین (با ضدسوءاستفاده)</td></tr>
+<tr><td><code>tax_rule</code></td><td>id, region, category_id, vat_rate, withholding_rate, effective_from, active</td><td>نرخ‌ها پارامتری، نه کد</td></tr>
+</tbody>
+</table>
+
+<h4>د) سفارش و اجرا (Order / Job) — ۱۲ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>order</code></td><td>id, code, customer_id, org_id, service_item_id, category_path, status, urgency, skills_required[], equipment_required[], severity, location(geography), address_id, slot_start, slot_end, price_quote_id, final_amount, payment_state, escrow_state, assigned_provider_id, warranty_expires_at, source(APP/WEB/CALLCENTER), created_at</td><td>موجودیت مرکزی؛ ایندکس روی (status, created_at) و GiST مکانی</td></tr>
+<tr><td><code>order_media</code></td><td>order_id, file_id, type(IMAGE/VIDEO/AUDIO/DOC), ai_tags[], transcript, exif_stripped, uploaded_by</td><td>رسانه‌های ورودی و مستندات</td></tr>
+<tr><td><code>order_triage_answer</code></td><td>order_id, question_id, answer, confidence, source(USER/AI)</td><td>پاسخ تریاژ و مبنای تخمین</td></tr>
+<tr><td><code>triage_flow</code> / <code>triage_question</code></td><td>flow_id, category_id, nodes(jsonb), version, active</td><td>درخت تصمیم قابل ویرایش در پنل</td></tr>
+<tr><td><code>order_item</code></td><td>order_id, kind(SERVICE/MATERIAL/ADDON/TRAVEL), title, qty, unit_price, total, taxable</td><td>اقلام صورتحساب</td></tr>
+<tr><td><code>order_checklist</code></td><td>order_id, phase(BEFORE/AFTER), item, required, photo_required, done_at, done_by, photo_file_id, geo</td><td>مستندسازی قبل/بعد (پایه بیمه و اختلاف)</td></tr>
+<tr><td><code>order_timeline</code></td><td>order_id, event_code, at, actor_id, payload(jsonb)</td><td>خط زمانی نمایش‌داده‌شده به کاربر</td></tr>
+<tr><td><code>order_event</code></td><td>id, order_id, event_type, payload, correlation_id, created_at</td><td>پارتیشن ماهانه؛ منبع انتشار Kafka</td></tr>
+<tr><td><code>order_status_transition</code></td><td>order_id, from_status, to_status, by_user, reason, at</td><td>قابل حسابرسی بودن تغییر وضعیت</td></tr>
+<tr><td><code>booking</code></td><td>id, order_id, provider_id, time_range(tstzrange), check_in_at, check_out_at, gps_in, gps_out</td><td>قاعده عدم تعارض تقویم (EXCLUDE constraint)</td></tr>
+<tr><td><code>job_worklog</code></td><td>booking_id, minutes_worked, notes, materials_used(jsonb)</td><td>مبنای تسویه ساعتی/روزمرد</td></tr>
+<tr><td><code>recurring_plan</code> / <code>maintenance_contract</code></td><td>id, customer_id, org_id, cadence, service_item_id, next_run_at, sla_terms(jsonb)</td><td>سفارش دوره‌ای و قرارداد B2B</td></tr>
+</tbody>
+</table>
+
+<h4>ه) تطبیق و اعزام (Dispatch) — ۷ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>dispatch_request</code></td><td>order_id, mode(NORMAL/EMERGENCY/SCHEDULED), wave_no, radius_m, status, started_at, expires_at, policy(jsonb), started_by</td><td>وضعیت زنده فرآیند تخصیص</td></tr>
+<tr><td><code>job_offer</code></td><td>id, dispatch_id, provider_id, rank_score, score_breakdown(jsonb), offered_at, expires_at, response(ACCEPT/REJECT/IGNORE), responded_at, incentive_amount</td><td>مبنای شفافیت (چرا این متخصص؟) و حسابرسی</td></tr>
+<tr><td><code>assignment</code></td><td>id, order_id, provider_id, assigned_by(AUTO/MANUAL/CUSTOMER_PICK), assigned_at, lock_key, released_at, release_reason</td><td>تخصیص قطعی (Unique on active order)</td></tr>
+<tr><td><code>assignment_rejection</code></td><td>assignment_id/offer_id, reason_code, note, at</td><td>تحلیل رفتار و جریمه</td></tr>
+<tr><td><code>dispatch_wave</code></td><td>dispatch_id, wave_no, candidate_count, radius_m, wave_deadline, outcome</td><td>نردبان تشدید قابل تحلیل</td></tr>
+<tr><td><code>provider_score_snapshot</code></td><td>provider_id, at, components(jsonb), total, context(zone, category)</td><td>بازتولید تصمیم‌های گذشته</td></tr>
+<tr><td><code>emergency_request</code></td><td>id, order_id, eta_minutes, accepted_provider_id, prepay_txn_id, safety_ack_at</td><td>اعزام فوری</td></tr>
+</tbody>
+</table>
+
+<h4>و) مالی و دفتر کل (Payments) — ۱۴ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>payment_intent</code></td><td>id, order_id, payer_id, amount, currency, method(IPG/WALLET/BNPL/CASH/CREDIT_LINE), status, idempotency_key(uniq), psp_ref, created_at</td><td>واحدی برای تلاش پرداخت</td></tr>
+<tr><td><code>payment_txn</code></td><td>id, intent_id, psp, psp_txn_id, amount, fee, status(INIT/PENDING/SUCCESS/FAILED/REVERSED), raw_response(jsonb), at</td><td>رکورد خام درگاه برای مغایرت‌یابی</td></tr>
+<tr><td><code>ledger_account</code></td><td>code, name, kind(ASSET/LIABILITY/REVENUE/EXPENSE/EQUITY), owner_type, owner_id, normal_balance</td><td>حساب‌های داخلی/شخصی</td></tr>
+<tr><td><code>ledger_entry</code></td><td>id, txn_id, account_id, direction, amount, currency, ref_type, ref_id, at, hash_prev</td><td>دوعاملی + زنجیره هش برای تشخیص دست‌کاری</td></tr>
+<tr><td><code>escrow_hold</code></td><td>id, order_id, amount, status, held_at, expires_at, released_amount, refunded_amount</td><td>نگهداشت مبلغ تا تأیید کار</td></tr>
+<tr><td><code>escrow_release</code></td><td>id, hold_id, milestone_id, amount, type(FULL/PARTIAL/RELEASE_TO_PROVIDER/REFUND), triggered_by, approved_by, at</td><td>آزادسازی مرحله‌ای</td></tr>
+<tr><td><code>milestone</code></td><td>id, order_id, seq, title, share_percent, condition(jsonb), status, approved_at, proof_media_ids[]</td><td>Merestone پروژه‌های بزرگ</td></tr>
+<tr><td><code>wallet</code> / <code>wallet_transaction</code></td><td>wallet: owner_type(USER/PROVIDER/ORG), balance_cached; txn: wallet_id, kind(TOPUP/PAYOUT/REFUND/BONUS/PENALTY), amount, ref</td><td>موجودی = Cache از دفتر کل با بازتولید دوره‌ای</td></tr>
+<tr><td><code>payout_batch</code> / <code>payout_item</code></td><td>batch: cycle_date, status, total; item: provider_id, iban_hash, amount, commission, tax, status, bank_ref</td><td>تسویه دسته‌ای T+1</td></tr>
+<tr><td><code>invoice</code></td><td>id, order_id | org_id, number, issued_at, subtotal, discount, vat, total, status, pdf_file_id, buyer_snapshot(jsonb)</td><td>فاکتور عملیاتی</td></tr>
+<tr><td><code>tax_invoice</code></td><td>id, invoice_id, tax_id_unique, submit_status, response_code, submitted_at, xml_file_id, retry_count</td><td>سامانه مؤدیان</td></tr>
+<tr><td><code>refund</code></td><td>id, payment_intent_id, amount, reason_code, status, destination(WALLET/IPG), approved_by, at</td><td>بازگشت وجه با مسیر تأیید</td></tr>
+<tr><td><code>bnpl_contract</code></td><td>id, order_id, provider_partner, approved_amount, installment_count, schedule(jsonb), status, external_ref</td><td>پرداخت اقساطی</td></tr>
+<tr><td><code>reconciliation_run</code> / <code>reconciliation_item</code></td><td>run_date, source(PSP/BANK/LEDGER), matched, diff_count, item: ref, expected, actual, status</td><td>مغایرت‌یابی روزانه</td></tr>
+</tbody>
+</table>
+
+<h4>ز) اعتماد، کیفیت و بیمه (Trust) — ۱۰ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>review</code></td><td>id, order_id(uniq), customer_id, provider_id, text, is_verified, published_at, moderation_status, sentiment, topics[]</td><td>فقط برای سفارش اجراشده</td></tr>
+<tr><td><code>review_dimension</code></td><td>review_id, dimension(PUNCTUALITY/QUALITY/TIDINESS/PRICE_ACCURACY/CONDUCT), score(1..5)</td><td>امتیاز چندبعدی</td></tr>
+<tr><td><code>review_appeal</code></td><td>id, review_id, filed_by, reason, evidence[], decision, decided_by, at</td><td>اعتراض متخصص و داوری</td></tr>
+<tr><td><code>quality_check</code></td><td>id, order_id, type(AUTO/HUMAN), checklist(jsonb), result, score, checked_by, at</td><td>بازرسی کیفیت</td></tr>
+<tr><td><code>rework_case</code></td><td>id, order_id, reported_by, symptom, root_cause, fix_provider_id, fix_cost, closed_at, charged_to_provider</td><td>بازکاری و هزینه آن</td></tr>
+<tr><td><code>warranty</code></td><td>id, order_id, category_id, started_at, expires_at, terms_snapshot(jsonb), status</td><td>گارانتی فعال هر سفارش</td></tr>
+<tr><td><code>insurance_policy</code> / <code>insurance_coverage</code></td><td>policy: partner_id, master_policy_no, valid_from/to, premium_rate; coverage: category_id, max_amount, deductible</td><td>بیمه گروهی و سقف پوشش</td></tr>
+<tr><td><code>claim</code></td><td>id, order_id, claimant_id, type(ACCIDENT/DAMAGE/INJURY/THEFT), description, amount_requested, evidence[], status, sla_due_at</td><td>پرونده خسارت</td></tr>
+<tr><td><code>claim_assessment</code></td><td>claim_id, method(AUTO/EXPERT), risk_score, decision(APPROVE/PARTIAL/REJECT/ESCALATE), amount_approved, assessor_id, notes, at</td><td>ارزیابی الگوریتمی/انسانی</td></tr>
+<tr><td><code>dispute</code> / <code>dispute_message</code> / <code>dispute_resolution</code></td><td>dispute: order_id, opened_by, category, status, freeze_escrow; message: sender, body, attachments; resolution: decision, amounts, decided_by, rationale</td><td>چرخه کامل حل اختلاف</td></tr>
+</tbody>
+</table>
+
+<h4>ح) ریسک و ضدتقلب (Risk) — ۶ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>risk_signal</code></td><td>id, entity_type(USER/PROVIDER/ORDER/DEVICE), entity_id, signal_code, value, source, at, ttl</td><td>ورودی خام قوانین و مدل</td></tr>
+<tr><td><code>risk_score</code></td><td>entity_type, entity_id, scope(ONBOARDING/ORDER/PAYOUT/REVIEW), score, band(LOW/MED/HIGH), model_version, computed_at, features(jsonb)</td><td>خروجی قابل توضیح</td></tr>
+<tr><td><code>risk_case</code></td><td>id, order_id/entity_id, band, status(OPEN/IN_REVIEW/RESOLVED/BLOCKED), assigned_to, decision, decided_at, notes</td><td>صف بررسی انسانی</td></tr>
+<tr><td><code>entity_link</code></td><td>left_type, left_id, right_type, right_id, link_type(DEVICE/IBAN/ADDRESS/IP/PHONE), weight</td><td>گراف تبانی و حساب‌های هم‌خوشه</td></tr>
+<tr><td><code>collusion_alert</code></td><td>id, pair_hash(provider_id, customer_id), pattern(OFF_PLATFORM/CANCELLATION_RING/REVIEW_RING), evidence(jsonb), confidence, status</td><td>هشدار تبانی</td></tr>
+<tr><td><code>blacklist_entry</code></td><td>type(PHONE/DEVICE/NATIONAL_ID/IBAN), value_hash, reason, added_by, expires_at</td><td>لیست سیاه قابل اعتراض</td></tr>
+</tbody>
+</table>
+
+<h4>ط) ارتباطات، پشتیبانی و CRM — ۹ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>conversation</code> / <code>message</code> / <code>message_attachment</code></td><td>conversation: order_id, participants[], type(CUSTOMER_PROVIDER/SUPPORT/BOT); message: sender, body, type, delivered_at, read_at, redacted</td><td>چت با قابلیت Redaction در صورت نیاز حقوقی</td></tr>
+<tr><td><code>masked_call</code></td><td>id, order_id, caller_id, callee_id, provider_sip, started_at, ended_at, duration, recording_file_id, transcript_id, consent_announced</td><td>تماس امن با CDR</td></tr>
+<tr><td><code>call_transcript</code></td><td>call_id, text, segments(jsonb), keywords[], pii_flags[], redacted_text</td><td>مبنای جست‌وجو و Fraud</td></tr>
+<tr><td><code>video_session</code> / <code>video_recording</code></td><td>session: order_id, stage(REMOTE_INSPECTION/EXPERT_PANEL), participants, started_at, ended_at, recording_consent; recording: file_id, duration, notes</td><td>بازدید ویدیویی و جلسه کارشناسی</td></tr>
+<tr><td><code>support_ticket</code> / <code>ticket_event</code> / <code>ticket_macro</code></td><td>ticket: channel, category, priority, sla_due_at, assignee, status, related_order_id; event: type, from, to, note, at</td><td>تیکتینگ با SLA</td></tr>
+<tr><td><code>csat_survey</code></td><td>ticket_id|order_id, score, comment, at</td><td>سنجش رضایت</td></tr>
+<tr><td><code>crm_segment</code> / <code>campaign</code> / <code>campaign_send</code></td><td>segment: rules(jsonb), size_cached; campaign: channel, template, schedule; send: user_id, status, opened_at</td><td>بخش‌بندی و کمپین</td></tr>
+<tr><td><code>loyalty_account</code> / <code>loyalty_point_txn</code></td><td>tier, points_balance, txn: kind(EARN/REDEEM/EXPIRE), amount, ref</td><td>وفاداری</td></tr>
+<tr><td><code>knowledge_article</code></td><td>slug, title, body, tags[], audience(PUBLIC/SUPPORT/BOT), version, published_at</td><td>پایه دانش مشترک سایت/بات/پشتیبانی</td></tr>
+<tr><td><code>notification_template</code> / <code>notification_log</code> / <code>notification_preference</code></td><td>template: code, channel, locale, body, variables[]; log: user_id, channel, status, sent_at, delivered_at, opened_at, fail_reason</td><td>سرویس اطلاع‌رسانی</td></tr>
+</tbody>
+</table>
+
+<h4>ی) هوش مصنوعی، تحلیل و پلتفرم — ۴ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>ai_inference</code></td><td>id, model_name, model_version, purpose(CATEGORY/SEVERITY/ETA/FRAUD/TRANSCRIBE/FACE_MATCH/QUALITY_PHOTO), input_ref, output(jsonb), confidence, latency_ms, at</td><td>ردیابی همه استنتاج‌ها برای بازتولید و حسابرسی</td></tr>
+<tr><td><code>ai_label</code></td><td>inference_id|input_ref, label, labeler_id, labeler_type(HUMAN/AUTO), at</td><td>داده برچسب‌خورده برای آموزش مدل بعدی</td></tr>
+<tr><td><code>feature_flag</code> / <code>experiment_assignment</code></td><td>flag: key, rules(jsonb), rollout_percent, kill_switch; assignment: user_id, variant, at</td><td>آزمایش و خاموش‌سازی</td></tr>
+<tr><td><code>analytics_daily_agg</code></td><td>date, zone_id, category_id, orders, gmv, take_rate, fulfillment_rate, tta_seconds, csat, cancellations</td><td>پیش‌تجمیع برای داشبوردها (منبع اصلی: ClickHouse)</td></tr>
+</tbody>
+</table>
+
+<h3>۸.۴ ایندکس‌ها و بهینه‌سازی نمونه</h3>
+<pre class="code">-- ۱) جست‌وجوی مکانی متخصصان فعال (GiST + فیلتر جزئی)
+CREATE INDEX idx_provider_loc_active ON provider_profile USING GIST (last_location)
+  WHERE status = 'ACTIVE' AND blocked_until IS NULL;
+
+-- ۲) سفارش‌های باز برای صف دیسپچ
+CREATE INDEX idx_order_open ON "order" (status, urgency, slot_start)
+  WHERE status IN ('CREATED','DISPATCHING','ASSIGNED','EN_ROUTE','IN_PROGRESS');
+
+-- ۳) جلوگیری از تخصیص هم‌زمان دو متخصص به یک سفارش
+CREATE UNIQUE INDEX uq_active_assignment ON assignment (order_id) WHERE released_at IS NULL;
+
+-- ۴) جلوگیری از تعارض تقویم متخصص
+ALTER TABLE booking ADD CONSTRAINT no_overlap
+  EXCLUDE USING GIST (provider_id WITH =, time_range WITH &&);
+
+-- ۵) سفارش‌های در انتظار نظر (برای یادآوری و تحلیل)
+CREATE INDEX idx_order_review_pending ON "order" (completed_at) WHERE payment_state = 'RELEASED' AND review_id IS NULL;
+
+-- ۶) جست‌وجوی سریع شماره (با هش، نه متن خام)
+CREATE UNIQUE INDEX uq_user_phone_hash ON "user" (phone_hash);</pre>
+
+<h3>۸.۵ یکپارچگی، تراکنش و همگامی بین سرویس‌ها</h3>
+<ul>
+<li><b>Saga</b> برای جریان مالی سفارش: (ایجاد Escrow → تخصیص → شروع کار → تکمیل → آزادسازی). هر گام یک رویداد و یک عملیات جبرانی (Compensation) دارد: شکست آزادسازی ⇒ برنگرداندن به حالت قبل، بلکه ثبت در صف <code>escrow_pending_release</code> با تلاش مجدد.</li>
+<li><b>Transaction Outbox</b> در هر سرویس: تغییر DB و رویداد در یک تراکنش، سپس انتشار تضمین‌شده به Kafka.</li>
+<li><b>Idempotency</b>: همه عملیات مالی با کلید یکتا (هدر <code>Idempotency-Key</code>) و ثبت در جدول idempotency (TTL ۷ روز).</li>
+<li><b>Reconciliation</b> روزانه: PSP ↔ دفتر کل ↔ بانک ↔ صورتحساب‌های مالیاتی؛ عدم تطابق ⇒ تیکت سطح ۲ مالی.</li>
+</ul>
+</section>
+
+<!-- ===== 09-api.html (s9) ===== -->
+<section id="s9">
+<h2><span class="num">۹</span>فهرست APIها و رویدادهای رویدادمحور</h2>
+<p class="lead">سبک: REST نسخه‌دار (<code>/v1</code>) + JSON؛ احراز با Bearer Token؛ همه نوشتن‌ها Idempotency-Key؛ Real-time با WebSocket؛ فایل نهایی نمونه: <code>achareh-plus/api/openapi-core.yaml</code>.</p>
+
+<h3>۹.۱ قواعد قراردادی</h3>
+<table class="tbl">
+<thead><tr><th>موضوع</th><th>قاعده</th></tr></thead>
+<tbody>
+<tr><td>خطاها</td><td><code>{"error":{"code":"ORDER_NOT_ASSIGNABLE","message_fa":"...","details":{...},"trace_id":"..."}}</code> با کدهای معنایی (نه فقط HTTP Status)</td></tr>
+<tr><td>صفحه‌بندی</td><td>Cursor-based: <code>?limit=20&amp;cursor=...</code> → <code>{"items":[], "next_cursor":null}</code></td></tr>
+<tr><td>نسخه‌بندی</td><td>در URL (<code>/v1</code>) + هدر اپ (<code>X-App-Version</code>) برای سیاست «کمترین نسخه پشتیبانی‌شده»</td></tr>
+<tr><td>زمان پاسخ</td><td>p95 &lt; ۳۰۰ms برای خواندن، &lt; ۶۰۰ms برای نوشتن (بدون احتساب درگاه پرداخت)</td></tr>
+<tr><td>محدودیت نرخ</td><td>بر پایه کاربر/دستگاه/IP + سهمیه سرویس؛ خطای 429 با هدر <code>Retry-After</code></td></tr>
+<tr><td>وب‌هوک</td><td>امضای HMAC-SHA256 در <code>X-Signature</code>، تلاش مجدد نمایی تا ۲۴ ساعت، داشبورد رویداد برای پارتنر B2B</td></tr>
+</tbody>
+</table>
+
+<h3>۹.۲ احراز هویت و کاربران</h3>
+<table class="tbl">
+<thead><tr><th>متد</th><th>مسیر</th><th>کارکرد</th><th>نکته</th></tr></thead>
+<tbody>
+<tr><td>POST</td><td><code>/v1/auth/otp/request</code></td><td>ارسال کد OTP</td><td>Rate-Limit سه‌لایه؛ Captcha پویا در تشخیص ربات</td></tr>
+<tr><td>POST</td><td><code>/v1/auth/otp/verify</code></td><td>تأیید کد و صدور توکن</td><td>خطای یکنواخت برای جلوگیری از شمارش شماره‌ها</td></tr>
+<tr><td>POST</td><td><code>/v1/auth/oauth/{provider}</code></td><td>ورود Google/Apple</td><td>اتصال به شماره تأییدشده</td></tr>
+<tr><td>POST</td><td><code>/v1/auth/passkey/register|login</code></td><td>ثبت و ورود Passkey</td><td>WebAuthn؛ مسیر بازیابی امن</td></tr>
+<tr><td>POST</td><td><code>/v1/auth/refresh</code></td><td>تمدید توکن</td><td>Rotation + Reuse-Detection</td></tr>
+<tr><td>POST</td><td><code>/v1/auth/logout</code> / <code>/v1/auth/logout-all</code></td><td>خروج جاری/همه دستگاه‌ها</td><td>ابطال سرور-ساید</td></tr>
+<tr><td>GET</td><td><code>/v1/me</code> / <code>PATCH /v1/me</code></td><td>پروفایل کاربر</td><td>ویرایش فیلدهای مجاز</td></tr>
+<tr><td>GET</td><td><code>/v1/me/sessions</code> / <code>DELETE /v1/me/sessions/{id}</code></td><td>مدیریت نشست‌ها</td><td>شفافیت امنیتی</td></tr>
+<tr><td>GET/POST</td><td><code>/v1/me/addresses</code></td><td>آدرس‌ها و برچسب مکان</td><td>اعتبارسنجی موقعیت روی نقشه</td></tr>
+<tr><td>POST</td><td><code>/v1/me/consents</code></td><td>ثبت/ابطال رضایت</td><td>نسخه‌دار</td></tr>
+<tr><td>POST</td><td><code>/v1/me/data-export</code></td><td>درخواست خروجی داده</td><td>تولید غیرهمگام + لینک دانلود موقت</td></tr>
+</tbody>
+</table>
+
+<h3>۹.۳ متخصص و تأیید صلاحیت</h3>
+<table class="tbl">
+<thead><tr><th>متد</th><th>مسیر</th><th>کارکرد</th></tr></thead>
+<tbody>
+<tr><td>POST</td><td><code>/v1/providers/apply</code></td><td>شروع فرآیند جذب متخصص (اطلاعات پایه)</td></tr>
+<tr><td>POST</td><td><code>/v1/providers/me/documents</code></td><td>ثبت مدرک (پیش‌امضاشده S3: آپلود مستقیم)</td></tr>
+<tr><td>POST</td><td><code>/v1/providers/me/identity/selfie</code></td><td>سلفی زنده و اجرای Face-Match</td></tr>
+<tr><td>GET</td><td><code>/v1/providers/me/identity/status</code></td><td>وضعیت احراز و نقص‌های باقی‌مانده</td></tr>
+<tr><td>POST</td><td><code>/v1/providers/me/skill-test/{category}/submit</code></td><td>ارسال آزمون و ویدیو</td></tr>
+<tr><td>PUT</td><td><code>/v1/providers/me/skills</code> / <code>/equipment</code> / <code>/service-areas</code></td><td>مهارت، تجهیزات، مناطق فعالیت</td></tr>
+<tr><td>PUT</td><td><code>/v1/providers/me/availability</code></td><td>تقویم هفتگی و استثناها</td></tr>
+<tr><td>GET</td><td><code>/v1/providers/me/dashboard?range=</code></td><td>درآمد، ساعات پرکار، نرخ‌ها، پیشنهادها</td></tr>
+<tr><td>POST</td><td><code>/v1/providers/me/withdrawals</code></td><td>درخواست برداشت وجه</td></tr>
+<tr><td>POST</td><td><code>/v1/providers/me/online</code> / <code>offline</code></td><td>وضعیت آماده‌به‌کار و شروع ارسال موقعیت</td></tr>
+<tr><td>GET</td><td><code>/v1/providers/{id}/public-profile</code></td><td>پروفایل عمومی برای مشتری</td></tr>
+<tr><td>POST</td><td><code>/v1/admin/providers/{id}/verification-decision</code></td><td>تصمیم پنل (Approve/Reject/Hold) + دلیل اجباری</td></tr>
+</tbody>
+</table>
+
+<h3>۹.۴ کاتالوگ، تریاژ و قیمت</h3>
+<table class="tbl">
+<thead><tr><th>متد</th><th>مسیر</th><th>کارکرد</th></tr></thead>
+<tbody>
+<tr><td>GET</td><td><code>/v1/catalog/categories</code> / <code>/v1/catalog/services?q=</code></td><td>دسته‌بندی و جست‌وجو</td></tr>
+<tr><td>GET</td><td><code>/v1/catalog/services/{id}/rate-card?zone=</code></td><td>تعرفه شفاف منطقه‌ای</td></tr>
+<tr><td>GET</td><td><code>/v1/triage/flow/{service_id}</code></td><td>درخت پرسش‌های تریاژ</td></tr>
+<tr><td>POST</td><td><code>/v1/media/presigned-url</code></td><td>آپلود مستقیم رسانه (سقف حجم/نوع فایل)</td></tr>
+<tr><td>POST</td><td><code>/v1/intake/analyze</code></td><td>تحلیل چندرسانه‌ای: دسته پیشنهادی، شدت، برازش، پرچم خطر</td></tr>
+<tr><td>POST</td><td><code>/v1/pricing/quote</code></td><td>تخمین قیمت با Breakdown شفاف</td></tr>
+<tr><td>POST</td><td><code>/v1/pricing/quote/{id}/revision</code></td><td>درخواست تغییر قیمت (Change Order) + تأیید مشتری</td></tr>
+<tr><td>POST</td><td><code>/v1/slots/availability</code></td><td>ظرفیت آزاد و ETA تقریبی</td></tr>
+<tr><td>POST</td><td><code>/v1/emergency/quote</code></td><td>پیش‌قیمت اعزام فوری + ETA</td></tr>
+</tbody>
+</table>
+
+<h3>۹.۵ سفارش و دیسپچ</h3>
+<table class="tbl">
+<thead><tr><th>متد</th><th>مسیر</th><th>کارکرد</th></tr></thead>
+<tbody>
+<tr><td>POST</td><td><code>/v1/orders</code></td><td>ثبت سفارش (عادی/زمان‌بندی‌شده/فوری)</td></tr>
+<tr><td>GET</td><td><code>/v1/orders</code> / <code>/v1/orders/{id}</code></td><td>لیست و جزئیات سفارش</td></tr>
+<tr><td>POST</td><td><code>/v1/orders/{id}/submit-for-dispatch</code></td><td>ورود به صف تخصیص پس از تأیید قیمت/پرداخت</td></tr>
+<tr><td>GET</td><td><code>/v1/orders/{id}/offers</code></td><td>پیشنهادهای موجود (حالت Bid) برای انتخاب مشتری</td></tr>
+<tr><td>POST</td><td><code>/v1/orders/{id}/assign</code></td><td>تخصیص دستی توسط اپراتور (Override + دلیل)</td></tr>
+<tr><td>POST</td><td><code>/v1/orders/{id}/reschedule</code> / <code>/cancel</code></td><td>تغییر زمان / لغو (با محاسبه جریمه)</td></tr>
+<tr><td>POST</td><td><code>/v1/providers/me/offers/{offer_id}/accept|reject</code></td><td>پاسخ به پیشنهاد (اتمی، اول-پذیرنده-برنده)</td></tr>
+<tr><td>POST</td><td><code>/v1/bookings/{id}/check-in</code> / <code>check-out</code></td><td>شروع/پایان کار با GPS و عکس الزامی</td></tr>
+<tr><td>POST</td><td><code>/v1/bookings/{id}/milestones/{seq}/submit</code></td><td>ثبت پیشرفت Milestone</td></tr>
+<tr><td>POST</td><td><code>/v1/orders/{id}/complete</code></td><td>اعلام اتمام کار توسط متخصص</td></tr>
+<tr><td>POST</td><td><code>/v1/orders/{id}/approve</code> / <code>/dispute</code></td><td>تأیید مشتری یا باز کردن اختلاف</td></tr>
+<tr><td>POST</td><td><code>/v1/orders/{id}/messages</code> / <code>/media</code></td><td>چت و ارسال رسانه درون سفارش</td></tr>
+<tr><td>GET</td><td><code>/v1/orders/{id}/tracking</code> + WS <code>/v1/ws/orders/{id}</code></td><td>ردیابی زنده و ETA</td></tr>
+<tr><td>POST</td><td><code>/v1/orders/{id}/call-session</code></td><td>شماره پوشانده‌شده / تماس تصویری</td></tr>
+<tr><td>POST</td><td><code>/v1/orders/{id}/video-inspection</code></td><td>بازدید ویدیویی پیش از اعزام</td></tr>
+<tr><td>POST</td><td><code>/v1/recurring-plans</code></td><td>سفارش دوره‌ای / قرارداد نگهداری</td></tr>
+</tbody>
+</table>
+
+<h3>۹.۶ پرداخت، کیف پول و نگهداشت</h3>
+<table class="tbl">
+<thead><tr><th>متد</th><th>مسیر</th><th>کارکرد</th></tr></thead>
+<tbody>
+<tr><td>POST</td><td><code>/v1/payments/intents</code></td><td>ایجاد تعهد پرداخت (IPG/Wallet/BNPL/CreditLine)</td></tr>
+<tr><td>POST</td><td><code>/v1/payments/intents/{id}/confirm</code></td><td>تأیید نتیجه بازگشت از درگاه (Idempotent)</td></tr>
+<tr><td>POST</td><td><code>/v1/payments/callback/{psp}</code></td><td>Webhook درگاه (امضا و اعتبارسنجی)</td></tr>
+<tr><td>GET</td><td><code>/v1/wallets/me</code> / <code>/v1/wallets/me/transactions</code></td><td>کیف پول و گردش</td></tr>
+<tr><td>POST</td><td><code>/v1/wallets/me/topup</code></td><td>شارژ کیف پول</td></tr>
+<tr><td>POST</td><td><code>/v1/refunds</code></td><td>درخواست بازگشت وجه (کاربر/سازمان)</td></tr>
+<tr><td>POST</td><td><code>/v1/admin/refunds/{id}/approve</code></td><td>تأیید بازگشت (Maker-Checker بالای سقف)</td></tr>
+<tr><td>GET</td><td><code>/v1/orders/{id}/escrow</code></td><td>وضعیت نگهداشت و آزادسازی‌ها</td></tr>
+<tr><td>POST</td><td><code>/v1/organizations/{id}/credit-line/request</code></td><td>درخواست اعتبار شرکتی</td></tr>
+<tr><td>POST</td><td><code>/v1/bnpl/eligibility</code> / <code>/v1/bnpl/contracts</code></td><td>بررسی و ایجاد قرارداد اقساطی</td></tr>
+<tr><td>GET</td><td><code>/v1/invoices/{id}</code> / <code>/v1/invoices/{id}/pdf</code></td><td>فاکتور و دریافت PDF</td></tr>
+<tr><td>GET</td><td><code>/v1/organizations/{id}/billing-report?from=&amp;to=</code></td><td>گزارش مالی B2B (CSV/Excel)</td></tr>
+<tr><td>GET</td><td><code>/v1/admin/ledger/accounts/{code}/entries</code></td><td>دفتر کل (دسترسی محدود + لاگ)</td></tr>
+<tr><td>POST</td><td><code>/v1/admin/payout-batches</code> / <code>/{id}/approve</code></td><td>تولید و تأیید دوره تسویه</td></tr>
+</tbody>
+</table>
+
+<h3>۹.۷ کیفیت، بیمه، اختلاف و ریسک</h3>
+<table class="tbl">
+<thead><tr><th>متد</th><th>مسیر</th><th>کارکرد</th></tr></thead>
+<tbody>
+<tr><td>POST</td><td><code>/v1/orders/{id}/review</code></td><td>ثبت نظر و امتیاز چندبعدی</td></tr>
+<tr><td>POST</td><td><code>/v1/reviews/{id}/appeal</code></td><td>اعتراض متخصص به نظر</td></tr>
+<tr><td>POST</td><td><code>/v1/claims</code> / <code>GET /v1/claims/{id}</code></td><td>ثبت و پیگیری ادعای خسارت</td></tr>
+<tr><td>POST</td><td><code>/v1/claims/{id}/evidence</code></td><td>افزودن مستندات</td></tr>
+<tr><td>POST</td><td><code>/v1/admin/claims/{id}/assess</code></td><td>ثبت ارزیابی (خودکار/کارشناس) و تصمیم</td></tr>
+<tr><td>POST</td><td><code>/v1/disputes</code> / <code>/v1/disputes/{id}/messages</code> / <code>/resolve</code></td><td>چرخه اختلاف</td></tr>
+<tr><td>GET</td><td><code>/v1/orders/{id}/warranty</code></td><td>وضعیت گارانتی</td></tr>
+<tr><td>GET</td><td><code>/v1/admin/risk/cases?band=HIGH</code></td><td>صف بررسی ریسک</td></tr>
+<tr><td>POST</td><td><code>/v1/admin/risk/cases/{id}/decision</code></td><td>تصمیم (ALLOW/BLOCK/REVIEW) + دلیل</td></tr>
+<tr><td>GET</td><td><code>/v1/admin/fraud/collusion-alerts</code></td><td>هشدارهای تبانی</td></tr>
+</tbody>
+</table>
+
+<h3>۹.۸ پشتیبانی، ارتباطات و CRM</h3>
+<table class="tbl">
+<thead><tr><th>متد</th><th>مسیر</th><th>کارکرد</th></tr></thead>
+<tbody>
+<tr><td>POST</td><td><code>/v1/support/tickets</code> / <code>GET /v1/support/tickets/{id}</code></td><td>ایجاد و پیگیری تیکت</td></tr>
+<tr><td>POST</td><td><code>/v1/support/chatbot/sessions</code> / <code>POST /messages</code></td><td>گفتگو با دستیار (با Handoff)</td></tr>
+<tr><td>WS</td><td><code>/v1/ws/support/{ticket_id}</code></td><td>گفتگوی زنده با اپراتور</td></tr>
+<tr><td>POST</td><td><code>/v1/support/calls/mask</code></td><td>ایجاد شماره واسط برای تماس</td></tr>
+<tr><td>GET</td><td><code>/v1/support/tickets/{id}/timeline</code></td><td>تاریخچه کامل (چت/تماس/ویدیو/اقدامات)</td></tr>
+<tr><td>POST</td><td><code>/v1/ops/crisis/broadcast</code></td><td>پیام عمومی به متخصصان منطقه</td></tr>
+<tr><td>GET</td><td><code>/v1/ops/live-board</code></td><td>نمای عملیات زنده (سفارش‌های بحرانی)</td></tr>
+<tr><td>POST</td><td><code>/v1/crm/segments</code> / <code>/v1/crm/campaigns</code></td><td>بخش‌بندی و کمپین</td></tr>
+<tr><td>GET</td><td><code>/v1/knowledge/articles?audience=public</code></td><td>پایه دانش</td></tr>
+</tbody>
+</table>
+
+<h3>۹.۹ تحلیل، ادمین و رویدادها</h3>
+<table class="tbl">
+<thead><tr><th>متد/کانال</th><th>مسیر</th><th>کارکرد</th></tr></thead>
+<tbody>
+<tr><td>GET</td><td><code>/v1/admin/analytics/overview?range=&amp;zone=</code></td><td>داشبورد مدیریتی (GMV، Take Rate، Fulfillment، TTA، CSAT)</td></tr>
+<tr><td>GET</td><td><code>/v1/admin/analytics/funnel</code></td><td>قیف تبدیل از بازدید تا سفارش تکمیل‌شده</td></tr>
+<tr><td>POST</td><td><code>/v1/admin/feature-flags/{key}</code></td><td>مدیریت فلگ و Kill-Switch</td></tr>
+<tr><td>POST</td><td><code>/v1/admin/users/{id}/sanctions</code></td><td>تعلیق/جریمه با دلیل</td></tr>
+<tr><td>GET</td><td><code>/v1/admin/audit-log?resource=</code></td><td>لاگ حسابرسی</td></tr>
+</tbody>
+</table>
+<h4>موضوعات Kafka (نمونه)</h4>
+<table class="tbl">
+<thead><tr><th>موضوع</th><th>رویدادها</th><th>مصرف‌کننده‌های اصلی</th></tr></thead>
+<tbody>
+<tr><td><code>identity.user.*</code></td><td>user.registered, user.updated, session.created, consent.updated</td><td>Notification, Risk, Analytics</td></tr>
+<tr><td><code>provider.lifecycle.*</code></td><td>provider.applied, document.uploaded, verification.decided, tier.changed, sanction.applied</td><td>Dispatch, Notification, Analytics</td></tr>
+<tr><td><code>order.lifecycle.*</code></td><td>order.created, order.dispatched, order.assigned, order.started, order.completed, order.closed, order.cancelled</td><td>Payments, Trust, CRM, Analytics, Fraud</td></tr>
+<tr><td><code>dispatch.*</code></td><td>dispatch.wave.started, offer.sent, offer.accepted, offer.rejected, dispatch.escalated, dispatch.manual_override</td><td>Notification, Analytics, ML (training data)</td></tr>
+<tr><td><code>payment.*</code></td><td>payment.initiated, payment.succeeded, payment.failed, escrow.held, escrow.milestone_released, refund.issued, payout.settled</td><td>Ledger, Invoice/Tax, Notification, Risk</td></tr>
+<tr><td><code>trust.*</code></td><td>review.created, review.flagged, claim.filed, claim.decided, dispute.opened, dispute.resolved</td><td>Quality, Provider Scoring, Analytics</td></tr>
+<tr><td><code>risk.*</code></td><td>risk.score.computed, case.opened, entity.blocked, collusion.detected</td><td>Ops Cockpit, Compliance</td></tr>
+<tr><td><code>comm.*</code></td><td>message.sent, call.started, call.ended, transcript.ready, video.session.ended</td><td>Support, Fraud, Analytics</td></tr>
+</tbody>
+</table>
+<p class="muted">قواعد: نام‌گذاری <code>&lt;domain&gt;.&lt;entity&gt;.&lt;event&gt;</code>، نسخه‌بندی اسکیمای رویداد با فیلد <code>schema_version</code>، سازگاری رو به عقب، و <code>correlation_id</code> برای ردیابی سرتاسری.</p>
+</section>
+
+<!-- ===== 10-wireframes.html (s10) ===== -->
+<section id="s10">
+<h2><span class="num">۱۰</span>وایرفریم‌ها و نمونه اولیه تعاملی</h2>
+<p class="lead">فایل نمونه اولیه: <code>achareh-plus/prototype/index.html</code> — ۲۲ صفحه کلیک‌پذیر در سه نقش (مشتری، متخصص، پشتیبانی/عملیات). فهرست کامل صفحات وایرفریم (شامل صفحاتی که در پروتوتایپ شبیه‌سازی نشده‌اند) در جدول زیر آمده است.</p>
+
+<h3>۱۰.۱ سیستم طراحی (Design System)</h3>
+<table class="tbl">
+<thead><tr><th>مؤلفه</th><th>تصمیم</th><th>نکته RTL/دسترس‌پذیری</th></tr></thead>
+<tbody>
+<tr><td>شبکه و فاصله‌گذاری</td><td>Grid 4pt؛ حاشیه صفحه ۱۶، فاصله کارت ۱۲، شعاع گوشه ۱۲–۱۶</td><td>راست‌چین کامل، آیکون‌های جهت‌دار آینه‌ای (فلش، پیکان بازگشت)</td></tr>
+<tr><td>تایپوگرافی</td><td>Vazirmatn؛ مقیاس ۱۱/۱۲.۵/۱۴/۱۷/۲۲؛ ارتفاع خط ۱.۹ (فارسی نیاز به خط بازتر دارد)</td><td>اعداد فارسی در متن؛ اعداد لاتین فقط در کد/شناسه‌ها</td></tr>
+<tr><td>رنگ</td><td>اصلی: سبز-تیل #0F7A6C (اعتماد و آرامش)، هشدار #B45309، خطر #BE123C، موفقیت #15803D</td><td>کنتراست AA حداقل؛ رنگ هرگز تنها حامل معنا نباشد (همراه آیکون/متن)</td></tr>
+<tr><td>حالت‌ها</td><td>هر صفحه: Loading، Empty، Error، Offline، «نیازمند اقدام»</td><td>متن خطا با راه‌حل عملی، نه پیام فنی</td></tr>
+<tr><td>تم تاریک</td><td>پشتیبانی از Dark Mode برای متخصصان شب‌کار</td><td>حفظ کنتراست در نقشه و وضعیت‌ها</td></tr>
+<tr><td>دسترس‌پذیری</td><td>هدف لمسی ≥ ۴۴px؛ پشتیبانی از فونت بزرگ؛ خوانشگر صفحه در فرم‌های مالی</td><td>متخصصان با میانگین سنی بالاتر — سادگی مقدم بر زیبایی</td></tr>
+<tr><td>آفلاین</td><td>اپ متخصص: صف عملیات آفلاین (Check-in/out، عکس، یادداشت) و همگام‌سازی خودکار</td><td>شرط لازم برای کار در پارکینگ/زیرزمین</td></tr>
+</tbody>
+</table>
+
+<h3>۱۰.۲ فهرست وایرفریم‌ها به تفکیک نقش</h3>
+<h4>الف) اپ مشتری (Consumer) — ۱۸ صفحه</h4>
+<table class="tbl">
+<thead><tr><th>کد</th><th>صفحه</th><th>هدف اصلی</th><th>اجزای کلیدی</th><th>اولویت</th><th>پروتوتایپ</th></tr></thead>
+<tbody>
+<tr><td>C-01</td><td>خوش‌آمد / ورود</td><td>ورود با حداقل اصطکاک</td><td>OTP، Google/Apple، Passkey، حالت مهمان</td><td><span class="badge b-mvp">MVP</span></td><td>—</td></tr>
+<tr><td>C-02</td><td>خانه</td><td>انتخاب سریع خدمت</td><td>دسته‌بندی، جست‌وجو، اعزام فوری، سفارش فعال</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>C-03</td><td>جست‌وجو و فیلتر</td><td>یافتن خدمت/متخصص</td><td>فیلتر قیمت، امتیاز، زمان، زبان، جنسیت (اختیاری)</td><td><span class="badge b-mvp">MVP</span></td><td>—</td></tr>
+<tr><td>C-04</td><td>صفحه خدمت (SEO)</td><td>تبدیل از جست‌وجوی وب</td><td>قیمت شفاف، نمونه‌کار، نظرها، CTA</td><td><span class="badge b-mvp">MVP</span></td><td>—</td></tr>
+<tr><td>C-05</td><td>ورودی چندرسانه‌ای</td><td>توصیف مشکل</td><td>صوت، عکس/ویدیو، علائم خطر</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>C-06</td><td>نتیجه تحلیل AI</td><td>اعتبار بخشیدن به تشخیص</td><td>دسته، شدت، اطمینان، اصلاح توسط کاربر</td><td><span class="badge b-v1">V1</span></td><td>✔</td></tr>
+<tr><td>C-07</td><td>تریاژ تعاملی</td><td>دقت‌بخشی به برآورد</td><td>پرسش‌های وابسته، نوار پیشرفت</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>C-08</td><td>قیمت شفاف</td><td>حذف تردید قیمت</td><td>Breakdown، فوریت، Escrow، روش پرداخت</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>C-09</td><td>اعزام فوری</td><td>خدمت اضطراری</td><td>هشدار ایمنی، ETA، لیست کوتاه، پیش‌پرداخت</td><td><span class="badge b-v1">V1</span></td><td>✔</td></tr>
+<tr><td>C-10</td><td>جست‌وجوی متخصص (Dispatch)</td><td>شفافیت انتظار</td><td>موج‌ها، زمان‌شمار، تشدید</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>C-11</td><td>ردیابی زنده</td><td>اطمینان و امنیت</td><td>نقشه، ETA، تماس/چت/ویدیو، پلاک</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>C-12</td><td>پیشنهاد/مزایده</td><td>پروژه‌های بزرگ</td><td>مقایسه پیشنهادها، پروفایل، امتیاز، انتخاب</td><td><span class="badge b-v1">V1</span></td><td>—</td></tr>
+<tr><td>C-13</td><td>جزئیات سفارش (پروژه‌ای)</td><td>پیگیری Milestone</td><td>خط زمانی، عکس پیشرفت، تأیید مرحله</td><td><span class="badge b-v1">V1</span></td><td>✔</td></tr>
+<tr><td>C-14</td><td>تأیید پایان کار و امتیاز</td><td>کیفیت و آزادسازی</td><td>عکس قبل/بعد، امتیاز ۵بعدی، متن</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>C-15</td><td>گارانتی و بیمه</td><td>اطمینان پس از خرید</td><td>انقضا، شماره پرونده، دانلود فاکتور</td><td><span class="badge b-v1">V1</span></td><td>✔</td></tr>
+<tr><td>C-16</td><td>ثبت ادعای خسارت</td><td>جبران خسارت</td><td>شواهد، مبلغ، وضعیت Escrow</td><td><span class="badge b-v1">V1</span></td><td>✔</td></tr>
+<tr><td>C-17</td><td>کیف پول و فاکتورها</td><td>شفافیت مالی</td><td>موجودی، بلوکه، تراکنش، PDF فاکتور</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>C-18</td><td>پروفایل و امنیت</td><td>کنترل کاربر</td><td>نشست‌ها، رضایت‌ها، خروجی داده، حذف حساب</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+</tbody>
+</table>
+
+<h4>ب) اپ متخصص (Provider) — ۱۲ صفحه</h4>
+<table class="tbl">
+<thead><tr><th>کد</th><th>صفحه</th><th>هدف</th><th>اجزای کلیدی</th><th>اولویت</th><th>پروتوتایپ</th></tr></thead>
+<tbody>
+<tr><td>P-01</td><td>ثبت‌نام و ورود</td><td>ورود سریع</td><td>OTP، بیومتریک، دستگاه مورد اعتماد</td><td><span class="badge b-mvp">MVP</span></td><td>—</td></tr>
+<tr><td>P-02</td><td>وارد کردن مدارک</td><td>Onboarding</td><td>آپلود، OCR، وضعیت هر مدرک</td><td><span class="badge b-mvp">MVP</span></td><td>✔ (خلاصه)</td></tr>
+<tr><td>P-03</td><td>احراز تصویری</td><td>Face Match</td><td>راهنمای نور/زاویه، Liveness، نتیجه</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>P-04</td><td>آزمون مهارت و ویدیو</td><td>سنجش صلاحیت</td><td>آزمون، آپلود ویدیو ۶۰ ثانیه، نتیجه</td><td><span class="badge b-v1">V1</span></td><td>—</td></tr>
+<tr><td>P-05</td><td>کارتابل/خانه</td><td>شروع کار روز</td><td>آنلاین/آفلاین، درآمد، پیشنهادها، هشدار مدرک</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>P-06</td><td>جزئیات پیشنهاد</td><td>تصمیم سریع</td><td>رسانه مشتری، فاصله، مبلغ، دلیل تطبیق، پذیرش/رد</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>P-07</td><td>مسیریابی و Check-in</td><td>حضور در محل</td><td>نقشه، ETA، ثبت ورود با GPS</td><td><span class="badge b-mvp">MVP</span></td><td>—</td></tr>
+<tr><td>P-08</td><td>اجرای کار</td><td>مستندسازی</td><td>چک‌لیست، عکس الزامی، مواد مصرفی، Milestone</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>P-09</td><td>درخواست تغییر قیمت</td><td>شفافیت مالی</td><td>علت، عکس، ارسال برای تأیید مشتری</td><td><span class="badge b-v1">V1</span></td><td>✔</td></tr>
+<tr><td>P-10</td><td>درآمد و تحلیل</td><td>رشد درآمد</td><td>نقشه حرارتی، نرخ‌ها، پیشنهاد بهبود، برداشت</td><td><span class="badge b-v1">V1</span></td><td>✔</td></tr>
+<tr><td>P-11</td><td>کیف پول و تسویه</td><td>مالی متخصص</td><td>برداشت، دوره تسویه، توقیف تضمین</td><td><span class="badge b-mvp">MVP</span></td><td>✔ (بخشی)</td></tr>
+<tr><td>P-12</td><td>آموزش و ارتقای سطح</td><td>Upskill</td><td>دوره‌های کوتاه، آزمون، نشان تخصصی</td><td><span class="badge b-v2">V2</span></td><td>—</td></tr>
+</tbody>
+</table>
+
+<h4>ج) پنل عملیات، پشتیبانی و ادمین — ۱۴ صفحه</h4>
+<table class="tbl">
+<thead><tr><th>کد</th><th>صفحه</th><th>هدف</th><th>اجزای کلیدی</th><th>اولویت</th><th>پروتوتایپ</th></tr></thead>
+<tbody>
+<tr><td>S-01</td><td>کانال (Board) عملیات زنده</td><td>کنترل صف روز</td><td>سفارش‌های پرخطر، SLA، نقشه زنده</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>S-02</td><td>کارتابل سفارش/تیکت</td><td>حل پرونده</td><td>خط زمانی، شواهد، اقدامات، لاگ</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>S-03</td><td>صف احراز متخصصان</td><td>تأیید سریع</td><td>صف موارد نیازمند بررسی، Face Match، تصمیم</td><td><span class="badge b-mvp">MVP</span></td><td>✔</td></tr>
+<tr><td>S-04</td><td>اپراتور گفتگوی زنده</td><td>پشتیبانی هم‌زمان</td><td>چند گفتگو، پاسخ سریع، انتقال</td><td><span class="badge b-mvp">MVP</span></td><td>✔ (بخشی)</td></tr>
+<tr><td>S-05</td><td>صف ریسک و تقلب</td><td>کشف و اقدام</td><td>شواهد گراف، اقدام پیشنهادی، ارجاع</td><td><span class="badge b-v1">V1</span></td><td>✔</td></tr>
+<tr><td>S-06</td><td>اتاق بحران</td><td>واکنش به حادثه</td><td>سلامت سیستم، موضوعات داغ، Kill-Switch</td><td><span class="badge b-v1">V1</span></td><td>✔</td></tr>
+<tr><td>S-07</td><td>مدیریت دسته‌بندی و تعرفه</td><td>به‌روزرسانی بی‌کد</td><td>درخت خدمات، Rate Card، درخت تریاژ</td><td><span class="badge b-mvp">MVP</span></td><td>—</td></tr>
+<tr><td>S-08</td><td>مدیریت کمپین و کوپن</td><td>رشد</td><td>ساخت کمپین، محدودیت‌ها، ضدسوءاستفاده</td><td><span class="badge b-v1">V1</span></td><td>—</td></tr>
+<tr><td>S-09</td><td>داشبورد مدیریتی</td><td>تصمیم‌گیری</td><td>GMV، Take Rate، Fulfillment، TTA، CSAT</td><td><span class="badge b-v1">V1</span></td><td>—</td></tr>
+<tr><td>S-10</td><td>مالی و دفتر کل</td><td>کنترل مالی</td><td>Ledger، مغایرت‌یابی، تسویه، بازگشت وجه</td><td><span class="badge b-mvp">MVP</span></td><td>—</td></tr>
+<tr><td>S-11</td><td>صورتحساب و مالیات</td><td>انطباق</td><td>صف ارسال سامانه مؤدیان، خطاها، اصلاح</td><td><span class="badge b-v1">V1</span></td><td>—</td></tr>
+<tr><td>S-12</td><td>پرونده ادعای خسارت</td><td>ارزیابی</td><td>شواهد، ریسک، تصمیم، پرداخت</td><td><span class="badge b-v1">V1</span></td><td>—</td></tr>
+<tr><td>S-13</td><td>مدیریت نقش‌ها و دسترسی</td><td>امنیت</td><td>RBAC، سقف تأیید، تأیید دوعاملی</td><td><span class="badge b-mvp">MVP</span></td><td>—</td></tr>
+<tr><td>S-14</td><td>لاگ حسابرسی</td><td>انطباق و پیگیری</td><td>جست‌وجوی Actor/Resource، خروجی CSV</td><td><span class="badge b-mvp">MVP</span></td><td>—</td></tr>
+</tbody>
+</table>
+
+<h4>د) پنل سازمانی B2B — ۶ صفحه</h4>
+<table class="tbl">
+<thead><tr><th>کد</th><th>صفحه</th><th>هدف</th><th>اولویت</th></tr></thead>
+<tbody>
+<tr><td>B-01</td><td>داشبورد سازمان</td><td>مصرف، سفارش‌های باز، SLA، هزینه هر شعبه</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>B-02</td><td>مدیریت کاربران سازمان</td><td>افزودن کاربر، نقش، سقف تأیید، مرکز هزینه</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>B-03</td><td>ثبت و تأیید سفارش</td><td>جریان درخواست → تأیید → تخصیص</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>B-04</td><td>قرارداد و تعرفه اختصاصی</td><td>Rate Card سازمانی، SLA، دوره تسویه</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>B-05</td><td>فاکتور و گزارش مالی</td><td>فاکتور رسمی، خروجی CSV/Excel، اتصال ERP</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>B-06</td><td>مراکز هزینه و تأیید زنجیره‌ای</td><td>چند سطح تأیید، سقف بودجه</td><td><span class="badge b-v2">V2</span></td></tr>
+</tbody>
+</table>
+
+<h3>۱۰.۳ مسیرهای اصلی کاربر (Key Flows) برای تست قابلیت استفاده</h3>
+<ol>
+<li><b>مسیر اضطراری (Happy Path فوری):</b> کلیدسازی فوری → پرداخت پیش‌پرداخت → پذیرش در ۲۰ ثانیه → ردیابی زنده → پایان کار → امتیاز. <span class="muted">معیار: تکمیل در کمتر از ۹۰ ثانیه ثبت سفارش.</span></li>
+<li><b>مسیر پروژه‌ای (Milestone):</b> بازسازی → بازدید و پیش‌فاکتور → Escrow ۳مرحله‌ای → تأیید مرحله‌به‌مرحله → تحویل و گارانتی ۳۰ روزه.</li>
+<li><b>مسیر اختلاف:</b> اتمام کار → نارضایتی → توقف Escrow → شواهد → پیشنهاد خودکار جبران → تصمیم کارشناس → ثبت اثر روی رتبه.</li>
+<li><b>مسیر Onboarding متخصص:</b> ثبت‌نام → مدارک → Face Match → آزمون → قرارداد و شبا → فعال‌سازی خودکار زیر ۳۰ دقیقه.</li>
+<li><b>مسیر B2B:</b> ثبت سازمان → تأیید اعتبار → ثبت سفارش توسط کارمند → تأیید مدیر → اجرا → فاکتور و تسویه ۳۰ روزه.</li>
+</ol>
+<div class="callout"><b>روش اعتبارسنجی:</b> ۵ آزمون کاربری نگه‌داشت‌شده با مشتری واقعی و ۵ آزمون با متخصص، در دو مرحله (وایرفریم کاغذی و پروتوتایپ کلیک‌پذیر). معیار قبولی: نرخ تکمیل > ۸۰٪ بدون کمک، SUS ≥ ۷۵، خطای بحرانی ≤ ۱ مورد در هر وظیفه.</div>
+</section>
+
+<!-- ===== 11-nfr.html (s11) ===== -->
+<section id="s11">
+<h2><span class="num">۱۱</span>الزامات غیرکارکردی (NFR): کارایی، امنیت، انطباق</h2>
+<h3>۱۱.۱ کارایی و مقیاس‌پذیری</h3>
+<table class="tbl">
+<thead><tr><th>شاخص</th><th>هدف (P95)</th><th>نحوه اندازه‌گیری</th></tr></thead>
+<tbody>
+<tr><td>API خواندنی (لیست سفارش، کاتالوگ)</td><td>&lt; ۳۰۰ میلی‌ثانیه</td><td>OpenTelemetry Span در Gateway</td></tr>
+<tr><td>API نوشتنی (ثبت سفارش، پرداخت)</td><td>&lt; ۶۰۰ میلی‌ثانیه (بدون درگاه)</td><td>ردیابی سرتاسری با Correlation-ID</td></tr>
+<tr><td>تصمیم موتور تخصیص (یک موج)</td><td>&lt; ۴۰۰ میلی‌ثانیه برای ۲۰۰ کاندید</td><td>Benchmark سرویس Dispatch</td></tr>
+<tr><td>تصمیم ریسک آنلاین</td><td>&lt; ۱۵۰ میلی‌ثانیه</td><td>Latency Histogram سرویس Risk</td></tr>
+<tr><td>رندر اپ (TTI روی موبایل میان‌رده)</td><td>&lt; ۲.۵ ثانیه</td><td>RUM در اپ + Lighthouse برای وب</td></tr>
+<tr><td>همگام‌سازی صف آفلاین متخصص</td><td>&lt; ۵ ثانیه پس از بازگشت شبکه</td><td>متریک اپ + لاگ سرویس</td></tr>
+<tr><td>ارسال اعلان بحرانی</td><td>&lt; ۳ ثانیه تا تحویل</td><td>SLA سرویس Notification</td></tr>
+</tbody>
+</table>
+<h4>SLO دسترس‌پذیری</h4>
+<ul>
+<li>هسته سفارش/پرداخت/تخصیص: <b>۹۹.۹٪</b> ماهانه (خطای مجاز ≈ ۴۳ دقیقه).</li>
+<li>سرویس‌های کمکی (تحلیل، CRM، ویرایش محتوا): <b>۹۹.۵٪</b>.</li>
+<li>رژیم خطا (Error Budget): مصرف &gt; ۷۵٪ بودجه خطا ⇒ توقف انتشار قابلیت جدید و تمرکز بر پایداری.</li>
+<li>Degradation Mode: در فشار بار، اولویت با «ثبت سفارش، پرداخت، تخصیص» است؛ قابلیت‌های شخصی‌سازی، پیشنهادهای هوشمند و تحلیل موقتاً خاموش می‌شوند.</li>
+</ul>
+
+<h3>۱۱.۲ امنیت</h3>
+<table class="tbl">
+<thead><tr><th>حوزه</th><th>الزام</th></tr></thead>
+<tbody>
+<tr><td>احراز و مجوز</td><td>JWT کوتاه‌عمر + Refresh چرخشی؛ RBAC با کمینه‌دسترسی؛ تأیید دومرحله‌ای برای همه کارکنان و برای اقدامات مالی.</td></tr>
+<tr><td>رمزنگاری</td><td>TLS 1.3 در انتقال، AES-256 در سکون برای PII و مدارک؛ کلیدها در KMS/HSM با چرخش دوره‌ای؛ توکن‌سازی داده پرداخت (پلتفرم هرگز PAN کارت را ذخیره نمی‌کند).</td></tr>
+<tr><td>حریم خصوصی در لاگ</td><td>ماسک شماره، کد ملی، آدرس و مختصات دقیق در لاگ‌ها؛ دسترسی به لاگ حساس فقط برای نقش امنیت.</td></tr>
+<tr><td>مدیریت رازها</td><td>Vault/Sealed-Secrets؛ بدون راز در مخزن کد؛ چرخش خودکار اعتبارنامه‌های سرویس.</td></tr>
+<tr><td>امنیت اپلیکیشن</td><td>پوشش OWASP Top 10؛ محدودیت نرخ، اعتبارسنجی ورودی، محافظت CSRF در پنل وب، Content-Security-Policy، ضداحراز هویت‌شکنی (Credential-Stuffing).</td></tr>
+<tr><td>امنیت اپ موبایل</td><td>Certificate Pinning، تشخیص Root/Jailbreak، مبهم‌سازی، عدم ذخیره توکن در حافظه ناامن، حذف داده در Logout.</td></tr>
+<tr><td>تست نفوذ</td><td>حداقل سالانه + پس از هر تغییر بزرگ در جریان پول و احراز؛ Bug-Bounty داخلی اختیاری.</td></tr>
+<tr><td>دسترسی کارکنان</td><td>Just-in-Time Access با تأیید، نشست‌های ضبط‌شده برای دسترسی به داده مشتری، بازبینی دوره‌ای دسترسی‌ها.</td></tr>
+<tr><td>یکپارچگی مالی</td><td>زنجیره هش روی قیدهای دفتر کل، عدم اجازه ویرایش قید، بازتولید دوره‌ای موجودی از روی رویدادها و مقایسه با مقادیر Cache.</td></tr>
+</tbody>
+</table>
+
+<h3>۱۱.۳ حریم خصوصی و انطباق</h3>
+<table class="tbl">
+<thead><tr><th>موضوع</th><th>الزام عملیاتی</th></tr></thead>
+<tbody>
+<tr><td>طبقه‌بندی داده</td><td>سه سطح: عمومی، محرمانه کسب‌وکار، داده شخصی حساس (مدارک هویتی، مختصات، صدای ضبط‌شده). هر سطح با سیاست نگهداری و دسترسی مشخص.</td></tr>
+<tr><td>رضایت و شفافیت</td><td>رضایت جداگانه برای ضبط تماس/ویدیو، اشتراک موقعیت و استفاده آموزشی از تصاویر؛ نسخه‌دار و قابل ابطال.</td></tr>
+<tr><td>نگهداری و حذف</td><td>پیام‌ها و رسانه‌های سفارش: ۱۸ ماه؛ داده مالی: حداقل ۷ سال؛ داده مدل: بی‌نام‌سازی‌شده. حذف حساب ⇒ بی‌اثرسازی PII و نگه‌داری داده مالی.</td></tr>
+<tr><td>مینیمم‌سازی</td><td>پلتفرم فقط داده لازم برای اجرای خدمت را می‌گیرد؛ شماره و آدرس بعد از پایان سفارش از دسترس متخصص خارج می‌شود.</td></tr>
+<tr><td>انطباق حمل‌ونقل/صنفی</td><td>احراز صلاحیت صنفی متخصصان طبق ضوابط اتحادیه‌ها؛ ثبت سوابق خدمت برای پاسخ به بازرسی.</td></tr>
+<tr><td>حسابرسی‌پذیری</td><td>هر تغییر وضعیت مهم (پول، تخصیص، تعلیق، امتیاز) با Actor، زمان، دلیل و Correlation-ID؛ خروجی قابل ارائه به حسابرس.</td></tr>
+<tr><td>الزامات مالیاتی</td><td>ارسال صورتحساب الکترونیکی، نگهداری اسناد و پاسخ به استعلام؛ نسخه‌بندی قواعد مالیاتی با تاریخ اعتبار.</td></tr>
+</tbody>
+</table>
+
+<h3>۱۱.۴ استراتژی تست</h3>
+<table class="tbl">
+<thead><tr><th>سطح</th><th>پوشش هدف</th><th>شامل</th></tr></thead>
+<tbody>
+<tr><td>واحد</td><td>≥ ۷۰٪ روی سرویس‌های مالی، Dispatch و Pricing</td><td>منطق قیمت‌گذاری، قواعد آزادسازی، محاسبه کمیسیون و مالیات</td></tr>
+<tr><td>یکپارچگی</td><td>مسیرهای بحرانی</td><td>ثبت سفارش تا تسویه، Escrow و بازگشت وجه، تخصیص و لغو، Milestone</td></tr>
+<tr><td>قرارداد (Contract)</td><td>همه رویدادهای Kafka و APIهای بین‌سرویس</td><td>سازگاری نسخه اسکیمای رویداد، Fail در CI در صورت شکستن قرارداد</td></tr>
+<tr><td>بار و فشار</td><td>فصلی</td><td>سناریوی پیک (۳ برابر میانگین)، آزمایش خاموشی یک AZ، هم‌زمانی چت و ردیابی</td></tr>
+<tr><td>آشوب (Chaos)</td><td>ماهانه در محیط Staging</td><td>قطع Kafka، افت Redis، تأخیر درگاه پرداخت، از دست رفتن یک Pod از Dispatch</td></tr>
+<tr><td>پذیرش کاربر (UAT)</td><td>هر انتشار بزرگ</td><td>سناریوهای واقعی توسط تیم عملیات و ۲۰ متخصص نمونه</td></tr>
+<tr><td>امنیت</td><td>هر تغییر بزرگ</td><td>SAST/DAST، اسکن وابستگی، بررسی کد دسترسی‌ها</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="s12">
+<h2><span class="num">۱۲</span>نقشه راه، فازبندی و شاخص‌های موفقیت</h2>
+<h3>۱۲.۱ مدل اندازه‌گیری: شاخص شمال و شاخص‌های محافظ</h3>
+<div class="grid">
+  <div class="kpi"><b>شاخص شمال</b><span>تعداد سفارش‌های تکمیل‌شده با رضایت ≥ ۴ در ماه</span></div>
+  <div class="kpi"><b>حافظ ۱</b><span>نرخ تحقق سفارش (Fulfillment) ≥ ۸۵٪</span></div>
+  <div class="kpi"><b>حافظ ۲</b><span>میانگین زمان پذیرش (TTA) &lt; ۳ دقیقه عادی / &lt; ۲۰ ثانیه فوری</span></div>
+  <div class="kpi"><b>حافظ ۳</b><span>نرخ شکایت قیمت &lt; ۳٪ و نرخ بازکاری &lt; ۵٪</span></div>
+  <div class="kpi"><b>حافظ ۴</b><span>نگهداشت متخصص فعال ماهانه ≥ ۸۵٪</span></div>
+  <div class="kpi"><b>حافظ ۵</b><span>حاشیه سهم پلتفرم (Take Rate) پایدار با رشد GMV</span></div>
+</div>
+<h3>۱۲.۲ فازبندی پیشنهادی (۲۸–۳۲ هفته تا MVP عمومی، ۱۲ ماه تا مقیاس)</h3>
+<table class="tbl">
+<thead><tr><th>فاز</th><th>مدت</th><th>تمرکز</th><th>تحویل‌دادنی‌ها</th><th>معیار خروج</th></tr></thead>
+<tbody>
+<tr><td>فاز ۰ — Discovery و پایه‌ریزی</td><td>۳ هفته</td><td>تثبیت نیازمندی، طراحی داده، اسکلت فنی</td><td>Document سند حاضر، ERD نهایی، CI/CD، محیط‌ها، طرح امنیت و انطباق</td><td>تصویب معماری + آماده‌سازی محیط + تیم مستقر</td></tr>
+<tr><td>فاز ۱ — MVP معامله‌محور</td><td>۹ هفته</td><td>هویت OTP/Passkey، کاتالوگ، سفارش، دیسپچ ساده امتیازمحور، پرداخت + Escrow ساده، چت، پنل عملیات، امتیازدهی چندبعدی</td><td>اپ مشتری و متخصص، پنل عملیات، لایه مالی، اولین شهربه‌صورت محدود (Soft Launch)</td><td>Fulfillment ≥ ۷۵٪، TTA &lt; ۶ دقیقه، خطای پرداخت &lt; ۲٪، ۱۰۰ متخصص فعال</td></tr>
+<tr><td>فاز ۲ — هوشمندسازی و اعتماد</td><td>۸ هفته</td><td>ورودی چندرسانه‌ای و AI Intake، Dispatch کامل با تشدید و Surge سقف‌دار، امتیاز اعتبار، بیمه و گارانتی، اعزام فوری، داشبورد متخصص</td><td>موتور AI Intake، Dispatch v2، پنل ریسک، پرونده ادعا</td><td>Fulfillment ≥ ۸۵٪، TTA &lt; ۳ دقیقه، دقت دسته‌بندی ≥ ۸۵٪، Deflection پشتیبانی ≥ ۳۵٪</td></tr>
+<tr><td>فاز ۳ — فین‌تک و B2B</td><td>۷ هفته</td><td>Milestone، کیف پول سازمانی، اعتبار شرکتی، فاکتور مالیاتی، BNPL، پنل سازمانی</td><td>پنل B2B، موتور فاکتور و مالیات، دفتر کل کامل، گزارش مالی</td><td>۱۰ قرارداد B2B فعال، سهم سفارش‌های بالای ۵۰م ≥ ۱۰٪</td></tr>
+<tr><td>فاز ۴ — مقیاس و بهینه‌سازی</td><td>۶+ هفته</td><td>مقیاس زیرساخت، بهینه‌سازی هزینه، مدل‌های پیشرفته (ETA، قیمت، ریسک)، اتوماسیون پشتیبانی، گسترش شهری</td><td>Senderهای HPA و چندشهری، مدل‌های نسخه‌دار، چت‌بات RAG</td><td>پایداری ۹۹.۹٪، هزینه به‌ازای سفارش −۲۰٪، ۵ شهر فعال</td></tr>
+</tbody>
+</table>
+<h3>۱۲.۳ وابستگی‌ها و مسیر بحرانی</h3>
+<ul>
+<li><b>ریسک اصلی زمانی:</b> تأیید مدارک و انطباق متخصصان (سوءپیشینه، قرارداد، شبا) و اتصال به بیمه‌گذار.</li>
+<li><b>مسیر بحرانی فنی:</b> مدل داده سفارش/پرداخت → موتور Escrow → Dispatch v2 → AI Intake. تأخیر در سه مورد اول، همه فازها را جابه‌جا می‌کند.</li>
+<li><b>یین و نه اولیه‌ها:</b> مبلغ و شرایط بیمه، درصد کمیسیون هر دسته، سقف Surge، سیاست انصراف و جریمه لغو، شرایط اعتبار شرکتی.</li>
+</ul>
+</section>
+
+<!-- ===== 13-rfp.html (s13) ===== -->
+<section id="s13">
+<h2><span class="num">۱۳</span>RFP: برآورد دامنه، تیم، زمان‌بندی و هزینه</h2>
+<p class="lead">فایل قابل ارسال به پیمانکار: <code>achareh-plus/rfp/estimate.xlsx</code> (سه برگه: ریز برآورد کار، سناریوهای هزینه، هزینه‌های جاری و اشتراک‌ها). اعداد زیر <b>برآورد برنامه‌ریزی</b> هستند و برای قیمت‌گذاری دقیق‌تر باید نرخ روز تیم و شرایط بازار تأیید شود.</p>
+
+<h3>۱۳.۱ ساختار تیم پیشنهادی (سناریوی استاندارد)</h3>
+<table class="tbl">
+<thead><tr><th>نقش</th><th>تعداد</th><th>حضور</th><th>مسئولیت اصلی</th></tr></thead>
+<tbody>
+<tr><td>معمار راهکار / Tech Lead</td><td>۱</td><td>تمام‌وقت</td><td>معماری، قراردادهای سرویس، بازبینی کد بحرانی، تصمیم‌های ADR</td></tr>
+<tr><td>Product Owner + Business Analyst</td><td>۱</td><td>تمام‌وقت</td><td>اولویت‌بندی، Backlog، تعریف دقیق قواعد کسب‌وکار (کمیسیون، لغو، بیمه)</td></tr>
+<tr><td>طراح UX/UI</td><td>۱</td><td>تمام‌وقت (فاز ۰–۲) سپس پاره‌وقت</td><td>وایرفریم، دیزاین‌سیستم، پروتوتایپ، آزمون کاربری</td></tr>
+<tr><td>توسعه‌دهنده موبایل (Flutter)</td><td>۲</td><td>تمام‌وقت</td><td>اپ مشتری و متخصص</td></tr>
+<tr><td>توسعه‌دهنده بک‌اند (Go/Python)</td><td>۴</td><td>تمام‌وقت</td><td>Identity, Catalog, Order, Dispatch, Payments, Notification</td></tr>
+<tr><td>توسعه‌دهنده فرانت‌وب (Next.js/React)</td><td>۲</td><td>تمام‌وقت</td><td>پنل‌های عملیات/ادمین/B2B و سایت</td></tr>
+<tr><td>مهندس داده/ML</td><td>۱</td><td>تمام‌وقت (فاز ۲+)</td><td>AI Intake، مدل‌های ریسک و ETA، خط لوله داده، Feature Store</td></tr>
+<tr><td>مهندس DevOps/SRE</td><td>۱</td><td>تمام‌وقت</td><td>K8s، CI/CD، پایش، امنیت زیرساخت، DR</td></tr>
+<tr><td>مهندس QA (اتوماسیون + دستی)</td><td>۲</td><td>تمام‌وقت</td><td>تست قرارداد، رگرسیون، تست بار، UAT</td></tr>
+<tr><td>کارشناس امنیت (پاره‌وقت)</td><td>۰.۵</td><td>ماهانه</td><td>تست نفوذ، بازبینی دسترسی، انطباق امنیتی</td></tr>
+<tr><td>کارشناس پشتیبانی محصول (SME دامنه)</td><td>۰.۵</td><td>پاره‌وقت</td><td>سناریوهای پشتیبانی، Playbook، آموزش OCR/AI با نمونه داده</td></tr>
+</tbody>
+</table>
+<p><b>حداقل تیم قابل قبول برای فاز ۱:</b> ۱ معمار (که خودش هم کد می‌زند) + ۲ بک‌اند + ۱ موبایل + ۱ فرانت (که طراحی UI را هم انجام دهد) + ۱ DevOps نیمه‌وقت + ۱ QA. با این ترکیب، فاز ۱ حدود ۱۴–۱۶ هفته طول می‌کشد (به‌جای ۹ هفته).</p>
+
+<h3>۱۳.۲ برآورد کار به تفکیک ماژول</h3>
+<table class="tbl">
+<thead><tr><th>ماژول</th><th>نفر-ماه (استاندارد)</th><th>نفر-ماه (حداقلی)</th><th>ریسک برآورد</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td>هویت، ورود، RBAC و چرخه عمر کاربر</td><td>۴</td><td>۲.۵</td><td>کم</td><td>الگوهای شناخته‌شده؛ ریسک در Passkey روی دستگاه‌های قدیمی</td></tr>
+<tr><td>Onboarding و احراز هویت متخصص (OCR/Face Match)</td><td>۵</td><td>۳</td><td>متوسط</td><td>وابسته به کیفیت سرویس‌های OCR/Liveness و دقت روی مدارک ایرانی</td></tr>
+<tr><td>کاتالوگ، تریاژ و قیمت‌گذاری پویا</td><td>۶</td><td>۳.۵</td><td>متوسط</td><td>پیچیدگی در مدل‌سازی قواعد و نسخه‌بندی Rate Card</td></tr>
+<tr><td>سفارش، تقویم و اجرا</td><td>۷</td><td>۴</td><td>متوسط</td><td>چرخه وضعیت‌های زیاد + مستندسازی تصویری + آفلاین</td></tr>
+<tr><td>موتور تخصیص و اعزام فوری</td><td>۷</td><td>۴</td><td>بالا</td><td>نیاز به تنظیم پارامترها با داده واقعی؛ پیشنهاد: نسخه ساده در MVP و نسخه کامل در فاز ۲</td></tr>
+<tr><td>پرداخت، کیف پول، Escrow، Milestone</td><td>۸</td><td>۴.۵</td><td>بالا</td><td>حساس‌ترین بخش؛ نیازمند بازبینی دوعاملی و مغایرت‌یابی</td></tr>
+<tr><td>فاکتور، مالیات و B2B (شامل BNPL)</td><td>۵</td><td>۲.۵</td><td>متوسط–بالا</td><td>وابستگی به API سامانه مؤدیان و پارتنر BNPL</td></tr>
+<tr><td>اعتماد: امتیازدهی، گارانتی، بیمه و اختلاف</td><td>۵</td><td>۳</td><td>متوسط</td><td>شامل جریان پرونده ادعا و داوری</td></tr>
+<tr><td>ضدتقلب و ریسک</td><td>۴</td><td>۲</td><td>متوسط</td><td>نسخه قاعده‌محور در MVP، مدل گراف در فاز ۳</td></tr>
+<tr><td>پشتیبانی: چت، تماس امن، ویدیو، تیکتینگ، بات</td><td>۸</td><td>۴.۵</td><td>متوسط</td><td>WebRTC و ضبط جلسه نیازمند زیرساخت رسانه</td></tr>
+<tr><td>هوش مصنوعی ورودی (ASR/CV) و مدل‌های تحلیلی</td><td>۶</td><td>۲ (سرویس بیرونی)</td><td>بالا</td><td>کیفیت ASR فارسی و داده برچسب‌خورده در ابتدا محدود است</td></tr>
+<tr><td>پنل‌های عملیات، ادمین، مالی و B2B</td><td>۸</td><td>۴.۵</td><td>متوسط</td><td>حجم زیاد صفحه با ریسک کم؛ قابل موازی‌سازی</td></tr>
+<tr><td>اپ مشتری و اپ متخصص</td><td>۱۰</td><td>۶</td><td>متوسط</td><td>دو اپ روی کدبیس مشترک</td></tr>
+<tr><td>زیرساخت، CI/CD، پایش، امنیت، DR</td><td>۶</td><td>۳</td><td>کم–متوسط</td><td>در طول پروژه توزیع می‌شود</td></tr>
+<tr><td>مدیریت پروژه، QA و مستندسازی</td><td>۸</td><td>۴</td><td>کم</td><td>معمولاً ۱۵–۲۰٪ کل ظرفیت</td></tr>
+<tr><td><b>جمع</b></td><td><b>≈ ۹۷ نفر-ماه</b></td><td><b>≈ ۵۳ نفر-ماه</b></td><td>—</td><td>معادل حدود ۴۲۰ نفر-هفته کار در سناریوی استاندارد</td></tr>
+</tbody>
+</table>
+<p class="muted">تبدیل به زمان: تیم ۱۲ نفره استاندارد (با فرض ۸ نفر تمام‌وقت مؤثر بر توسعه) ⇒ حدود ۱۱–۱۲ ماه تا پایان فاز ۴. تیم ۷ نفره حداقلی ⇒ حدود ۹ ماه فقط برای رسیدن به پایان فاز ۲.</p>
+
+<h3>۱۳.۳ سناریوهای تجمیعی زمان و هزینه</h3>
+<table class="tbl">
+<thead><tr><th>سناریو</th><th>دامنه</th><th>مدت</th><th>ظرفیت</th><th>محدوده هزینه (تومان)</th><th>مناسب برای</th></tr></thead>
+<tbody>
+<tr><td>حداقلی / اعتبارسنجی بازار</td><td>فاز ۱ + بخشی از فاز ۲</td><td>۷–۹ ماه</td><td>≈ ۳۵ نفر-ماه</td><td>۱۴ تا ۲۴ میلیارد</td><td>استارتاپ با بودجه محدود، یک شهر، هدف اثبات محصول</td></tr>
+<tr><td>استاندارد (پیشنهاد شده)</td><td>فاز ۰ تا ۳</td><td>۱۰–۱۲ ماه</td><td>≈ ۷۵ نفر-ماه</td><td>۳۰ تا ۴۵ میلیارد</td><td>رقابت جدی با آچاره در چند شهر</td></tr>
+<tr><td>تسریع‌شده / پیشتاز</td><td>فاز ۰ تا ۴ با تیم بزرگ‌تر و موازی‌کاری کامل</td><td>۷–۸ ماه</td><td>≈ ۷۵ نفر-ماه در بازه کمتر</td><td>۴۵ تا ۶۵ میلیارد</td><td>سرمایه‌گذاری قابل توجه، پنجره زمانی رقابتی بسته</td></tr>
+</tbody>
+</table>
+<div class="callout warn"><b>هشدار درباره فشرده‌سازی:</b> کاهش مدت با افزایش هم‌زمانی تیم، هزینه را غیرخطی می‌کند (سازمان‌دهی، بازبینی، بازآزمایی و ریسک کیفیت). در پروژه‌ای با مغز مالی (Escrow/دفتر کل) فشرده‌سازی بی‌محابا ریسک جدی است؛ توصیه: تسریع در پنل‌ها و اپ‌ها، نه در لایه پول.</div>
+
+<h3>۱۳.۴ هزینه‌های جاری ماهانه (برآوردی، در مقیاس سال اول)</h3>
+<table class="tbl">
+<thead><tr><th>قلم</th><th>ماهانه (تومان)</th><th>توضیح / مقدار مصرف</th></tr></thead>
+<tbody>
+<tr><td>محاسبات، DB، Redis، ذخیره‌سازی آبجکت</td><td>۸۰۰ میلیون تا ۱.۵ میلیارد</td><td>۶–۱۰ محیط/سرویس با HPA روی K8s؛ ذخیره‌سازی رسانه ۲–۵ ترابایت</td></tr>
+<tr><td>CDN، WAF و دامنه</td><td>۱۵۰–۴۰۰ میلیون</td><td>ترافیک تصویری سنگین در اپ</td></tr>
+<tr><td>Kafka/OpenSearch/ClickHouse مدیریت‌شده</td><td>۳۰۰–۸۰۰ میلیون</td><td>بستگی به نگهداری داده و تعداد رویداد</td></tr>
+<tr><td>پیامک OTP و اطلاع‌رسانی</td><td>۲۰۰–۶۰۰ میلیون</td><td>فرض: ۵۰۰ هزار کاربره، ۲ پیامک/کاربر/ماه با نرخ خوشه‌ای</td></tr>
+<tr><td>Push (FCM رایگان) + سرویس جایگزین</td><td>۵۰–۲۰۰ میلیون</td><td>پایداری در شرایط اختلال</td></tr>
+<tr><td>ASR/OCR/Face-Match/AI (سه‌ویژگی)</td><td>۴۰۰ میلیون تا ۱.۲ میلیارد</td><td>وابسته به حجم دقیقه صدا، تعداد عکس و رویکرد خودمیزبانی در برابر مدل بیرونی</td></tr>
+<tr><td>نقشه، مسیریابی و ETA</td><td>۱۰۰–۳۵۰ میلیون</td><td>در صورت استفاده از سرویس تجاری داخلی</td></tr>
+<tr><td>تلفن VoIP و ضبط تماس</td><td>۱۰۰–۳۰۰ میلیون</td><td>بر پایه تعداد دقیقه تماس پوشانده‌شده</td></tr>
+<tr><td>ابزارهای پایش، خطا و لاگ</td><td>۸۰–۲۵۰ میلیون</td><td>OpenTelemetry خودمیزبان ارزان‌تر است</td></tr>
+<tr><td>کارمزد درگاه پرداخت</td><td>۰.۵–۱٪ مبلغ تراکنش</td><td>هزینه متغیر و حذف‌ناشدنی</td></tr>
+<tr><td>حق بیمه گروهی و هزینه خسارت</td><td>۰.۵–۱.۵٪ GMV</td><td>بسته به نرخ توافقی با بیمه‌گذار و سیاست پوشش</td></tr>
+<tr><td><b>جمع متغیر ماهانه (سال اول)</b></td><td><b>≈ ۳ تا ۶ میلیارد تومان</b></td><td>برای مقیاس ۵۰۰ هزار کاربر ماهانه و ۱۵ هزار سفارش روزانه (برآورد سطح سفارش)</td></tr>
+</tbody>
+</table>
+
+<h3>۱۳.۵ برنامه پرداخت و پذیرش تحویل</h3>
+<table class="tbl">
+<thead><tr><th>مرحله</th><th>سهم پرداخت</th><th>معیار پذیرش</th></tr></thead>
+<tbody>
+<tr><td>شروع و فاز ۰</td><td>۱۰٪</td><td>تصویب سند معماری، محیط‌ها آماده، CI/CD فعال</td></tr>
+<tr><td>پایان فاز ۱ (MVP)</td><td>۲۵٪</td><td>اجرای UAT سناریوهای بحرانی، Fulfillment ≥ ۷۵٪ در پایلوت، خطای پرداخت &lt; ۲٪</td></tr>
+<tr><td>پایان فاز ۲ (هوشمندسازی)</td><td>۲۵٪</td><td>دقت دسته‌بندی AI ≥ ۸۵٪ روی مجموعه آزمون، TTA &lt; ۳ دقیقه، پنل ریسک فعال</td></tr>
+<tr><td>پایان فاز ۳ (فین‌تک/B2B)</td><td>۲۰٪</td><td>دفتر کل متوازن و مغایرت‌یابی موفق، فاکتور مالیاتی موفق در آزمون سامانه، حداقل یک قرارداد B2B واقعی</td></tr>
+<tr><td>پایان فاز ۴ و تحویل نهایی</td><td>۱۵٪</td><td>پایداری ۹۹.۹٪ در ۳۰ روز، انتقال دانش، مستندات کامل، تمرین DR انجام‌شده</td></tr>
+<tr><td>نگهداشت و پشتیبانی (جداگانه)</td><td>۱۰–۱۸٪ هزینه سالانه ساخت</td><td>SLA پاسخ و رفع (مثلاً پاسخ ۱۵ دقیقه برای سطح ۱، رفع بحرانی ۴ ساعت)</td></tr>
+</tbody>
+</table>
+
+<h3>۱۳.۶ معیارهای ارزیابی پیمانکار</h3>
+<table class="tbl">
+<thead><tr><th>معیار</th><th>وزن</th><th>سنجه</th></tr></thead>
+<tbody>
+<tr><td>تجربه مارکت‌پلیس دوطرفه و پرداخت</td><td>۲۵٪</td><td>نمونه پروژه‌های مشابه با Escrow یا تسویه دسته‌ای</td></tr>
+<tr><td>کیفیت معماری پیشنهادی</td><td>۲۰٪</td><td>پاسخ به سند حاضر: تصمیم‌ها، ریسک‌ها، جایگزین‌ها</td></tr>
+<tr><td>تیم و ظرفیت تخصیص‌یافته</td><td>۲۰٪</td><td>رزومه نفرات کلیدی، تعهد زمانی، نرخ جانشینی</td></tr>
+<tr><td>تفاهم بر دامنه و صراحت برآورد</td><td>۱۵٪</td><td>پذیرش معیارهای پذیرش، شفافیت در فرض‌ها و خارج از دامنه</td></tr>
+<tr><td>رویه تست و تضمین کیفیت</td><td>۱۰٪</td><td>تست قرارداد، تست بار، اتوماسیون، فرآیند انتشار</td></tr>
+<tr><td>پیشنهاد قیمت و شرایط پرداخت</td><td>۱۰٪</td><td>ارزیابی ارزش در برابر هزینه، نه کم‌ترین قیمت</td></tr>
+</tbody>
+</table>
+<p><b>موارد قراردادی پیشنهادی:</b> مالکیت کد و داده به‌طور کامل با کارفرما؛ الزام Documentation و Runbook؛ انتقال دانش و آموزش تیم داخلی؛ دوره تضمین رفع نقص ۶ ماهه؛ نرخ تغییرات با مکانیزم Change Request و سقف ساعتی؛ منع استفاده از داده واقعی مشتری در محیط توسعه.</p>
+</section>
+
+<!-- ===== 14-risks.html (s14) ===== -->
+<section id="s14">
+<h2><span class="num">۱۴</span>ریسک‌ها، انطباق قانونی و امنیت عملیاتی</h2>
+<h3>۱۴.۱ رجیستر ریسک (با مالک و پاسخ)</h3>
+<table class="tbl">
+<thead><tr><th>#</th><th>ریسک</th><th>اثر</th><th>احتمال</th><th>پاسخ (Mitigation)</th><th>مالک</th></tr></thead>
+<tbody>
+<tr><td>R-01</td><td>کمبود عرضه متخصص در ساعات پیک/مناطق خاص</td><td>افت نرخ تحقق و از دست رفتن مشتری</td><td>بالا</td><td>سیاست انگیزه پیک، هدایت متخصص با نقشه حرارتی، جذب هدفمند در مناطق کم‌عرضه، پذیرش سفارش زمان‌بندی‌شده در پیک</td><td>عملیات عرضه</td></tr>
+<tr><td>R-02</td><td>فروپاشی اعتماد به‌دنبال یک حادثه کیفیت یا امنیتی با پوشش رسانه‌ای</td><td>آسیب برند جدی</td><td>متوسط</td><td>احراز چندلایه، عکس قبل/بعد اجباری، بیمه فعال، Playbook بحران (بیانیه، جبران، شفافیت)، آماده‌سازی پاسخ حقوقی</td><td>مدیریت + انطباق</td></tr>
+<tr><td>R-03</td><td>خطای مالی: آزادسازی نادرست یا مغایرت در دفتر کل</td><td>زیان مستقیم و بی‌اعتباری</td><td>متوسط</td><td>دفتر کل دوعاملی، تأیید دوعاملی بالای سقف، مغایرت‌یابی روزانه، حداکثر خودکارسازی شکست‌ناپذیر، بازبینی هفتگی نمونه‌ای</td><td>مالی + مهندسی</td></tr>
+<tr><td>R-04</td><td>سوءاستفاده از تخفیف/کوپن و ادعاهای خسارت جعلی</td><td>هزینه اضافی مستقیم</td><td>متوسط</td><td>موتور ریسک، سقف کوپن به‌ازای کاربر/دستگاه، الزام شواهد، تحلیل گراف هم‌خوشه‌ای</td><td>ریسک</td></tr>
+<tr><td>R-05</td><td>خروج متخصص به کانال خارج پلتفرم (تبانی)</td><td>کاهش درآمد کمیسیون</td><td>بالا</td><td>شفافیت مزایا (بیمه، گارانتی، پرداخت امن)، تحلیل متن/تماس، هدف‌گیری مشتریان پرتکرار با پاداش درون‌پلتفرم</td><td>رشد + ریسک</td></tr>
+<tr><td>R-06</td><td>محدودیت‌های زیرساختی/تحریم یا وابستگی به سرویس بیرونی</td><td>توقف سرویس هوشمند</td><td>متوسط</td><td>میزبانی داخلی برای داده و پرداخت، دو تأمین‌کننده برای هر سرویس بحرانی، طراحی Fail-Over، امکان کار در حالت بدون AI</td><td>SRE</td></tr>
+<tr><td>R-07</td><td>کیفیت پایین مدل‌های ASR/CV روی داده فارسی و لهجه‌ها</td><td>تجربه بد و داده برچسب غلط</td><td>بالا</td><td>شروع با رویکرد Human-in-the-loop، واژه‌نامه تخصصی، معیار پذیرش کمی، جمع‌آوری مستمر داده برچسب‌خورده، آزادی کاربر برای اصلاح</td><td>داده/ML</td></tr>
+<tr><td>R-08</td><td>تأخیر در تأییدهای قانونی/صنفی متخصصان</td><td>کندی رشد عرضه</td><td>متوسط</td><td>ساختار قراردادی از پیش تأییدشده، تیم بررسی پاره‌وقت پویا در پیک جذب، پیگیری وضعیت برای متقاضی</td><td>انطباق</td></tr>
+<tr><td>R-09</td><td>رشد هزینه پشتیبانی با رشد سفارش</td><td>فشار بر حاشیه سود</td><td>متوسط</td><td>چت‌بات و پایگاه دانش، خودخدمتی، رانش هوشمند، کاهش علل ریشه‌ای (شفافیت قیمت، عکس قبل/بعد)</td><td>پشتیبانی</td></tr>
+<tr><td>R-10</td><td>هزینه تملک مشتری (CAC) بالا در برابر ارزش عمر (LTV)</td><td>ناترازی اقتصادی</td><td>متوسط</td><td>رشد ارگانیک سئو صفحات خدمت، بازگشت از طریق سفارش دوره‌ای، سبد خدمات B2B با LTV بالاتر، پایش پیوسته سهم بازاریابی در سفارش</td><td>رشد</td></tr>
+<tr><td>R-11</td><td>افشای داده کاربر یا سوءاستفاده داخلی</td><td>ریسک حقوقی و اعتباری شدید</td><td>کم</td><td>کمینه‌دسترسی، لاگ کامل، ضبط نشست کارکنان برای داده حساس، ماسک‌کردن داده در لاگ، تست نفوذ دوره‌ای</td><td>امنیت</td></tr>
+<tr><td>R-12</td><td>وابستگی به یک نفر کلیدی (Bus Factor)</td><td>توقف یا کندی توسعه</td><td>متوسط</td><td>الزام دو نفر مالک برای هر سرویس، مستندسازی تصمیم‌ها (ADR)، جفت‌برنامه‌نویسی دوره‌ای</td><td>مهندسی</td></tr>
+</tbody>
+</table>
+
+<h3>۱۴.۲ انطباق قانونی — چک‌لیست اجرایی</h3>
+<table class="tbl">
+<thead><tr><th>حوزه</th><th>الزامات کلیدی</th><th>فاصله تا وضعیت مطلوب در پلتفرم فعلی</th></tr></thead>
+<tbody>
+<tr><td>قانون تجارت الکترونیک و حمایت از مصرف‌کننده</td><td>شفافیت قیمت و شرایط پیش از خرید، حق انصراف، مسیر شکایت مشخص، ثبت سوابق معامله</td><td>نیازمند صفحه شرایط خدمت و سیاست لغو/بازگشت با نسخه‌بندی و تأیید صریح کاربر</td></tr>
+<tr><td>داده‌های شخصی</td><td>رضایت آگاهانه، حداقل‌سازی، محدودیت هدف، حق دسترسی و اصلاح و حذف</td><td>نیازمند جدول رضایت نسخه‌دار، مسیر درخواست داده، و بی‌اثرسازی PII در حذف حساب</td></tr>
+<tr><td>مالیاتی</td><td>صدور و ارسال صورتحساب الکترونیکی، نگهداری اسناد، کسر و واریز تکالیف مالیاتی</td><td>نیازمند ماژول صورتحساب و صف ارسال به سامانه مؤدیان</td></tr>
+<tr><td>کار و صلاحیت صنفی</td><td>احراز مهارت و مجوز برای دسته‌های حساس (برق، گاز، آسانسور)، بیمه مسئولیت</td><td>نیازمند قواعد سخت‌گیرانه‌تر برای دسته‌های پرخطر در مدل تأیید</td></tr>
+<tr><td>بیمه</td><td>پوشش مسئولیت حرفه‌ای و خسارت مالی، سقف مشخص، فرآیند ادعا</td><td>نیازمند قرارداد بیمه گروهی و خودکارسازی ثبت پرونده</td></tr>
+<tr><td>ضدپولشویی (در صورت ورود به خدمات مالی)</td><td>شناسایی مشتری، رصد تراکنش‌های مشکوک، سقف تراکنش</td><td>در دامنه V1; در صورت اعطای اعتبار/تسهیلات، الزامات شدیدتر اعمال شود</td></tr>
+<tr><td>تبلیغات و ادعاها</td><td>پرهیز از ادعای «بهترین قیمت» یا ضمانت مطلق بدون پشتوانه</td><td>نیازمند بازبینی محتوای بازاریابی و بانک ادعاهای مجاز</td></tr>
+</tbody>
+</table>
+<div class="callout danger"><b>توصیه حاکمیتی:</b> پیش از راه‌اندازی ماژول‌های مالی (Escrow، اعتبار شرکتی، BNPL)، یک بررسی حقوقی مستقل با محور «ماهیت رابطه سه‌جانبه پلتفرم–مشتری–متخصص» و «مسئولیت پلتفرم در خسارت» انجام شود. سند حاضر جایگزین مشاوره حقوقی نیست.</div>
+</section>
+
+<section id="s15">
+<h2><span class="num">۱۵</span>پیوست‌ها: واژه‌نامه، ماتریس اولویت و فرم‌های ارزیابی</h2>
+<h3>۱۵.۱ واژه‌نامه</h3>
+<table class="tbl">
+<thead><tr><th>اصطلاح</th><th>تعریف عملیاتی در این پلتفرم</th></tr></thead>
+<tbody>
+<tr><td>Escrow</td><td>نگه‌داشت مبلغ سفارش در حساب واسط تا تأیید انجام کار یا انقضای پنجره اعتراض</td></tr>
+<tr><td>Milestone</td><td>مرحله مالی پروژه با شرط آزادسازی مستقل (پیشرفت/تحویل)</td></tr>
+<tr><td>TTA (Time-to-Accept)</td><td>فاصله بین ثبت سفارش و پذیرش توسط متخصص</td></tr>
+<tr><td>Fulfillment Rate</td><td>نسبت سفارش‌های تکمیل‌شده به کل سفارش‌های ثبت‌شده</td></tr>
+<tr><td>Take Rate</td><td>سهم درآمدی پلتفرم از مبلغ سفارش (کمیسیون + کارمزدها)</td></tr>
+<tr><td>Surge Factor</td><td>ضریب قیمت ناشی از عدم تعادل تقاضا/عرضه در منطقه و زمان مشخص</td></tr>
+<tr><td>Wave (موج)</td><td>دسته‌ای از کاندیداها که هم‌زمان پیشنهاد دریافت می‌کنند</td></tr>
+<tr><td>Change Order</td><td>درخواست رسمی تغییر دامنه/قیمت که نیازمند تأیید مشتری است</td></tr>
+<tr><td>Verified Review</td><td>نظر ثبت‌شده صرفاً برای سفارش اجراشده با تأیید مکان و زمان</td></tr>
+<tr><td>Trust Ladder</td><td>سطوح اعتماد L0 تا L4 متخصص و دسترسی‌های متناظر</td></tr>
+<tr><td>SLO / Error Budget</td><td>هدف سطح خدمت و بودجه خطای مجاز ماهانه</td></tr>
+<tr><td>Collusion</td><td>هم‌دستی مشتری و متخصص برای دورزدن قواعد یا کمیسیون پلتفرم</td></tr>
+</tbody>
+</table>
+
+<h3>۱۵.۲ ماتریس اولویت قابلیت‌ها (خلاصه مدیریتی)</h3>
+<table class="tbl">
+<thead><tr><th>قابلیت</th><th>اثر بر درآمد</th><th>اثر بر تجربه</th><th>هزینه ساخت</th><th>ریسک</th><th>فاز</th></tr></thead>
+<tbody>
+<tr><td>Escrow و آزادسازی مرحله‌ای</td><td>بالا</td><td>بالا</td><td>بالا</td><td>بالا</td><td>فاز ۱ / کامل در ۳</td></tr>
+<tr><td>Dispatch امتیازمحور</td><td>بالا</td><td>بالا</td><td>متوسط</td><td>متوسط</td><td>فاز ۱ ساده / ۲ کامل</td></tr>
+<tr><td>وارد کردن سفارش چندرسانه‌ای + AI Intake</td><td>متوسط</td><td>بالا</td><td>بالا</td><td>بالا</td><td>فاز ۲</td></tr>
+<tr><td>قیمت‌گذاری پویا با سقف</td><td>بالا</td><td>خنثی/منفی</td><td>متوسط</td><td>متوسط</td><td>فاز ۲</td></tr>
+<tr><td>اعزام فوری</td><td>بالا</td><td>بالا</td><td>متوسط</td><td>متوسط</td><td>فاز ۲ (+شرط عرضه)</td></tr>
+<tr><td>امتیاز چندبعدی و صحت‌سنجی نظر</td><td>متوسط</td><td>بالا</td><td>کم</td><td>کم</td><td>فاز ۱</td></tr>
+<tr><td>بیمه و گارانتی خودکار</td><td>متوسط</td><td>بالا</td><td>متوسط</td><td>متوسط</td><td>فاز ۲</td></tr>
+<tr><td>فاکتور مالیاتی و پنل B2B</td><td>بالا (کارهای بزرگ)</td><td>متوسط</td><td>متوسط</td><td>متوسط</td><td>فاز ۳</td></tr>
+<tr><td>BNPL</td><td>متوسط</td><td>بالا</td><td>کم (اتصال قاعده‌مند)</td><td>کم–متوسط</td><td>فاز ۳</td></tr>
+<tr><td>چت‌بات پشتیبانی و پایگاه دانش</td><td>متوسط (کاهش هزینه)</td><td>بالا (سرعت پاسخ)</td><td>متوسط</td><td>متوسط</td><td>فاز ۲</td></tr>
+<tr><td>تماس تصویری و بازدید از راه دور</td><td>متوسط</td><td>بالا</td><td>بالا</td><td>متوسط</td><td>فاز ۳</td></tr>
+<tr><td>ضدتقلب گرافی و کشف تبانی</td><td>بالا (کمیسیون ازدست‌رفته)</td><td>خنثی</td><td>بالا</td><td>متوسط</td><td>فاز ۲ قاعده‌محور / ۳ مدل</td></tr>
+<tr><td>داشبورد و نقشه حرارتی متخصص</td><td>متوسط (عرضه)</td><td>بالا</td><td>کم–متوسط</td><td>کم</td><td>فاز ۲</td></tr>
+</tbody>
+</table>
+
+<h3>۱۵.۳ فرم ارزیابی کیفیت سفارش (برای کارشناس کیفیت — نمونه)</h3>
+<table class="tbl">
+<thead><tr><th>سنجه</th><th>روش بررسی</th><th>آستانه عبور</th></tr></thead>
+<tbody>
+<tr><td>صحت قیمت نهایی نسبت به پیش‌فاکتور</td><td>مقایسه با Change Orderهای تأییدشده</td><td>Δ ≤ ۵٪ بدون تأیید مشتری ⇒ تخلف</td></tr>
+<tr><td>کامل بودن مدارک</td><td>عکس قبل/بعد + چک‌لیست امضاشده</td><td>۱۰۰٪ موارد اجباری</td></tr>
+<tr><td>انطباق زمانی</td><td>اختلاف زمان توافقی و Check-in</td><td>تأخیر ≤ ۱۵ دقیقه</td></tr>
+<tr><td>کیفیت کار</td><td>بازکاری در ۳۰ روز یا تأیید مشتری</td><td>بازکاری ≤ ۵٪</td></tr>
+<tr><td>رفتار حرفه‌ای</td><td>سنجه امتیازی و شکایت‌های ثبت‌شده</td><td>امتیاز رفتار ≥ ۴.۲ از ۵</td></tr>
+</tbody>
+</table>
+
+<h3>۱۵.۴ فرم پایش هفتگی پلتفرم (برای جلسه عملیاتی)</h3>
+<table class="tbl">
+<thead><tr><th>شاخص</th><th>هدف</th><th>منبع داده</th></tr></thead>
+<tbody>
+<tr><td>سفارش‌های تکمیل‌شده</td><td>رشد ۵–۸٪ هفتگی در فاز رشد</td><td>Data Warehouse</td></tr>
+<tr><td>نرخ تحقق به تفکیک دسته</td><td>≥ ۸۵٪</td><td>جدول سفارش</td></tr>
+<tr><td>میانگین TTA و P90</td><td>میانگین &lt; ۳ دقیقه، P90 &lt; ۱۲ دقیقه</td><td>رویدادهای Dispatch</td></tr>
+<tr><td>نرخ پذیرش متخصص (Offer → Accept)</td><td>≥ ۶۰٪ در موج اول</td><td>جدول پیشنهاد</td></tr>
+<tr><td>نرخ اعتراض قیمت</td><td>&lt; ۳٪</td><td>تغییرهای قیمت + نظرها</td></tr>
+<tr><td>نرخ ادعای خسارت</td><td>&lt; ۱٪ سفارش‌ها</td><td>پرونده ادعا</td></tr>
+<tr><td>سبد Escrow در دسترس (Aging)</td><td>&lt; ۲٪ مبلغ لاوصول</td><td>دفتر کل + پرونده‌های باز</td></tr>
+<tr><td>هزینه پشتیبانی به‌ازای سفارش</td><td>کاهش ۱۰٪ فصلی با اتوماسیون</td><td>هزینه نیرو / سفارش</td></tr>
+</tbody>
+</table>
+<div class="callout ok"><b>جمع‌بندی:</b> اجرای این سند در سه قالب تحویل‌دادنی کاربردی خلاصه می‌شود: <b>(۱)</b> سند حاضر (نیازمندی + معماری + نقشه راه)، <b>(۲)</b> مدل داده و API قابل پیاده‌سازی (<code>db/schema.sql</code> و <code>api/openapi-core.yaml</code>)، <b>(۳)</b> پروتوتایپ تعاملی و برآورد قابل ارائه به پیمانکار (<code>prototype/index.html</code> و <code>rfp/estimate.xlsx</code>).</div>
+</section>
+
+<footer class="doc">سند تهیه‌شده برای تیم محصول/فنی و پیمانکار — قابل چاپ (Print to PDF). همه قیمت‌ها و برآوردها برنامه‌ریزی‌محور و نیازمند تأیید بازار هستند.</footer>
+</main>
+</div>
+</body>
+</html>

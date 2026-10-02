@@ -1,0 +1,114 @@
+<section id="s4">
+<h2><span class="num">۴</span>معماری قیمت‌گذاری و تراکنش‌های مالی</h2>
+<p class="lead">پول، ستون فقرات اعتماد در مارکت‌پلیس است. هدف این ماژول: <b>شفافیت قیمت قبل از سفارش</b>، <b>نگهداشت پول تا انجام کار (Escrow)</b>، <b>مسیر پرداخت‌های بزرگ (Milestone + BNPL)</b> و <b>انطباق مالیاتی</b>.</p>
+
+<h3 id="s4-1">۴.۱ موتور قیمت‌گذاری پویا</h3>
+<h4>مدل‌های قیمت‌گذاری قابل پشتیبانی (همه در یک موتور)</h4>
+<table class="tbl">
+<thead><tr><th>مدل</th><th>کجا استفاده می‌شود</th><th>مکانیزم</th></tr></thead>
+<tbody>
+<tr><td>قیمت ثابت (Fixed)</td><td>خدمات استاندارد و قابل تکرار: نصب کولر، بازکردن قفل ساده، سرویس کامل کولر</td><td>Rate Card نسخه‌دار با مولفه‌های واضح</td></tr>
+<tr><td>بازه تخمینی (Estimated Band)</td><td>تعمیرات با عدم قطعیت: نشت آب، ایراد برد</td><td>کف/سقف + تعهد «تغییر قیمت فقط با تأیید مشتری»</td></tr>
+<tr><td>برآورد بازدیدی (Inspection-based)</td><td>بازسازی، نقاشی متری، نصب پکیج</td><td>هزینه بازدید (قابل کسر از فاکتور) + پیش‌فاکتور رسمی پس از بازدید</td></tr>
+<tr><td>مزایده/پیشنهاد (Bid)</td><td>پروژه‌های بزرگ و تخصصی</td><td>چند متخصص پیشنهاد می‌دهند؛ مشتری مقایسه و انتخاب می‌کند</td></tr>
+<tr><td>ساعتی/روز-مرد (Hourly / Man-day)</td><td>کارهای مبهم یا B2B قراردادی</td><td>نرخ ساعتی تصویب‌شده + تایم‌شیت دیجیتال با Check-in/out</td></tr>
+<tr><td>قرارداد نگهداری (Retainer)</td><td>B2B: مجتمع اداری، رستوران</td><td>بسته ماهانه با SLA، سقف ساعت، تعرفه تخفیف‌دار</td></tr>
+</tbody>
+</table>
+
+<h4>فرمول قیمت پویا</h4>
+<pre class="code">Final_Price =
+    ( Base_Rate(category, sub_service, unit)            // از Rate Card نسخه‌دار
+    * Complexity_Factor(order)                          // 1.0 .. 2.5 بر پایه پاسخ‌های تریاژ و شدت AI
+    * Urgency_Factor(urgency)                           // now=1.35 | same_day=1.15 | next_day=1.00 | scheduled=0.95
+    * Surge_Factor(zone, time_window)                   // تقاضا/عرضه منطقه‌ای، سقف 1.5
+    + Travel_Fee(distance_km, mode)                     // نرخ پله‌ای، شفاف روی فاکتور
+    + Materials_Estimate(category)                      // اقلام مصرفی؛ تسویه با رسید
+    + AddOns(extra_services[]) )
+    * Discount_Factors(membership, coupon, referral, loyalty, B2B_contract)
+    ;  Surge_Factor = clamp( 1 + k * (demand_index/ supply_index - 1), 0.95, 1.50 )
+    ;  demand_index: سفارش‌های ثبت‌شده در ۳۰ دقیقه گذشته در همان Zone
+    ;  supply_index: متخصصان فعال همان Zone با ظرفیت آزاد</pre>
+<p><b>مهار (Guardrails) اجباری:</b> سقف افزایش ۱.۵ برابری؛ نمایش دلیل افزایش («تقاضای بالا در محله شما»)، عدم اعمال Surge روی خدمات امدادی و روی مشتریان دارای اشتراک؛ ثبت هر تغییر قیمت در جدول <code>price_quote_revision</code> با دلیل و تأیید مشتری.</p>
+
+<pre class="code">// توضیح صورتحساب کاربرپسند (نمونه خروجی به مشتری)
+{
+  "base":            {"title":"اجرت پایه تعمیر نشت لوله", "amount": 900000},
+  "complexity":      {"title":"پیچیدگی بالای کار (اعلام کارشناس)", "amount": 150000},
+  "travel":          {"title":"هزینه ایاب/ذهاب (۴.۲ کیلومتر)", "amount": 60000},
+  "materials":       {"title":"اقلام مصرفی (واشر و سیفون)", "amount": 280000, "receipt_required": true},
+  "discount":        {"title":"تخفیف اشتراک طلایی", "amount": -50000},
+  "surcharge_waived":{"title":"معاف از افزایش تقاضا (خدمت امدادی)", "amount": 0},
+  "tax":             {"title":"مالیات ارزش افزوده (۱۰٪)", "amount": 134000},
+  "total":           {"title":"قابل پرداخت", "amount": 1474000}
+}</pre>
+
+<h4>طراحی فنی و ابزارهای آزمایش</h4>
+<ul>
+<li>قیمت‌گذاری به‌صورت سرویس مستقل با <b>Deterministic</b> بودن خروجی برای یک ورودی (قابل بازتولید و حسابرسی): هر تخمین با <code>rate_card_version</code> و <code>engine_version</code> امضا می‌شود.</li>
+<li><b>Kill-Switch</b> برای Surge و برای کل موتور پویا؛ بازگشت به قیمت ثابت در هر لحظه (سناریوی بحران: یخبندان، آلودگی هوا، پیک خبری).</li>
+<li>قابلیت <b>آزمایش قیمت</b> (Pricing Experiment) با Feature Flag: درصد کاربران آزمایشی، اندازه‌گیری نرخ تبدیل، درآمد هر بازدید (RPV) و نرخ شکایت قیمت.</li>
+</ul>
+
+<h3 id="s4-2">۴.۲ کیف پول، Escrow و پرداخت مرحله‌ای (Milestone)</h3>
+<div class="flow">
+<svg viewBox="0 0 980 250" role="img" aria-label="چرخه پول در Escrow">
+ <defs><marker id="ar5" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#94a3b8"/></marker>
+ <style>.t4{font:600 11.5px Tahoma,sans-serif;fill:#0b3f4d;text-anchor:middle;direction:rtl}
+ .s4{font:10.5px Tahoma,sans-serif;fill:#5c6472;text-anchor:middle;direction:rtl}
+ .e{fill:#f2f9f8;stroke:#0f7a6c;stroke-width:1.4;rx:10}.e2{fill:#eef2ff;stroke:#1d4ed8;stroke-width:1.4;rx:10}
+ .e3{fill:#fff8ed;stroke:#b45309;stroke-width:1.4;rx:10}.l5{stroke:#94a3b8;stroke-width:1.3;marker-end:url(#ar5)}</style></defs>
+ <rect class="e2" x="790" y="40" width="170" height="58"/><text class="t4" x="875" y="64">PENDING_PAYMENT</text><text class="s4" x="875" y="82">سفارش ثبت، بدون تعهد مالی</text>
+ <rect class="e" x="590" y="40" width="180" height="58"/><text class="t4" x="680" y="64">HELD_IN_ESCROW</text><text class="s4" x="680" y="82">مبلغ در حساب واسط پلتفرم</text>
+ <rect class="e" x="390" y="40" width="180" height="58"/><text class="t4" x="480" y="64">PARTIALLY_RELEASED</text><text class="s4" x="480" y="82">آزادسازی در Milestone‌ها</text>
+ <rect class="e" x="190" y="40" width="180" height="58"/><text class="t4" x="280" y="64">RELEASED_TO_PROVIDER</text><text class="s4" x="280" y="82">پس از تأیید مشتری/انقضای پنجره</text>
+ <rect class="e" x="20" y="40" width="150" height="58"/><text class="t4" x="95" y="64">SETTLED</text><text class="s4" x="95" y="82">تسویه به شبا / کیف پول</text>
+ <rect class="e3" x="330" y="150" width="320" height="54"/><text class="t4" x="490" y="172">DISPUTED → FREEZE</text><text class="s4" x="490" y="190">توقف آزادسازی تا رأی تیم کیفیت</text>
+ <rect class="e3" x="670" y="150" width="290" height="54"/><text class="t4" x="815" y="172">REFUND / PARTIAL_REFUND</text><text class="s4" x="815" y="190">بازگشت به کیف پول یا درگاه</text>
+ <line class="l5" x1="788" y1="69" x2="772" y2="69"/><line class="l5" x1="588" y1="69" x2="572" y2="69"/>
+ <line class="l5" x1="388" y1="69" x2="372" y2="69"/><line class="l5" x1="188" y1="69" x2="172" y2="69"/>
+ <line class="l5" x1="680" y1="98" x2="560" y2="148"/><line class="l5" x1="650" y1="170" x2="668" y2="170"/>
+</svg>
+</div>
+<h4>دفتر کل دوعاملی (Double-Entry Ledger) — قلب صحت مالی</h4>
+<p>هیچ سرویسی «موجودی» را مستقیم تغییر نمی‌دهد؛ همه از طریق ثبت قیدهای دوعاملی انجام می‌شود. موجودی کیف پول یک <b>View محاسبه‌شده</b> از قیدهاست (با Snapshot دوره‌ای برای کارایی).</p>
+<pre class="code">-- جدول ledger_entry: هر تراکنش = چند قید که جمع بدهکار و بستانکار برابر است
+INSERT INTO ledger_entry (txn_id, account_code, direction, amount, currency, ref_type, ref_id)
+VALUES
+ ('txn_7f21', '1100-CUSTOMER-FUNDS',      'DEBIT',  1474000, 'IRR', 'order', 'ord_5521'), -- دریافت از PSP
+ ('txn_7f21', '2200-ESCROW-LIABILITY',    'CREDIT', 1474000, 'IRR', 'order', 'ord_5521');
+
+-- آزادسازی پس از تأیید کار (کسر کمیسیون پلتفرم و مالیات)
+ ('txn_7f3c', '2200-ESCROW-LIABILITY',    'DEBIT',  1000000, 'IRR', 'order', 'ord_5521'),
+ ('txn_7f3c', '2300-PROVIDER-WALLET',     'CREDIT',  850000, 'IRR', 'order', 'ord_5521'),
+ ('txn_7f3c', '4100-COMMISSION-REVENUE',  'CREDIT',  150000, 'IRR', 'order', 'ord_5521');
+-- تسویه به شبا: 2300 → 2100-BANK-CLEARING + کاهش 2400-PAYABLE-TAX</pre>
+<p><b>قواعد کلیدی:</b> هر قید غیرقابل تغییر (Immutable) است؛ اصلاح با «قید معکوس» انجام می‌شود نه ویرایش. هر عملیات با <b>Idempotency-Key</b> یکتا و <code>correlation_id</code> ثبت می‌شود. روزانه گزارش مغایرت (Reconciliation) بین PSP، دفتر کل و صورتحساب بانکی تولید می‌شود.</p>
+
+<h4>پروژه بزرگ: Milestone Payment</h4>
+<table class="tbl">
+<thead><tr><th>مرحله</th><th>سهم</th><th>شرط آزادسازی</th><th>چه‌کسی تأیید می‌کند</th></tr></thead>
+<tbody>
+<tr><td>Milestone 1 — شروع و مصالح</td><td>۳۰٪</td><td>تحویل برنامه زمان‌بندی + عکس وضعیت اولیه + ثبت شروع کار (Check-in)</td><td>مشتری (تأیید در اپ) یا خودکار پس از ۲۴ ساعت بی‌واکنشی</td></tr>
+<tr><td>Milestone 2 — پیشرفت</td><td>۴۰٪</td><td>عکس/ویدیو پیشرفت + تأیید مرزی کارشناس کیفیت (برای تیکت &gt; سقف)</td><td>مشتری + بررسی خودکار تصویری</td></tr>
+<tr><td>Milestone 3 — تحویل</td><td>۳۰٪</td><td>بازدید نهایی/چک‌لیست تحویل + پنجره اعتراض ۴۸ ساعته</td><td>خودکار پس از پنجره، مگر اعتراض</td></tr>
+<tr><td>تضمین بازکاری (Garanti)</td><td>۵–۱۰٪ توقیف</td><td>آزادسازی پس از ۷–۳۰ روز بدون بازکاری (بسته به دسته)</td><td>خودکار</td></tr>
+</tbody>
+</table>
+<p><b>Change Order:</b> هر افزایش قیمت وسط کار باید در اپ به‌صورت «درخواست تغییر» با علت و عکس ثبت و توسط مشتری امضا/تأیید شود؛ در غیر این صورت مبلغ اضافه از Escrow آزاد نمی‌شود. این یک قاعده سخت است و بیشترین اختلافات مالی را حذف می‌کند.</p>
+
+<h3 id="s4-3">۴.۳ مالیات، فاکتور رسمی و پرداخت اقساطی (BNPL)</h3>
+<table class="tbl">
+<thead><tr><th>موضوع</th><th>الزام/طراحی فنی</th><th>نکته اجرایی</th></tr></thead>
+<tbody>
+<tr><td>صورتحساب الکترونیکی (سامانه مؤدیان)</td><td>تولید صورتحساب با شناسه یکتای حافظه مالیاتی، ارسال به سامانه، دریافت شماره منحصربه‌فرد و کد رهگیری؛ نگهداری XML/JSON ارسالی</td><td>جدول <code>tax_invoice</code> + صف ارسال با Retry؛ حالت «صادرشده/در انتظار اعتبارسنجی/ردشده» و صف اصلاح</td></tr>
+<tr><td>مالیات بر ارزش افزوده</td><td>نرخ پارامتری (پیش‌فرض ۱۰٪)، محاسبه در سطح قلم فاکتور، تفکیک خدمات مشمول/معاف</td><td>نرخ و قواعد در جدول <code>tax_rule</code> نسخه‌دار، نه در کد</td></tr>
+<tr><td>مالیات تکلیفی/وظیفه کسر</td><td>در پرداخت به اشخاص حقوقی، کسر و واریز طبق مقررات جاری</td><td>پارامتری و قابل به‌روزرسانی توسط تیم مالی</td></tr>
+<tr><td>فاکتور B2B</td><td>فاکتور با مشخصات کامل حقوقی خریدار، شماره سفارش خرید (PO)، مهر/امضای دیجیتال</td><td>قالب PDF دوزبانه + فایل XML؛ ارسال خودکار به ایمیل مالی مشتری</td></tr>
+<tr><td>پرداخت اقساطی (BNPL)</td><td>اتصال API به سرویس‌دهنده اعتبار (اسنپ‌پی/دیجی‌پی/فینوتک و…)، Pre-Score مشتری، سهم پیش‌پرداخت، اقساط ۳/۶/۱۲ ماهه</td><td>پرداخت تسویه با پلتفرم کامل و نقدی است؛ ریسک اقساط با BNPL-Provider می‌ماند (کلید کاهش ریسک)</td></tr>
+<tr><td>Refund / Chargeback</td><td>سیاست بازگشت: به کیف پول فوری، به درگاه ۳–۷ روز کاری؛ مدیریت Chargeback با ارائه مدارک سفارش (عکس، چت، GPS، امضا)</td><td>بسته مدارک خودکار (Evidence Pack) برای هر سفارش تولید شود</td></tr>
+<tr><td>کیف پول</td><td>سه کیف پول: مشتری (شارژ/کوپن/بازگشت)، متخصص (درآمد/برداشت)، سازمانی (اعتبار)</td><td>برداشت متخصص: سقف روزانه، تأیید دو مرحله‌ای، زمان‌بندی تسویه (T+1 کاری)</td></tr>
+</tbody>
+</table>
+<div class="callout ok"><b>اثر تجاری مورد انتظار:</b> ترکیب Escrow + فاکتور رسمی + BNPL، درِ ورود مشتریان B2B و سفارش‌های بالای ۵۰ میلیون تومان (بازسازی/نقاشی/کابینت) را باز می‌کند؛ همین بخش‌ها بالاترین حاشیه سود پلتفرم را دارند.</div>
+</section>

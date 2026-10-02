@@ -1,0 +1,139 @@
+<section id="s0">
+<h2><span class="num">۰</span>خلاصه مدیریتی و تفاوت‌های نسخه پیشنهادی با آچاره</h2>
+<p class="lead">هدف این سند، تبدیل «پرامپت بهبود آچاره» به یک <b>بسته اجرایی</b> است: نیازمندی‌های صفر تا صد، معماری داده، فهرست APIها، فهرست وایرفریم‌ها، نقشه راه فازبندی‌شده و برآورد زمان/هزینه (RFP). سند برای تحویل مستقیم به تیم محصول، تیم فنی یا شرکت پیمانکار نوشته شده است.</p>
+
+<div class="grid">
+  <div class="kpi"><b>۶ ماژول</b><span>هویت، تطبیق، فین‌تک، اعتماد، پشتیبانی، زیرساخت</span></div>
+  <div class="kpi"><b>۱۱۳ جدول</b><span>مدل داده PostgreSQL/PostGIS + پارتیشن‌بندی</span></div>
+  <div class="kpi"><b>۱۴۰+ API</b><span>REST نسخه‌دار + رویدادهای Kafka</span></div>
+  <div class="kpi"><b>۱۰–۱۲ ماه</b><span>از Discovery تا مقیاس‌پذیری ملی</span></div>
+</div>
+
+<h3>۰.۱ تصویر کلی: از «مارکت‌پلیس سفارش» به «سیستم‌عامل خدمات خانگی»</h3>
+<p>آچاره در وضعیت فعلی یک مارکت‌پلیس دوطرفه با نقاط قوت «اعتماد برند»، «پوشش دسته‌بندی» و «شبکه متخصص» است. گلوگاه‌های رشد در چنین پلتفرم‌هایی معمولاً چهار نقطه است: <b>(۱)</b> زمان و کیفیت تطبیق سفارش با متخصص، <b>(۲)</b> نرخ سبد ناتمام (cart abandonment) به‌دلیل ابهام قیمت، <b>(۳)</b> نرخ دورزدن کمیسیون و تخلفات خارج از پلتفرم، <b>(۴)</b> هزینه پشتیبانی انسانی و نرخ جبران خسارت. نسخه پیشنهادی دقیقاً روی همین چهار نقطه مهندسی شده است.</p>
+
+<table class="tbl">
+<thead><tr><th style="width:15%">محور</th><th style="width:29%">آچاره فعلی (طبق سند شما)</th><th style="width:36%">نسخه پیشنهادی «سرویسا/Care+»</th><th style="width:20%">افت اقتصادی مورد انتظار</th></tr></thead>
+<tbody>
+<tr><td>هویت</td><td>موبایل + OTP</td><td>OTP + OAuth + Passkey + بیومتریک؛ Onboarding دیجیتال متخصص با Face Match و سوابق کیفری آنلاین</td><td>کوتاه شدن زمان تأیید از ~۷۲ ساعت به &lt;۳۰ دقیقه؛ +۲۵٪ عرضه فعال در هفته اول</td></tr>
+<tr><td>ثبت سفارش</td><td>فرم متنی/انتخابی</td><td>ورودی چندرسانه‌ای (صوت/عکس/ویدیو) + تریاژ تشخیصی + برآورد خودکار قیمت</td><td>کاهش رهاکردن فرم ۲۰–۳۵٪؛ کاهش تماس‌های «قیمتش چنده؟»</td></tr>
+<tr><td>تخصیص</td><td>ارسال درخواست به منطقه / قیمت ثابت</td><td>اسکورینگ ماتریسی چندمتغیره + صف اولویت‌دار + اعزام فوری شبیه تاکسی اینترنتی</td><td>کاهش زمان پذیرش سفارش (TTA) ۴۰–۶۰٪؛ افزایش Fulfillment Rate</td></tr>
+<tr><td>قیمت</td><td>ثابت یا توافقی</td><td>قیمت‌گذاری پویا مبتنی بر تقاضای محله/ساعت/پیچیدگی + شفافیت پیش از سفارش</td><td>افزایش حاشیه در پیک بدون افت نرخ تبدیل</td></tr>
+<tr><td>پرداخت</td><td>پرداخت آنلاین/درجا</td><td>کیف پول + Escrow + آزادسازی مرحله‌ای + BNPL + فاکتور مالیاتی</td><td>افزایش تیکت بزرگ (بازسازی/نقاشی) و ورود مشتری B2B</td></tr>
+<tr><td>کیفیت</td><td>۱–۵ ستاره + متن</td><td>امتیاز ۴بعدی + صحت‌سنجی نظر + بیمه خودکار هر سفارش + Garanti خدمات</td><td>کاهش Rework و هزینه جبران خسارت ۱۵–۳۰٪</td></tr>
+<tr><td>پشتیبانی</td><td>چت متنی + شماره پوشانده‌شده</td><td>چت‌بات پیش‌پشتیبانی + تماس امن + ویدیو-بازدید + Cockpit بحران با ضبط جلسه</td><td>Deflection ≥ ۴۵٪ تیکت‌های سطح ۱</td></tr>
+</tbody>
+</table>
+
+<h3>۰.۲ تصمیم‌های معماری کلیدی (ADR خلاصه)</h3>
+<table class="tbl">
+<thead><tr><th>#</th><th>تصمیم</th><th>گزینه‌های بررسی‌شده</th><th>دلیل انتخاب</th></tr></thead>
+<tbody>
+<tr><td>ADR-01</td><td>Microservices با قلمروهای کسب‌وکاری (DDD) روی Kubernetes</td><td>مونولیت ماژولار / Microservices</td><td>تیم‌های موازی، مقیاس مستقل روی Dispatch و Payments، استقلال استقرار؛ با رعایت «مونولیت در ابتدا» برای ماژول‌های کم‌بار</td></tr>
+<tr><td>ADR-02</td><td>PostgreSQL (+PostGIS) به‌عنوان منبع حقیقت هر سرویس</td><td>MongoDB / MySQL</td><td>تراکنش‌های مالی (ACID)، جست‌وجوی مکانی، پارتیشن‌بندی اعلان‌دار، هزینه TCO پایین‌تر</td></tr>
+<tr><td>ADR-03</td><td>Kafka برای رویدادها + Outbox Pattern</td><td>RabbitMQ / cron</td><td>پایداری رویداد، Replay برای بازسازی مدل‌های تحلیلی و Fraud</td></tr>
+<tr><td>ADR-04</td><td>Dispatch به‌صورت سرویس مستقل با حالت Stateful/In-Memory (Redis + GEO) </td><td>منطق درون سرویس سفارش</td><td>نیاز به بروزرسانی مکرر موقعیت و امتیاز در مقیاس هزاران سفارش باز</td></tr>
+<tr><td>ADR-05</td><td>BFF جداگانه برای اپ مشتری، اپ متخصص و پنل‌ها</td><td>Gateway واحد</td><td>کاهش بایت روی موبایل، امکان بهینه‌سازی مستقل، نسخه‌بندی اپ</td></tr>
+<tr><td>ADR-06</td><td>Media-as-a-Service (آپلود مستقیم به S3 + صف پردازش)</td><td>آپلود از طریق API</td><td>کاهش بار سرور، امکان ترنسکد ویدیو و تحلیل CV نامتقارن</td></tr>
+</tbody>
+</table>
+
+<h3>۰.۳ دامنه سند (In/Out of Scope)</h3>
+<div class="two-col">
+<div class="card"><h4>در دامنه</h4>
+<ul>
+<li>اپ مشتری (Android/iOS/وب PWA)، اپ متخصص، پنل پشتیبانی/عملیات، پنل ادمین و مالی، پنل B2B</li>
+<li>موتور تطبیق، قیمت‌گذاری، Escrow، کیف پول، بیمه، Fraud و CRM</li>
+<li>مدل داده، API، رویدادها، NFR، RFP و نقشه راه</li>
+<li>نمونه اولیه قابل کلیک (Prototype) و فهرست کامل وایرفریم‌ها</li>
+</ul></div>
+<div class="card"><h4>خارج از دامنه (نیازمند سند جدا)</h4>
+<ul>
+<li>متن حقوقی قرارداد کاربر/متخصص و شرایط بیمه (تیم حقوقی)</li>
+<li>تولید محتوای سئو و کمپین‌های بازاریابی</li>
+<li>سخت‌افزار/سیم‌کارت سازمانی یا مرکز تماس تلفنی</li>
+<li>مدل‌های ML سفارشی (در سند به‌عنوان «مصرف‌کننده سرویس» ارجاع داده شده‌اند)</li>
+</ul></div>
+</div>
+
+<div class="callout ok"><b>قاعده طلایی این پروژه:</b> هر قابلیت هوشمند باید «مسیر جایگزین انسانی» داشته باشد. اگر تشخیص تصویر اشتباه بود یا امتیاز تطبیق پایین بود، اپراتور باید با یک کلیک همان سفارش را دستی تخصیص دهد. بدون این شرط، هوشمندسازی به ریسک عملیاتی تبدیل می‌شود.</div>
+</section>
+
+<section id="s1">
+<h2><span class="num">۱</span>معماری کلان، قلمروها و نقش‌ها</h2>
+<h3>۱.۱ نقشه قلمروهای کسب‌وکار (Bounded Contexts)</h3>
+<div class="flow">
+<svg viewBox="0 0 980 470" role="img" aria-label="نقشه معماری میکروسرویس‌ها">
+  <defs>
+    <style>
+      .bx{fill:#f2f9f8;stroke:#0f7a6c;stroke-width:1.4;rx:10}
+      .bx2{fill:#eef2ff;stroke:#1d4ed8;stroke-width:1.4;rx:10}
+      .bx3{fill:#fff8ed;stroke:#b45309;stroke-width:1.4;rx:10}
+      .t{font:600 12px Tahoma,sans-serif;fill:#0b3f4d;text-anchor:middle;direction:rtl}
+      .ts{font:11px Tahoma,sans-serif;fill:#5c6472;text-anchor:middle;direction:rtl}
+      .lbl{font:11px Tahoma,sans-serif;fill:#5c6472;text-anchor:middle;direction:rtl}
+      .ln{stroke:#94a3b8;stroke-width:1.3;fill:none;marker-end:url(#ar)}
+    </style>
+    <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#94a3b8"/></marker>
+  </defs>
+  <!-- clients -->
+  <g>
+    <rect class="bx2" x="30" y="20" width="150" height="52"/><text class="t" x="105" y="42">اپ مشتری</text><text class="ts" x="105" y="60">Flutter / PWA</text>
+    <rect class="bx2" x="196" y="20" width="150" height="52"/><text class="t" x="271" y="42">اپ متخصص</text><text class="ts" x="271" y="60">Flutter</text>
+    <rect class="bx2" x="362" y="20" width="150" height="52"/><text class="t" x="437" y="42">پنل عملیات/پشتیبانی</text><text class="ts" x="437" y="60">React + Realtime</text>
+    <rect class="bx2" x="528" y="20" width="150" height="52"/><text class="t" x="603" y="42">پنل B2B / مالی</text><text class="ts" x="603" y="60">React</text>
+    <rect class="bx2" x="694" y="20" width="150" height="52"/><text class="t" x="769" y="42">سایت + CMS</text><text class="ts" x="769" y="60">Next.js / SEO</text>
+  </g>
+  <!-- gateway -->
+  <rect x="30" y="96" width="814" height="44" fill="#0b3f4d" rx="9"/>
+  <text x="437" y="123" style="font:600 13px Tahoma;fill:#fff;text-anchor:middle;direction:rtl">API Gateway + BFF‌ها (احراز، Rate-Limit، نسخه‌بندی، Idempotency)</text>
+  <line class="ln" x1="437" y1="74" x2="437" y2="94"/>
+  <!-- services row1 -->
+  <g>
+    <rect class="bx" x="30" y="168" width="176" height="58"/><text class="t" x="118" y="192">Identity &amp; Access</text><text class="ts" x="118" y="210">OTP/Passkey/RBAC/KYC</text>
+    <rect class="bx" x="222" y="168" width="176" height="58"/><text class="t" x="310" y="192">Catalog &amp; Search</text><text class="ts" x="310" y="210">دسته، مهارت، قیمت پایه</text>
+    <rect class="bx" x="414" y="168" width="176" height="58"/><text class="t" x="502" y="192">Order / Job</text><text class="ts" x="502" y="210">چرخه عمر سفارش</text>
+    <rect class="bx" x="606" y="168" width="176" height="58"/><text class="t" x="694" y="192">Dispatch &amp; Matching</text><text class="ts" x="694" y="210">اسکورینگ + صف + ETA</text>
+  </g>
+  <line class="ln" x1="437" y1="140" x2="437" y2="166"/>
+  <!-- services row2 -->
+  <g>
+    <rect class="bx" x="30" y="248" width="176" height="58"/><text class="t" x="118" y="272">Pricing Engine</text><text class="ts" x="118" y="290">Surge / Quote / تخمین AI</text>
+    <rect class="bx" x="222" y="248" width="176" height="58"/><text class="t" x="310" y="272">Payments &amp; Escrow</text><text class="ts" x="310" y="290">IPG، دفتر کل، تسویه</text>
+    <rect class="bx" x="414" y="248" width="176" height="58"/><text class="t" x="502" y="272">Trust &amp; Quality</text><text class="ts" x="502" y="290">امتیاز، گارانتی، بیمه</text>
+    <rect class="bx" x="606" y="248" width="176" height="58"/><text class="t" x="694" y="272">Fraud &amp; Risk</text><text class="ts" x="694" y="290">تبانی، تقلب، Blacklist</text>
+  </g>
+  <!-- services row3 -->
+  <g>
+    <rect class="bx" x="30" y="328" width="176" height="58"/><text class="t" x="118" y="352">Communication</text><text class="ts" x="118" y="370">چت، تماس امن، ویدیو</text>
+    <rect class="bx" x="222" y="328" width="176" height="58"/><text class="t" x="310" y="352">Notification</text><text class="ts" x="310" y="370">Push/SMS/Email، ترجیح‌ها</text>
+    <rect class="bx" x="414" y="328" width="176" height="58"/><text class="t" x="502" y="352">Media &amp; AI Intake</text><text class="ts" x="502" y="370">ASR، CV، برآورد</text>
+    <rect class="bx" x="606" y="328" width="176" height="58"/><text class="t" x="694" y="352">Analytics &amp; ML</text><text class="ts" x="694" y="370">ClickHouse، Feature Store</text>
+  </g>
+  <!-- infra bar -->
+  <rect class="bx3" x="30" y="404" width="752" height="46" rx="9"/>
+  <text class="t" x="406" y="424">Kafka (Event Bus) • Redis • S3/MinIO • OpenSearch • Postgres/PostGIS • Feature Store • OTel</text>
+  <text class="ts" x="406" y="441">Data &amp; Event Foundation — تنها مسیر ارتباط غیرهمگام بین سرویس‌ها</text>
+</svg>
+</div>
+<p class="muted">هر سرویس: پایگاه داده اختصاصی، قرارداد رویداد نسخه‌دار، SLO مشخص و مالک تیم مشخص. ارتباط همگام فقط برای Query؛ همه تغییر حالت‌ها با رویداد.</p>
+
+<h3>۱.۲ نقش‌ها، پرسوناها و ماتریس دسترسی</h3>
+<table class="tbl">
+<thead><tr><th>نقش</th><th>پرسونا / نیاز اصلی</th><th>کلیدهای دسترسی اصلی</th><th>پوشش</th></tr></thead>
+<tbody>
+<tr><td>مشتری خانگی (Consumer)</td><td>«می‌خواهم سریع، مطمئن و با قیمت روشن سفارش بدهم» — حساس به اعتماد و قیمت</td><td>ثبت سفارش، آپلود مدرک مشکل، پرداخت Escrow، پیگیری زنده، نظر، ادعای خسارت</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>مشتری شرکتی (B2B)</td><td>دفتر/فروشگاه/مجتمع: نیاز به SLA، فاکتور رسمی، چند کاربر، مرکز هزینه</td><td>سازمان، چند کاربر، سقف اعتباری، قرارداد نگهداری دوره‌ای، فاکتور مالیاتی، گزارش مصرف</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>متخصص مستقل (Pro)</td><td>درآمد بیشتر، سفارش متناسب با مهارت و فاصله</td><td>پروفایل، مدارک، تقویم، کیف پول/برداشت، داشبورد درآمد، پذیرش/رد سفارش، گارانتی کار</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>شرکت خدماتی (Service Provider Org)</td><td>مدیریت چند تکنسین، توزیع کار، تسویه سازمانی</td><td>مدیریت تکنسین‌ها، تخصیص داخلی، تعرفه قراردادی، تسویه تجمیعی، کارتابل مدارک</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>اپراتور دیسپچ</td><td>کنترل صف سفارش‌های بدون متخصص، تماس خروجی، تخصیص دستی</td><td>Live Ops Board، تخصیص دستی/Override، تماس امن، افزودن متخصص آفلاین، تعلیق صف</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>کارشناس پشتیبانی</td><td>حل اختلاف، جبران خسارت، پیگیری شکایت</td><td>تاریخچه کامل سفارش/چت، ابزار Refund/کوپن، ارجاع به سطح ۲، ضبط تماس و ویدیو</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>کارشناس کیفیت/بیمه</td><td>ارزیابی خسارت و بازکاری</td><td>پرونده خسارت، ارزیابی تصویری، تعیین مقصر، تخفیف/جریمه متخصص</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>مالی و حسابداری</td><td>تسویه، فاکتور، مالیات، مغایرت‌یابی</td><td>دفتر کل، دستور پرداخت، گزارش مالیاتی (سامانه مودیان)، مدیریت Chargeback</td><td><span class="badge b-v1">V1</span></td></tr>
+<tr><td>مدیر محتوا/دسته‌بندی</td><td>افزودن خدمت جدید، تعرفه، FAQ</td><td>مدیریت Catalog و Rate Card، انتشار مقاله سئو، مدیریت بنر و کمپین</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>Super Admin</td><td>کنترل کامل با لاگ اجباری</td><td>همه موارد + مدیریت نقش‌ها، Feature Flag، Kill-Switch سرویس‌های هوشمند</td><td><span class="badge b-mvp">MVP</span></td></tr>
+<tr><td>پارتنر بیمه</td><td>اتصال API سنجش خسارت</td><td>دریافت پرونده، ثبت ارزیابی، اعلام پرداخت</td><td><span class="badge b-v2">V2</span></td></tr>
+</tbody>
+</table>
+<p><b>قواعد RBAC:</b> دسترسی‌ها در قالب <code>resource:action:scope</code> تعریف می‌شوند (مثل <code>order:refund:region</code>)؛ همه اقدامات حساس (Refund، تغییر پاسخگویی، تعدیل امتیاز، دیدن PII) در جدول <code>audit_log</code> با Actor، Reason و Correlation-IDثبت می‌شوند. اصل کمینه‌دسترسی + تأیید دو‌نفره (Maker–Checker) برای تراکنش‌های بالای سقف تعیین‌شده.</p>
+</section>

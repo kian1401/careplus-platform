@@ -1,0 +1,174 @@
+<section id="s9">
+<h2><span class="num">۹</span>فهرست APIها و رویدادهای رویدادمحور</h2>
+<p class="lead">سبک: REST نسخه‌دار (<code>/v1</code>) + JSON؛ احراز با Bearer Token؛ همه نوشتن‌ها Idempotency-Key؛ Real-time با WebSocket؛ فایل نهایی نمونه: <code>achareh-plus/api/openapi-core.yaml</code>.</p>
+
+<h3>۹.۱ قواعد قراردادی</h3>
+<table class="tbl">
+<thead><tr><th>موضوع</th><th>قاعده</th></tr></thead>
+<tbody>
+<tr><td>خطاها</td><td><code>{"error":{"code":"ORDER_NOT_ASSIGNABLE","message_fa":"...","details":{...},"trace_id":"..."}}</code> با کدهای معنایی (نه فقط HTTP Status)</td></tr>
+<tr><td>صفحه‌بندی</td><td>Cursor-based: <code>?limit=20&amp;cursor=...</code> → <code>{"items":[], "next_cursor":null}</code></td></tr>
+<tr><td>نسخه‌بندی</td><td>در URL (<code>/v1</code>) + هدر اپ (<code>X-App-Version</code>) برای سیاست «کمترین نسخه پشتیبانی‌شده»</td></tr>
+<tr><td>زمان پاسخ</td><td>p95 &lt; ۳۰۰ms برای خواندن، &lt; ۶۰۰ms برای نوشتن (بدون احتساب درگاه پرداخت)</td></tr>
+<tr><td>محدودیت نرخ</td><td>بر پایه کاربر/دستگاه/IP + سهمیه سرویس؛ خطای 429 با هدر <code>Retry-After</code></td></tr>
+<tr><td>وب‌هوک</td><td>امضای HMAC-SHA256 در <code>X-Signature</code>، تلاش مجدد نمایی تا ۲۴ ساعت، داشبورد رویداد برای پارتنر B2B</td></tr>
+</tbody>
+</table>
+
+<h3>۹.۲ احراز هویت و کاربران</h3>
+<table class="tbl">
+<thead><tr><th>متد</th><th>مسیر</th><th>کارکرد</th><th>نکته</th></tr></thead>
+<tbody>
+<tr><td>POST</td><td><code>/v1/auth/otp/request</code></td><td>ارسال کد OTP</td><td>Rate-Limit سه‌لایه؛ Captcha پویا در تشخیص ربات</td></tr>
+<tr><td>POST</td><td><code>/v1/auth/otp/verify</code></td><td>تأیید کد و صدور توکن</td><td>خطای یکنواخت برای جلوگیری از شمارش شماره‌ها</td></tr>
+<tr><td>POST</td><td><code>/v1/auth/oauth/{provider}</code></td><td>ورود Google/Apple</td><td>اتصال به شماره تأییدشده</td></tr>
+<tr><td>POST</td><td><code>/v1/auth/passkey/register|login</code></td><td>ثبت و ورود Passkey</td><td>WebAuthn؛ مسیر بازیابی امن</td></tr>
+<tr><td>POST</td><td><code>/v1/auth/refresh</code></td><td>تمدید توکن</td><td>Rotation + Reuse-Detection</td></tr>
+<tr><td>POST</td><td><code>/v1/auth/logout</code> / <code>/v1/auth/logout-all</code></td><td>خروج جاری/همه دستگاه‌ها</td><td>ابطال سرور-ساید</td></tr>
+<tr><td>GET</td><td><code>/v1/me</code> / <code>PATCH /v1/me</code></td><td>پروفایل کاربر</td><td>ویرایش فیلدهای مجاز</td></tr>
+<tr><td>GET</td><td><code>/v1/me/sessions</code> / <code>DELETE /v1/me/sessions/{id}</code></td><td>مدیریت نشست‌ها</td><td>شفافیت امنیتی</td></tr>
+<tr><td>GET/POST</td><td><code>/v1/me/addresses</code></td><td>آدرس‌ها و برچسب مکان</td><td>اعتبارسنجی موقعیت روی نقشه</td></tr>
+<tr><td>POST</td><td><code>/v1/me/consents</code></td><td>ثبت/ابطال رضایت</td><td>نسخه‌دار</td></tr>
+<tr><td>POST</td><td><code>/v1/me/data-export</code></td><td>درخواست خروجی داده</td><td>تولید غیرهمگام + لینک دانلود موقت</td></tr>
+</tbody>
+</table>
+
+<h3>۹.۳ متخصص و تأیید صلاحیت</h3>
+<table class="tbl">
+<thead><tr><th>متد</th><th>مسیر</th><th>کارکرد</th></tr></thead>
+<tbody>
+<tr><td>POST</td><td><code>/v1/providers/apply</code></td><td>شروع فرآیند جذب متخصص (اطلاعات پایه)</td></tr>
+<tr><td>POST</td><td><code>/v1/providers/me/documents</code></td><td>ثبت مدرک (پیش‌امضاشده S3: آپلود مستقیم)</td></tr>
+<tr><td>POST</td><td><code>/v1/providers/me/identity/selfie</code></td><td>سلفی زنده و اجرای Face-Match</td></tr>
+<tr><td>GET</td><td><code>/v1/providers/me/identity/status</code></td><td>وضعیت احراز و نقص‌های باقی‌مانده</td></tr>
+<tr><td>POST</td><td><code>/v1/providers/me/skill-test/{category}/submit</code></td><td>ارسال آزمون و ویدیو</td></tr>
+<tr><td>PUT</td><td><code>/v1/providers/me/skills</code> / <code>/equipment</code> / <code>/service-areas</code></td><td>مهارت، تجهیزات، مناطق فعالیت</td></tr>
+<tr><td>PUT</td><td><code>/v1/providers/me/availability</code></td><td>تقویم هفتگی و استثناها</td></tr>
+<tr><td>GET</td><td><code>/v1/providers/me/dashboard?range=</code></td><td>درآمد، ساعات پرکار، نرخ‌ها، پیشنهادها</td></tr>
+<tr><td>POST</td><td><code>/v1/providers/me/withdrawals</code></td><td>درخواست برداشت وجه</td></tr>
+<tr><td>POST</td><td><code>/v1/providers/me/online</code> / <code>offline</code></td><td>وضعیت آماده‌به‌کار و شروع ارسال موقعیت</td></tr>
+<tr><td>GET</td><td><code>/v1/providers/{id}/public-profile</code></td><td>پروفایل عمومی برای مشتری</td></tr>
+<tr><td>POST</td><td><code>/v1/admin/providers/{id}/verification-decision</code></td><td>تصمیم پنل (Approve/Reject/Hold) + دلیل اجباری</td></tr>
+</tbody>
+</table>
+
+<h3>۹.۴ کاتالوگ، تریاژ و قیمت</h3>
+<table class="tbl">
+<thead><tr><th>متد</th><th>مسیر</th><th>کارکرد</th></tr></thead>
+<tbody>
+<tr><td>GET</td><td><code>/v1/catalog/categories</code> / <code>/v1/catalog/services?q=</code></td><td>دسته‌بندی و جست‌وجو</td></tr>
+<tr><td>GET</td><td><code>/v1/catalog/services/{id}/rate-card?zone=</code></td><td>تعرفه شفاف منطقه‌ای</td></tr>
+<tr><td>GET</td><td><code>/v1/triage/flow/{service_id}</code></td><td>درخت پرسش‌های تریاژ</td></tr>
+<tr><td>POST</td><td><code>/v1/media/presigned-url</code></td><td>آپلود مستقیم رسانه (سقف حجم/نوع فایل)</td></tr>
+<tr><td>POST</td><td><code>/v1/intake/analyze</code></td><td>تحلیل چندرسانه‌ای: دسته پیشنهادی، شدت، برازش، پرچم خطر</td></tr>
+<tr><td>POST</td><td><code>/v1/pricing/quote</code></td><td>تخمین قیمت با Breakdown شفاف</td></tr>
+<tr><td>POST</td><td><code>/v1/pricing/quote/{id}/revision</code></td><td>درخواست تغییر قیمت (Change Order) + تأیید مشتری</td></tr>
+<tr><td>POST</td><td><code>/v1/slots/availability</code></td><td>ظرفیت آزاد و ETA تقریبی</td></tr>
+<tr><td>POST</td><td><code>/v1/emergency/quote</code></td><td>پیش‌قیمت اعزام فوری + ETA</td></tr>
+</tbody>
+</table>
+
+<h3>۹.۵ سفارش و دیسپچ</h3>
+<table class="tbl">
+<thead><tr><th>متد</th><th>مسیر</th><th>کارکرد</th></tr></thead>
+<tbody>
+<tr><td>POST</td><td><code>/v1/orders</code></td><td>ثبت سفارش (عادی/زمان‌بندی‌شده/فوری)</td></tr>
+<tr><td>GET</td><td><code>/v1/orders</code> / <code>/v1/orders/{id}</code></td><td>لیست و جزئیات سفارش</td></tr>
+<tr><td>POST</td><td><code>/v1/orders/{id}/submit-for-dispatch</code></td><td>ورود به صف تخصیص پس از تأیید قیمت/پرداخت</td></tr>
+<tr><td>GET</td><td><code>/v1/orders/{id}/offers</code></td><td>پیشنهادهای موجود (حالت Bid) برای انتخاب مشتری</td></tr>
+<tr><td>POST</td><td><code>/v1/orders/{id}/assign</code></td><td>تخصیص دستی توسط اپراتور (Override + دلیل)</td></tr>
+<tr><td>POST</td><td><code>/v1/orders/{id}/reschedule</code> / <code>/cancel</code></td><td>تغییر زمان / لغو (با محاسبه جریمه)</td></tr>
+<tr><td>POST</td><td><code>/v1/providers/me/offers/{offer_id}/accept|reject</code></td><td>پاسخ به پیشنهاد (اتمی، اول-پذیرنده-برنده)</td></tr>
+<tr><td>POST</td><td><code>/v1/bookings/{id}/check-in</code> / <code>check-out</code></td><td>شروع/پایان کار با GPS و عکس الزامی</td></tr>
+<tr><td>POST</td><td><code>/v1/bookings/{id}/milestones/{seq}/submit</code></td><td>ثبت پیشرفت Milestone</td></tr>
+<tr><td>POST</td><td><code>/v1/orders/{id}/complete</code></td><td>اعلام اتمام کار توسط متخصص</td></tr>
+<tr><td>POST</td><td><code>/v1/orders/{id}/approve</code> / <code>/dispute</code></td><td>تأیید مشتری یا باز کردن اختلاف</td></tr>
+<tr><td>POST</td><td><code>/v1/orders/{id}/messages</code> / <code>/media</code></td><td>چت و ارسال رسانه درون سفارش</td></tr>
+<tr><td>GET</td><td><code>/v1/orders/{id}/tracking</code> + WS <code>/v1/ws/orders/{id}</code></td><td>ردیابی زنده و ETA</td></tr>
+<tr><td>POST</td><td><code>/v1/orders/{id}/call-session</code></td><td>شماره پوشانده‌شده / تماس تصویری</td></tr>
+<tr><td>POST</td><td><code>/v1/orders/{id}/video-inspection</code></td><td>بازدید ویدیویی پیش از اعزام</td></tr>
+<tr><td>POST</td><td><code>/v1/recurring-plans</code></td><td>سفارش دوره‌ای / قرارداد نگهداری</td></tr>
+</tbody>
+</table>
+
+<h3>۹.۶ پرداخت، کیف پول و نگهداشت</h3>
+<table class="tbl">
+<thead><tr><th>متد</th><th>مسیر</th><th>کارکرد</th></tr></thead>
+<tbody>
+<tr><td>POST</td><td><code>/v1/payments/intents</code></td><td>ایجاد تعهد پرداخت (IPG/Wallet/BNPL/CreditLine)</td></tr>
+<tr><td>POST</td><td><code>/v1/payments/intents/{id}/confirm</code></td><td>تأیید نتیجه بازگشت از درگاه (Idempotent)</td></tr>
+<tr><td>POST</td><td><code>/v1/payments/callback/{psp}</code></td><td>Webhook درگاه (امضا و اعتبارسنجی)</td></tr>
+<tr><td>GET</td><td><code>/v1/wallets/me</code> / <code>/v1/wallets/me/transactions</code></td><td>کیف پول و گردش</td></tr>
+<tr><td>POST</td><td><code>/v1/wallets/me/topup</code></td><td>شارژ کیف پول</td></tr>
+<tr><td>POST</td><td><code>/v1/refunds</code></td><td>درخواست بازگشت وجه (کاربر/سازمان)</td></tr>
+<tr><td>POST</td><td><code>/v1/admin/refunds/{id}/approve</code></td><td>تأیید بازگشت (Maker-Checker بالای سقف)</td></tr>
+<tr><td>GET</td><td><code>/v1/orders/{id}/escrow</code></td><td>وضعیت نگهداشت و آزادسازی‌ها</td></tr>
+<tr><td>POST</td><td><code>/v1/organizations/{id}/credit-line/request</code></td><td>درخواست اعتبار شرکتی</td></tr>
+<tr><td>POST</td><td><code>/v1/bnpl/eligibility</code> / <code>/v1/bnpl/contracts</code></td><td>بررسی و ایجاد قرارداد اقساطی</td></tr>
+<tr><td>GET</td><td><code>/v1/invoices/{id}</code> / <code>/v1/invoices/{id}/pdf</code></td><td>فاکتور و دریافت PDF</td></tr>
+<tr><td>GET</td><td><code>/v1/organizations/{id}/billing-report?from=&amp;to=</code></td><td>گزارش مالی B2B (CSV/Excel)</td></tr>
+<tr><td>GET</td><td><code>/v1/admin/ledger/accounts/{code}/entries</code></td><td>دفتر کل (دسترسی محدود + لاگ)</td></tr>
+<tr><td>POST</td><td><code>/v1/admin/payout-batches</code> / <code>/{id}/approve</code></td><td>تولید و تأیید دوره تسویه</td></tr>
+</tbody>
+</table>
+
+<h3>۹.۷ کیفیت، بیمه، اختلاف و ریسک</h3>
+<table class="tbl">
+<thead><tr><th>متد</th><th>مسیر</th><th>کارکرد</th></tr></thead>
+<tbody>
+<tr><td>POST</td><td><code>/v1/orders/{id}/review</code></td><td>ثبت نظر و امتیاز چندبعدی</td></tr>
+<tr><td>POST</td><td><code>/v1/reviews/{id}/appeal</code></td><td>اعتراض متخصص به نظر</td></tr>
+<tr><td>POST</td><td><code>/v1/claims</code> / <code>GET /v1/claims/{id}</code></td><td>ثبت و پیگیری ادعای خسارت</td></tr>
+<tr><td>POST</td><td><code>/v1/claims/{id}/evidence</code></td><td>افزودن مستندات</td></tr>
+<tr><td>POST</td><td><code>/v1/admin/claims/{id}/assess</code></td><td>ثبت ارزیابی (خودکار/کارشناس) و تصمیم</td></tr>
+<tr><td>POST</td><td><code>/v1/disputes</code> / <code>/v1/disputes/{id}/messages</code> / <code>/resolve</code></td><td>چرخه اختلاف</td></tr>
+<tr><td>GET</td><td><code>/v1/orders/{id}/warranty</code></td><td>وضعیت گارانتی</td></tr>
+<tr><td>GET</td><td><code>/v1/admin/risk/cases?band=HIGH</code></td><td>صف بررسی ریسک</td></tr>
+<tr><td>POST</td><td><code>/v1/admin/risk/cases/{id}/decision</code></td><td>تصمیم (ALLOW/BLOCK/REVIEW) + دلیل</td></tr>
+<tr><td>GET</td><td><code>/v1/admin/fraud/collusion-alerts</code></td><td>هشدارهای تبانی</td></tr>
+</tbody>
+</table>
+
+<h3>۹.۸ پشتیبانی، ارتباطات و CRM</h3>
+<table class="tbl">
+<thead><tr><th>متد</th><th>مسیر</th><th>کارکرد</th></tr></thead>
+<tbody>
+<tr><td>POST</td><td><code>/v1/support/tickets</code> / <code>GET /v1/support/tickets/{id}</code></td><td>ایجاد و پیگیری تیکت</td></tr>
+<tr><td>POST</td><td><code>/v1/support/chatbot/sessions</code> / <code>POST /messages</code></td><td>گفتگو با دستیار (با Handoff)</td></tr>
+<tr><td>WS</td><td><code>/v1/ws/support/{ticket_id}</code></td><td>گفتگوی زنده با اپراتور</td></tr>
+<tr><td>POST</td><td><code>/v1/support/calls/mask</code></td><td>ایجاد شماره واسط برای تماس</td></tr>
+<tr><td>GET</td><td><code>/v1/support/tickets/{id}/timeline</code></td><td>تاریخچه کامل (چت/تماس/ویدیو/اقدامات)</td></tr>
+<tr><td>POST</td><td><code>/v1/ops/crisis/broadcast</code></td><td>پیام عمومی به متخصصان منطقه</td></tr>
+<tr><td>GET</td><td><code>/v1/ops/live-board</code></td><td>نمای عملیات زنده (سفارش‌های بحرانی)</td></tr>
+<tr><td>POST</td><td><code>/v1/crm/segments</code> / <code>/v1/crm/campaigns</code></td><td>بخش‌بندی و کمپین</td></tr>
+<tr><td>GET</td><td><code>/v1/knowledge/articles?audience=public</code></td><td>پایه دانش</td></tr>
+</tbody>
+</table>
+
+<h3>۹.۹ تحلیل، ادمین و رویدادها</h3>
+<table class="tbl">
+<thead><tr><th>متد/کانال</th><th>مسیر</th><th>کارکرد</th></tr></thead>
+<tbody>
+<tr><td>GET</td><td><code>/v1/admin/analytics/overview?range=&amp;zone=</code></td><td>داشبورد مدیریتی (GMV، Take Rate، Fulfillment، TTA، CSAT)</td></tr>
+<tr><td>GET</td><td><code>/v1/admin/analytics/funnel</code></td><td>قیف تبدیل از بازدید تا سفارش تکمیل‌شده</td></tr>
+<tr><td>POST</td><td><code>/v1/admin/feature-flags/{key}</code></td><td>مدیریت فلگ و Kill-Switch</td></tr>
+<tr><td>POST</td><td><code>/v1/admin/users/{id}/sanctions</code></td><td>تعلیق/جریمه با دلیل</td></tr>
+<tr><td>GET</td><td><code>/v1/admin/audit-log?resource=</code></td><td>لاگ حسابرسی</td></tr>
+</tbody>
+</table>
+<h4>موضوعات Kafka (نمونه)</h4>
+<table class="tbl">
+<thead><tr><th>موضوع</th><th>رویدادها</th><th>مصرف‌کننده‌های اصلی</th></tr></thead>
+<tbody>
+<tr><td><code>identity.user.*</code></td><td>user.registered, user.updated, session.created, consent.updated</td><td>Notification, Risk, Analytics</td></tr>
+<tr><td><code>provider.lifecycle.*</code></td><td>provider.applied, document.uploaded, verification.decided, tier.changed, sanction.applied</td><td>Dispatch, Notification, Analytics</td></tr>
+<tr><td><code>order.lifecycle.*</code></td><td>order.created, order.dispatched, order.assigned, order.started, order.completed, order.closed, order.cancelled</td><td>Payments, Trust, CRM, Analytics, Fraud</td></tr>
+<tr><td><code>dispatch.*</code></td><td>dispatch.wave.started, offer.sent, offer.accepted, offer.rejected, dispatch.escalated, dispatch.manual_override</td><td>Notification, Analytics, ML (training data)</td></tr>
+<tr><td><code>payment.*</code></td><td>payment.initiated, payment.succeeded, payment.failed, escrow.held, escrow.milestone_released, refund.issued, payout.settled</td><td>Ledger, Invoice/Tax, Notification, Risk</td></tr>
+<tr><td><code>trust.*</code></td><td>review.created, review.flagged, claim.filed, claim.decided, dispute.opened, dispute.resolved</td><td>Quality, Provider Scoring, Analytics</td></tr>
+<tr><td><code>risk.*</code></td><td>risk.score.computed, case.opened, entity.blocked, collusion.detected</td><td>Ops Cockpit, Compliance</td></tr>
+<tr><td><code>comm.*</code></td><td>message.sent, call.started, call.ended, transcript.ready, video.session.ended</td><td>Support, Fraud, Analytics</td></tr>
+</tbody>
+</table>
+<p class="muted">قواعد: نام‌گذاری <code>&lt;domain&gt;.&lt;entity&gt;.&lt;event&gt;</code>، نسخه‌بندی اسکیمای رویداد با فیلد <code>schema_version</code>، سازگاری رو به عقب، و <code>correlation_id</code> برای ردیابی سرتاسری.</p>
+</section>

@@ -1,0 +1,290 @@
+<section id="s8">
+<h2><span class="num">۸</span>معماری داده — مدل موجودیت‌ها و فهرست جداول</h2>
+<p class="lead">فایل اجرایی کامل: <code>achareh-plus/db/schema.sql</code> (PostgreSQL 16 + PostGIS). این بخش نقشه فکری و فهرست جداول را ارائه می‌کند.</p>
+
+<h3>۸.۱ قواعد عمومی مدل داده</h3>
+<div class="grid two">
+<div class="card"><h4>قواعد پایه</h4>
+<ul>
+<li>کلید اصلی: <code>UUIDv7</code> (مرتب بر پایه زمان ⇒ ایندکس کاراتر)؛ برای جداول پرسرویداد، کلید مرکب <code>(created_at, id)</code>.</li>
+<li>مبالغ: <code>BIGINT</code> در واحد خرد (ریال) + ستون <code>currency CHAR(3)</code>؛ هیچ‌گاه <code>FLOAT</code> برای پول.</li>
+<li>زمان: همه <code>timestamptz</code> به UTC؛ نمایش بر پایه منطقه کاربر در لایه اپ.</li>
+<li>حذف نرم: <code>deleted_at</code>؛ نگه‌داری سابقه تغییرات روی جداول مالی و پروفایل متخصص با <code>audit_log</code>.</li>
+<li>هر جدول: <code>created_at</code>, <code>updated_at</code>, <code>created_by</code> (هر جا معنا دارد).</li>
+<li>Enumها به‌صورت <code>CHECK</code> + جدول Lookup برای مقادیر قابل مدیریت از پنل.</li>
+</ul></div>
+<div class="card"><h4>پارتیشن‌بندی و نگه‌داری</h4>
+<ul>
+<li>پارتیشن ماهانه: <code>order_event</code>, <code>provider_location_ping</code>, <code>notification_log</code>, <code>ai_inference</code>, <code>audit_log</code> (۷ سال برای مالی، ۱۸ ماه برای فنی).</li>
+<li>جداول داغ (سفارش باز، موقعیت متخصص) در حافظه/Redis و جدول اصلی فقط وضعیت پایدار.</li>
+<li>آرشیو سرد: انتقال سفارش‌های بسته‌شده &gt; ۲۴ ماه به جداول آرشیو (کم‌هزینه، فقط‌خواندنی).</li>
+<li>حذف/بی‌اثرسازی PII پس از دوره نگه‌داری قانونی؛ نگه‌داری فیلدهای تجمیعی برای تحلیل.</li>
+</ul></div>
+</div>
+
+<h3>۸.۲ نمای ERD سطح‌بالا</h3>
+<div class="flow">
+<svg viewBox="0 0 980 560" role="img" aria-label="ERD سطح‌بالا">
+ <defs><style>
+  .ent{fill:#f2f9f8;stroke:#0f7a6c;stroke-width:1.4;rx:8}
+  .ent2{fill:#eef2ff;stroke:#1d4ed8;stroke-width:1.4;rx:8}
+  .ent3{fill:#fff8ed;stroke:#b45309;stroke-width:1.4;rx:8}
+  .h{font:700 11.5px Tahoma,sans-serif;fill:#0b3f4d;text-anchor:middle;direction:rtl}
+  .f{font:10.5px Tahoma,sans-serif;fill:#455060;text-anchor:middle;direction:rtl}
+  .r{stroke:#94a3b8;stroke-width:1.1;fill:none}
+ </style></defs>
+ <!-- identity -->
+ <rect class="ent2" x="770" y="20" width="190" height="92"/>
+ <text class="h" x="865" y="40">users / auth</text>
+ <text class="f" x="865" y="58">user • user_profile</text><text class="f" x="865" y="74">auth_credential • auth_session</text><text class="f" x="865" y="90">device • otp_challenge</text>
+ <!-- provider -->
+ <rect class="ent2" x="770" y="140" width="190" height="108"/>
+ <text class="h" x="865" y="160">provider</text>
+ <text class="f" x="865" y="178">provider_profile • provider_document</text><text class="f" x="865" y="194">provider_skill • provider_equipment</text><text class="f" x="865" y="210">provider_service_area • availability</text><text class="f" x="865" y="226">provider_tier_history</text>
+ <!-- catalog -->
+ <rect class="ent3" x="770" y="276" width="190" height="92"/>
+ <text class="h" x="865" y="296">catalog &amp; pricing</text>
+ <text class="f" x="865" y="314">service_category • service_item</text><text class="f" x="865" y="330">rate_card • price_rule</text><text class="f" x="865" y="346">price_quote • price_quote_revision</text>
+ <!-- order -->
+ <rect class="ent" x="470" y="20" width="210" height="126"/>
+ <text class="h" x="575" y="40">order (سفارش)</text>
+ <text class="f" x="575" y="58">order • order_item • order_media</text><text class="f" x="575" y="74">order_triage_answer • order_address</text><text class="f" x="575" y="90">order_timeline • order_event</text><text class="f" x="575" y="106">order_checklist • order_addon</text><text class="f" x="575" y="122">recurring_plan • booking_slot</text>
+ <!-- dispatch -->
+ <rect class="ent" x="470" y="176" width="210" height="108"/>
+ <text class="h" x="575" y="196">dispatch</text>
+ <text class="f" x="575" y="214">dispatch_request • job_offer</text><text class="f" x="575" y="230">assignment • assignment_rejection</text><text class="f" x="575" y="246">dispatch_wave • provider_score_snapshot</text><text class="f" x="575" y="262">emergency_request</text>
+ <!-- finance -->
+ <rect class="ent3" x="180" y="20" width="230" height="150"/>
+ <text class="h" x="295" y="40">payments &amp; ledger</text>
+ <text class="f" x="295" y="58">payment_intent • payment_txn • refund</text><text class="f" x="295" y="74">ledger_account • ledger_entry</text><text class="f" x="295" y="90">escrow_hold • escrow_release</text><text class="f" x="295" y="106">wallet • wallet_transaction</text><text class="f" x="295" y="122">payout_batch • payout_item • payout_schedule</text><text class="f" x="295" y="138">invoice • tax_invoice • bnpl_contract</text>
+ <!-- trust -->
+ <rect class="ent" x="180" y="200" width="230" height="120"/>
+ <text class="h" x="295" y="220">trust &amp; quality</text>
+ <text class="f" x="295" y="238">review • review_dimension • review_appeal</text><text class="f" x="295" y="254">quality_check • rework_case</text><text class="f" x="295" y="270">warranty • insurance_policy</text><text class="f" x="295" y="286">claim • claim_assessment • dispute</text><text class="f" x="295" y="302">dispute_message • dispute_resolution</text>
+ <!-- risk -->
+ <rect class="ent3" x="180" y="360" width="230" height="100"/>
+ <text class="h" x="295" y="380">risk &amp; fraud</text>
+ <text class="f" x="295" y="398">risk_signal • risk_score • risk_case</text><text class="f" x="295" y="414">entity_link (graph) • blacklist_entry</text><text class="f" x="295" y="430">collusion_alert • behavioral_baseline</text>
+ <!-- comms -->
+ <rect class="ent2" x="470" y="330" width="210" height="126"/>
+ <text class="h" x="575" y="350">communication &amp; CRM</text>
+ <text class="f" x="575" y="368">conversation • message • message_attachment</text><text class="f" x="575" y="384">masked_call • call_recording • transcript</text><text class="f" x="575" y="400">video_session • video_recording</text><text class="f" x="575" y="416">support_ticket • ticket_event • csat_survey</text><text class="f" x="575" y="432">crm_segment • campaign • coupon</text>
+ <!-- infra -->
+ <rect class="ent" x="470" y="486" width="210" height="60"/>
+ <text class="h" x="575" y="506">platform</text><text class="f" x="575" y="524">notification_log • feature_flag • audit_log</text>
+ <!-- ai -->
+ <rect class="ent3" x="180" y="486" width="230" height="60"/>
+ <text class="h" x="295" y="506">AI &amp; analytics</text><text class="f" x="295" y="524">ai_inference • ai_label • analytics_daily_agg</text>
+ <!-- relations -->
+ <path class="r" d="M770 66 H690 V80 H680"/>
+ <path class="r" d="M770 194 H700 V120 H680"/>
+ <path class="r" d="M770 300 H720 V150 H640 V120"/>
+ <path class="r" d="M580 146 V174"/>
+ <path class="r" d="M470 90 H410"/>
+ <path class="r" d="M580 284 V328"/>
+ <path class="r" d="M410 84 V240 H470"/>
+ <path class="r" d="M410 260 H430 V400 H470"/>
+ <path class="r" d="M575 456 V484"/>
+ <path class="r" d="M410 500 H468"/>
+ <text class="f" x="700" y="500" style="font:10.5px Tahoma;fill:#5c6472">هر سرویس = یک Schema مستقل در DB مشترک (فاز ۱) یا DB جدا (فاز ۳)</text>
+</svg>
+</div>
+
+<h3>۸.۳ فهرست جداول به تفکیک سرویس</h3>
+<p class="muted">در ادامه، جداول اصلی هر سرویس فهرست شده‌اند (برخی جداول کمکی و پیوندی در ردیف‌های ترکیبی گروه‌بندی شده‌اند). اسکیمای اجرایی <code>db/schema.sql</code> در مجموع <b>۱۱۳ جدول</b> ایجاد می‌کند.</p>
+
+<h4>الف) هویت و دسترسی (Identity) — ۱۱ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>user</code></td><td>id, phone_e164 (uniq, encrypted), phone_verified_at, email, national_id_hash, status, locale, created_at</td><td>هویت واحد؛ شماره به‌صورت رمزنگاری‌شده + ایندکس هش برای جست‌وجو</td></tr>
+<tr><td><code>user_profile</code></td><td>user_id, full_name, avatar_url, gender, birth_date, addresses(jsonb), preferences(jsonb)</td><td>پروفایل نمایشی و ترجیحات</td></tr>
+<tr><td><code>auth_credential</code></td><td>id, user_id, type(OTP/OAUTH_GOOGLE/OAUTH_APPLE/PASSKEY/PASSWORD), secret_hash, public_key, metadata(jsonb), last_used_at</td><td>هر روش ورود یک ردیف؛ Passkey کلید عمومی</td></tr>
+<tr><td><code>auth_session</code></td><td>id, user_id, device_id, refresh_token_hash, issued_at, expires_at, revoked_at, ip, ua, risk_score</td><td>Rotation و Reuse-Detection</td></tr>
+<tr><td><code>otp_challenge</code></td><td>id, phone_e164, code_hash, purpose, attempts, expires_at, consumed_at, ip, device_fingerprint</td><td>ضد SMS-Bombing و محدودیت نرخ</td></tr>
+<tr><td><code>device</code></td><td>id, user_id, platform, model, os_version, app_version, push_token, fingerprint, trusted</td><td>پیوند نشست و Push</td></tr>
+<tr><td><code>role</code> / <code>permission</code> / <code>role_permission</code> / <code>user_role</code></td><td>code, scope, resource, action</td><td>RBAC مبتنی بر <code>resource:action:scope</code></td></tr>
+<tr><td><code>org_account</code></td><td>id, legal_name, national_entity_id, economic_code, credit_limit, payment_terms, contract_rate_card_id, status</td><td>حساب شرکتی B2B</td></tr>
+<tr><td><code>org_member</code></td><td>org_id, user_id, org_role, cost_center, approval_limit</td><td>چندکاربری سازمانی</td></tr>
+<tr><td><code>consent_record</code></td><td>user_id, consent_type, version, granted_at, revoked_at, ip</td><td>رضایت‌نامه نسخه‌دار</td></tr>
+<tr><td><code>audit_log</code></td><td>id, actor_id, actor_role, action, resource_type, resource_id, before(jsonb), after(jsonb), reason, ip, correlation_id, created_at</td><td>پارتیشن ماهانه؛ ۷ سال نگه‌داری</td></tr>
+</tbody>
+</table>
+
+<h4>ب) متخصص و تأیید صلاحیت (Provider) — ۱۲ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>provider_profile</code></td><td>user_id(PK), display_name, bio, verified_level(0..4), status, tier, rating_avg, rating_count, acceptance_rate, on_time_rate, cancel_rate, last_location(geography), last_location_at, capacity_per_day</td><td>هسته عرضه؛ ایندکس GiST روی موقعیت</td></tr>
+<tr><td><code>provider_org_link</code></td><td>provider_id, org_id, employment_type, revenue_share</td><td>متخصص زیر نظر شرکت خدماتی</td></tr>
+<tr><td><code>provider_document</code></td><td>id, provider_id, kind(NATIONAL_ID, CRIMINAL_RECORD, SKILL_CERT, INSURANCE, BUSINESS_LICENSE), file_id, ocr_data(jsonb), issue_date, expiry_date, verification_status, verified_by, verification_notes</td><td>چرخه اعتبار مدارک و یادآوری انقضا</td></tr>
+<tr><td><code>identity_verification</code></td><td>id, provider_id, selfie_file_id, face_match_score, liveness_score, tamper_score, decision, decided_by, decided_at</td><td>خروجی AI Face Match برای حسابرسی</td></tr>
+<tr><td><code>skill_test_attempt</code></td><td>id, provider_id, category_id, score, passed, video_file_id, reviewed_by</td><td>آزمون و ویدیو معرفی</td></tr>
+<tr><td><code>provider_skill</code></td><td>provider_id, skill_code, level, verified_at, experience_years</td><td>تطبیق مهارت با سفارش</td></tr>
+<tr><td><code>provider_equipment</code></td><td>provider_id, equipment_code, quantity, verified_at, photo_file_id</td><td>ورودی الگوریتم تطبیق</td></tr>
+<tr><td><code>provider_service_area</code></td><td>provider_id, zone_id | polygon(geography), radius_km, priority</td><td>پوشش جغرافیایی چندگانه</td></tr>
+<tr><td><code>provider_availability</code></td><td>provider_id, weekday, from_time, to_time, is_recurring, date_override, is_available</td><td>تقویم و ظرفیت</td></tr>
+<tr><td><code>provider_capacity</code></td><td>provider_id, date, accepted_count, slots_total, active_order_id</td><td>کنترل هم‌زمانی پذیرش</td></tr>
+<tr><td><code>provider_sanction</code></td><td>id, provider_id, type(WARN/SUSPEND/BAN/PENALTY), reason, from_date, to_date, amount, applied_by, appeal_status</td><td>تعلیق و جریمه با فرایند اعتراض</td></tr>
+<tr><td><code>provider_tier_history</code></td><td>provider_id, tier, from_date, to_date, reason, commission_rate</td><td>تاریخ تغییر سطح و کمیسیون</td></tr>
+</tbody>
+</table>
+
+<h4>ج) کاتالوگ و قیمت‌گذاری (Catalog &amp; Pricing) — ۹ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>service_category</code></td><td>id, slug, title_fa, parent_id, icon, seo_meta, active, warranty_days_default, insurance_required</td><td>درخت دسته‌بندی خدمات</td></tr>
+<tr><td><code>service_item</code></td><td>id, category_id, title_fa, unit(MANUAL/FIXED/HOURLY/SQ_METER), pricing_model(FIXED/BAND/INSPECTION/BID/HOURLY/RETAINER), duration_estimate_min, required_skills[], required_equipment[], triage_flow_id</td><td>تعریف خدمت قابل سفارش</td></tr>
+<tr><td><code>rate_card</code> / <code>rate_card_item</code></td><td>version, effective_from, region_id, service_item_id, base_price, min_price, max_price, travel_fee_rule(jsonb), materials_included</td><td>نسخه‌دار و منطقه‌ای</td></tr>
+<tr><td><code>price_rule</code></td><td>id, name, scope(jsonb), formula(jsonb), priority, active, valid_from, valid_to</td><td>قواعد پویا (Surge، پیچیدگی، تخفیف) به‌صورت داده</td></tr>
+<tr><td><code>demand_supply_metric</code></td><td>zone_id, window_start, orders_count, active_providers, demand_index, surge_factor</td><td>ورودی Surge (سری‌زمانی، ۵ دقیقه‌ای)</td></tr>
+<tr><td><code>price_quote</code></td><td>id, order_id, model, min_amount, max_amount, final_amount, currency, breakdown(jsonb), engine_version, rate_card_version, confidence, expires_at</td><td>تخمین با امکان بازتولید</td></tr>
+<tr><td><code>price_quote_revision</code></td><td>quote_id, revised_by, reason_code, old_amount, new_amount, approved_by_customer, approved_at, media_file_id</td><td>Change Order و تغییر قیمت</td></tr>
+<tr><td><code>promotion</code> / <code>coupon</code></td><td>code, kind(PERCENT/AMOUNT/FREE_ADDON), scope, max_uses, per_user_limit, min_basket, valid_from/to, applies_to_org</td><td>تخفیف و کمپین (با ضدسوءاستفاده)</td></tr>
+<tr><td><code>tax_rule</code></td><td>id, region, category_id, vat_rate, withholding_rate, effective_from, active</td><td>نرخ‌ها پارامتری، نه کد</td></tr>
+</tbody>
+</table>
+
+<h4>د) سفارش و اجرا (Order / Job) — ۱۲ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>order</code></td><td>id, code, customer_id, org_id, service_item_id, category_path, status, urgency, skills_required[], equipment_required[], severity, location(geography), address_id, slot_start, slot_end, price_quote_id, final_amount, payment_state, escrow_state, assigned_provider_id, warranty_expires_at, source(APP/WEB/CALLCENTER), created_at</td><td>موجودیت مرکزی؛ ایندکس روی (status, created_at) و GiST مکانی</td></tr>
+<tr><td><code>order_media</code></td><td>order_id, file_id, type(IMAGE/VIDEO/AUDIO/DOC), ai_tags[], transcript, exif_stripped, uploaded_by</td><td>رسانه‌های ورودی و مستندات</td></tr>
+<tr><td><code>order_triage_answer</code></td><td>order_id, question_id, answer, confidence, source(USER/AI)</td><td>پاسخ تریاژ و مبنای تخمین</td></tr>
+<tr><td><code>triage_flow</code> / <code>triage_question</code></td><td>flow_id, category_id, nodes(jsonb), version, active</td><td>درخت تصمیم قابل ویرایش در پنل</td></tr>
+<tr><td><code>order_item</code></td><td>order_id, kind(SERVICE/MATERIAL/ADDON/TRAVEL), title, qty, unit_price, total, taxable</td><td>اقلام صورتحساب</td></tr>
+<tr><td><code>order_checklist</code></td><td>order_id, phase(BEFORE/AFTER), item, required, photo_required, done_at, done_by, photo_file_id, geo</td><td>مستندسازی قبل/بعد (پایه بیمه و اختلاف)</td></tr>
+<tr><td><code>order_timeline</code></td><td>order_id, event_code, at, actor_id, payload(jsonb)</td><td>خط زمانی نمایش‌داده‌شده به کاربر</td></tr>
+<tr><td><code>order_event</code></td><td>id, order_id, event_type, payload, correlation_id, created_at</td><td>پارتیشن ماهانه؛ منبع انتشار Kafka</td></tr>
+<tr><td><code>order_status_transition</code></td><td>order_id, from_status, to_status, by_user, reason, at</td><td>قابل حسابرسی بودن تغییر وضعیت</td></tr>
+<tr><td><code>booking</code></td><td>id, order_id, provider_id, time_range(tstzrange), check_in_at, check_out_at, gps_in, gps_out</td><td>قاعده عدم تعارض تقویم (EXCLUDE constraint)</td></tr>
+<tr><td><code>job_worklog</code></td><td>booking_id, minutes_worked, notes, materials_used(jsonb)</td><td>مبنای تسویه ساعتی/روزمرد</td></tr>
+<tr><td><code>recurring_plan</code> / <code>maintenance_contract</code></td><td>id, customer_id, org_id, cadence, service_item_id, next_run_at, sla_terms(jsonb)</td><td>سفارش دوره‌ای و قرارداد B2B</td></tr>
+</tbody>
+</table>
+
+<h4>ه) تطبیق و اعزام (Dispatch) — ۷ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>dispatch_request</code></td><td>order_id, mode(NORMAL/EMERGENCY/SCHEDULED), wave_no, radius_m, status, started_at, expires_at, policy(jsonb), started_by</td><td>وضعیت زنده فرآیند تخصیص</td></tr>
+<tr><td><code>job_offer</code></td><td>id, dispatch_id, provider_id, rank_score, score_breakdown(jsonb), offered_at, expires_at, response(ACCEPT/REJECT/IGNORE), responded_at, incentive_amount</td><td>مبنای شفافیت (چرا این متخصص؟) و حسابرسی</td></tr>
+<tr><td><code>assignment</code></td><td>id, order_id, provider_id, assigned_by(AUTO/MANUAL/CUSTOMER_PICK), assigned_at, lock_key, released_at, release_reason</td><td>تخصیص قطعی (Unique on active order)</td></tr>
+<tr><td><code>assignment_rejection</code></td><td>assignment_id/offer_id, reason_code, note, at</td><td>تحلیل رفتار و جریمه</td></tr>
+<tr><td><code>dispatch_wave</code></td><td>dispatch_id, wave_no, candidate_count, radius_m, wave_deadline, outcome</td><td>نردبان تشدید قابل تحلیل</td></tr>
+<tr><td><code>provider_score_snapshot</code></td><td>provider_id, at, components(jsonb), total, context(zone, category)</td><td>بازتولید تصمیم‌های گذشته</td></tr>
+<tr><td><code>emergency_request</code></td><td>id, order_id, eta_minutes, accepted_provider_id, prepay_txn_id, safety_ack_at</td><td>اعزام فوری</td></tr>
+</tbody>
+</table>
+
+<h4>و) مالی و دفتر کل (Payments) — ۱۴ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>payment_intent</code></td><td>id, order_id, payer_id, amount, currency, method(IPG/WALLET/BNPL/CASH/CREDIT_LINE), status, idempotency_key(uniq), psp_ref, created_at</td><td>واحدی برای تلاش پرداخت</td></tr>
+<tr><td><code>payment_txn</code></td><td>id, intent_id, psp, psp_txn_id, amount, fee, status(INIT/PENDING/SUCCESS/FAILED/REVERSED), raw_response(jsonb), at</td><td>رکورد خام درگاه برای مغایرت‌یابی</td></tr>
+<tr><td><code>ledger_account</code></td><td>code, name, kind(ASSET/LIABILITY/REVENUE/EXPENSE/EQUITY), owner_type, owner_id, normal_balance</td><td>حساب‌های داخلی/شخصی</td></tr>
+<tr><td><code>ledger_entry</code></td><td>id, txn_id, account_id, direction, amount, currency, ref_type, ref_id, at, hash_prev</td><td>دوعاملی + زنجیره هش برای تشخیص دست‌کاری</td></tr>
+<tr><td><code>escrow_hold</code></td><td>id, order_id, amount, status, held_at, expires_at, released_amount, refunded_amount</td><td>نگهداشت مبلغ تا تأیید کار</td></tr>
+<tr><td><code>escrow_release</code></td><td>id, hold_id, milestone_id, amount, type(FULL/PARTIAL/RELEASE_TO_PROVIDER/REFUND), triggered_by, approved_by, at</td><td>آزادسازی مرحله‌ای</td></tr>
+<tr><td><code>milestone</code></td><td>id, order_id, seq, title, share_percent, condition(jsonb), status, approved_at, proof_media_ids[]</td><td>Merestone پروژه‌های بزرگ</td></tr>
+<tr><td><code>wallet</code> / <code>wallet_transaction</code></td><td>wallet: owner_type(USER/PROVIDER/ORG), balance_cached; txn: wallet_id, kind(TOPUP/PAYOUT/REFUND/BONUS/PENALTY), amount, ref</td><td>موجودی = Cache از دفتر کل با بازتولید دوره‌ای</td></tr>
+<tr><td><code>payout_batch</code> / <code>payout_item</code></td><td>batch: cycle_date, status, total; item: provider_id, iban_hash, amount, commission, tax, status, bank_ref</td><td>تسویه دسته‌ای T+1</td></tr>
+<tr><td><code>invoice</code></td><td>id, order_id | org_id, number, issued_at, subtotal, discount, vat, total, status, pdf_file_id, buyer_snapshot(jsonb)</td><td>فاکتور عملیاتی</td></tr>
+<tr><td><code>tax_invoice</code></td><td>id, invoice_id, tax_id_unique, submit_status, response_code, submitted_at, xml_file_id, retry_count</td><td>سامانه مؤدیان</td></tr>
+<tr><td><code>refund</code></td><td>id, payment_intent_id, amount, reason_code, status, destination(WALLET/IPG), approved_by, at</td><td>بازگشت وجه با مسیر تأیید</td></tr>
+<tr><td><code>bnpl_contract</code></td><td>id, order_id, provider_partner, approved_amount, installment_count, schedule(jsonb), status, external_ref</td><td>پرداخت اقساطی</td></tr>
+<tr><td><code>reconciliation_run</code> / <code>reconciliation_item</code></td><td>run_date, source(PSP/BANK/LEDGER), matched, diff_count, item: ref, expected, actual, status</td><td>مغایرت‌یابی روزانه</td></tr>
+</tbody>
+</table>
+
+<h4>ز) اعتماد، کیفیت و بیمه (Trust) — ۱۰ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>review</code></td><td>id, order_id(uniq), customer_id, provider_id, text, is_verified, published_at, moderation_status, sentiment, topics[]</td><td>فقط برای سفارش اجراشده</td></tr>
+<tr><td><code>review_dimension</code></td><td>review_id, dimension(PUNCTUALITY/QUALITY/TIDINESS/PRICE_ACCURACY/CONDUCT), score(1..5)</td><td>امتیاز چندبعدی</td></tr>
+<tr><td><code>review_appeal</code></td><td>id, review_id, filed_by, reason, evidence[], decision, decided_by, at</td><td>اعتراض متخصص و داوری</td></tr>
+<tr><td><code>quality_check</code></td><td>id, order_id, type(AUTO/HUMAN), checklist(jsonb), result, score, checked_by, at</td><td>بازرسی کیفیت</td></tr>
+<tr><td><code>rework_case</code></td><td>id, order_id, reported_by, symptom, root_cause, fix_provider_id, fix_cost, closed_at, charged_to_provider</td><td>بازکاری و هزینه آن</td></tr>
+<tr><td><code>warranty</code></td><td>id, order_id, category_id, started_at, expires_at, terms_snapshot(jsonb), status</td><td>گارانتی فعال هر سفارش</td></tr>
+<tr><td><code>insurance_policy</code> / <code>insurance_coverage</code></td><td>policy: partner_id, master_policy_no, valid_from/to, premium_rate; coverage: category_id, max_amount, deductible</td><td>بیمه گروهی و سقف پوشش</td></tr>
+<tr><td><code>claim</code></td><td>id, order_id, claimant_id, type(ACCIDENT/DAMAGE/INJURY/THEFT), description, amount_requested, evidence[], status, sla_due_at</td><td>پرونده خسارت</td></tr>
+<tr><td><code>claim_assessment</code></td><td>claim_id, method(AUTO/EXPERT), risk_score, decision(APPROVE/PARTIAL/REJECT/ESCALATE), amount_approved, assessor_id, notes, at</td><td>ارزیابی الگوریتمی/انسانی</td></tr>
+<tr><td><code>dispute</code> / <code>dispute_message</code> / <code>dispute_resolution</code></td><td>dispute: order_id, opened_by, category, status, freeze_escrow; message: sender, body, attachments; resolution: decision, amounts, decided_by, rationale</td><td>چرخه کامل حل اختلاف</td></tr>
+</tbody>
+</table>
+
+<h4>ح) ریسک و ضدتقلب (Risk) — ۶ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>risk_signal</code></td><td>id, entity_type(USER/PROVIDER/ORDER/DEVICE), entity_id, signal_code, value, source, at, ttl</td><td>ورودی خام قوانین و مدل</td></tr>
+<tr><td><code>risk_score</code></td><td>entity_type, entity_id, scope(ONBOARDING/ORDER/PAYOUT/REVIEW), score, band(LOW/MED/HIGH), model_version, computed_at, features(jsonb)</td><td>خروجی قابل توضیح</td></tr>
+<tr><td><code>risk_case</code></td><td>id, order_id/entity_id, band, status(OPEN/IN_REVIEW/RESOLVED/BLOCKED), assigned_to, decision, decided_at, notes</td><td>صف بررسی انسانی</td></tr>
+<tr><td><code>entity_link</code></td><td>left_type, left_id, right_type, right_id, link_type(DEVICE/IBAN/ADDRESS/IP/PHONE), weight</td><td>گراف تبانی و حساب‌های هم‌خوشه</td></tr>
+<tr><td><code>collusion_alert</code></td><td>id, pair_hash(provider_id, customer_id), pattern(OFF_PLATFORM/CANCELLATION_RING/REVIEW_RING), evidence(jsonb), confidence, status</td><td>هشدار تبانی</td></tr>
+<tr><td><code>blacklist_entry</code></td><td>type(PHONE/DEVICE/NATIONAL_ID/IBAN), value_hash, reason, added_by, expires_at</td><td>لیست سیاه قابل اعتراض</td></tr>
+</tbody>
+</table>
+
+<h4>ط) ارتباطات، پشتیبانی و CRM — ۹ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>conversation</code> / <code>message</code> / <code>message_attachment</code></td><td>conversation: order_id, participants[], type(CUSTOMER_PROVIDER/SUPPORT/BOT); message: sender, body, type, delivered_at, read_at, redacted</td><td>چت با قابلیت Redaction در صورت نیاز حقوقی</td></tr>
+<tr><td><code>masked_call</code></td><td>id, order_id, caller_id, callee_id, provider_sip, started_at, ended_at, duration, recording_file_id, transcript_id, consent_announced</td><td>تماس امن با CDR</td></tr>
+<tr><td><code>call_transcript</code></td><td>call_id, text, segments(jsonb), keywords[], pii_flags[], redacted_text</td><td>مبنای جست‌وجو و Fraud</td></tr>
+<tr><td><code>video_session</code> / <code>video_recording</code></td><td>session: order_id, stage(REMOTE_INSPECTION/EXPERT_PANEL), participants, started_at, ended_at, recording_consent; recording: file_id, duration, notes</td><td>بازدید ویدیویی و جلسه کارشناسی</td></tr>
+<tr><td><code>support_ticket</code> / <code>ticket_event</code> / <code>ticket_macro</code></td><td>ticket: channel, category, priority, sla_due_at, assignee, status, related_order_id; event: type, from, to, note, at</td><td>تیکتینگ با SLA</td></tr>
+<tr><td><code>csat_survey</code></td><td>ticket_id|order_id, score, comment, at</td><td>سنجش رضایت</td></tr>
+<tr><td><code>crm_segment</code> / <code>campaign</code> / <code>campaign_send</code></td><td>segment: rules(jsonb), size_cached; campaign: channel, template, schedule; send: user_id, status, opened_at</td><td>بخش‌بندی و کمپین</td></tr>
+<tr><td><code>loyalty_account</code> / <code>loyalty_point_txn</code></td><td>tier, points_balance, txn: kind(EARN/REDEEM/EXPIRE), amount, ref</td><td>وفاداری</td></tr>
+<tr><td><code>knowledge_article</code></td><td>slug, title, body, tags[], audience(PUBLIC/SUPPORT/BOT), version, published_at</td><td>پایه دانش مشترک سایت/بات/پشتیبانی</td></tr>
+<tr><td><code>notification_template</code> / <code>notification_log</code> / <code>notification_preference</code></td><td>template: code, channel, locale, body, variables[]; log: user_id, channel, status, sent_at, delivered_at, opened_at, fail_reason</td><td>سرویس اطلاع‌رسانی</td></tr>
+</tbody>
+</table>
+
+<h4>ی) هوش مصنوعی، تحلیل و پلتفرم — ۴ جدول</h4>
+<table class="tbl">
+<thead><tr><th>جدول</th><th>ستون‌های کلیدی</th><th>توضیح</th></tr></thead>
+<tbody>
+<tr><td><code>ai_inference</code></td><td>id, model_name, model_version, purpose(CATEGORY/SEVERITY/ETA/FRAUD/TRANSCRIBE/FACE_MATCH/QUALITY_PHOTO), input_ref, output(jsonb), confidence, latency_ms, at</td><td>ردیابی همه استنتاج‌ها برای بازتولید و حسابرسی</td></tr>
+<tr><td><code>ai_label</code></td><td>inference_id|input_ref, label, labeler_id, labeler_type(HUMAN/AUTO), at</td><td>داده برچسب‌خورده برای آموزش مدل بعدی</td></tr>
+<tr><td><code>feature_flag</code> / <code>experiment_assignment</code></td><td>flag: key, rules(jsonb), rollout_percent, kill_switch; assignment: user_id, variant, at</td><td>آزمایش و خاموش‌سازی</td></tr>
+<tr><td><code>analytics_daily_agg</code></td><td>date, zone_id, category_id, orders, gmv, take_rate, fulfillment_rate, tta_seconds, csat, cancellations</td><td>پیش‌تجمیع برای داشبوردها (منبع اصلی: ClickHouse)</td></tr>
+</tbody>
+</table>
+
+<h3>۸.۴ ایندکس‌ها و بهینه‌سازی نمونه</h3>
+<pre class="code">-- ۱) جست‌وجوی مکانی متخصصان فعال (GiST + فیلتر جزئی)
+CREATE INDEX idx_provider_loc_active ON provider_profile USING GIST (last_location)
+  WHERE status = 'ACTIVE' AND blocked_until IS NULL;
+
+-- ۲) سفارش‌های باز برای صف دیسپچ
+CREATE INDEX idx_order_open ON "order" (status, urgency, slot_start)
+  WHERE status IN ('CREATED','DISPATCHING','ASSIGNED','EN_ROUTE','IN_PROGRESS');
+
+-- ۳) جلوگیری از تخصیص هم‌زمان دو متخصص به یک سفارش
+CREATE UNIQUE INDEX uq_active_assignment ON assignment (order_id) WHERE released_at IS NULL;
+
+-- ۴) جلوگیری از تعارض تقویم متخصص
+ALTER TABLE booking ADD CONSTRAINT no_overlap
+  EXCLUDE USING GIST (provider_id WITH =, time_range WITH &&);
+
+-- ۵) سفارش‌های در انتظار نظر (برای یادآوری و تحلیل)
+CREATE INDEX idx_order_review_pending ON "order" (completed_at) WHERE payment_state = 'RELEASED' AND review_id IS NULL;
+
+-- ۶) جست‌وجوی سریع شماره (با هش، نه متن خام)
+CREATE UNIQUE INDEX uq_user_phone_hash ON "user" (phone_hash);</pre>
+
+<h3>۸.۵ یکپارچگی، تراکنش و همگامی بین سرویس‌ها</h3>
+<ul>
+<li><b>Saga</b> برای جریان مالی سفارش: (ایجاد Escrow → تخصیص → شروع کار → تکمیل → آزادسازی). هر گام یک رویداد و یک عملیات جبرانی (Compensation) دارد: شکست آزادسازی ⇒ برنگرداندن به حالت قبل، بلکه ثبت در صف <code>escrow_pending_release</code> با تلاش مجدد.</li>
+<li><b>Transaction Outbox</b> در هر سرویس: تغییر DB و رویداد در یک تراکنش، سپس انتشار تضمین‌شده به Kafka.</li>
+<li><b>Idempotency</b>: همه عملیات مالی با کلید یکتا (هدر <code>Idempotency-Key</code>) و ثبت در جدول idempotency (TTL ۷ روز).</li>
+<li><b>Reconciliation</b> روزانه: PSP ↔ دفتر کل ↔ بانک ↔ صورتحساب‌های مالیاتی؛ عدم تطابق ⇒ تیکت سطح ۲ مالی.</li>
+</ul>
+</section>

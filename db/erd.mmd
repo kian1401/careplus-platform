@@ -1,0 +1,105 @@
+%% نمودار ERD سطح‌بالا — سرویسا (Care+)
+%% نمایش در Mermaid Live Editor یا VS Code (افزونه Mermaid) و خروجی PNG/SVG
+%% نسخه کامل: db/schema.sql  |  واژه‌نامه: db/data_dictionary.csv
+
+erDiagram
+    USER ||--o| USER_PROFILE : has
+    USER ||--o{ AUTH_CREDENTIAL : authenticates
+    USER ||--o{ AUTH_SESSION : owns
+    USER ||--o{ DEVICE : uses
+    USER ||--o| PROVIDER_PROFILE : "becomes (if pro)"
+    USER ||--o{ USER_ROLE : assigned
+    ORG_ACCOUNT ||--o{ ORG_MEMBER : has
+    USER ||--o{ ORG_MEMBER : joins
+    PROVIDER_PROFILE ||--o{ PROVIDER_DOCUMENT : uploads
+    PROVIDER_PROFILE ||--o{ IDENTITY_VERIFICATION : verified_by
+    PROVIDER_PROFILE ||--o{ PROVIDER_SKILL : has
+    PROVIDER_PROFILE ||--o{ PROVIDER_EQUIPMENT : owns
+    PROVIDER_PROFILE ||--o{ PROVIDER_SERVICE_AREA : covers
+    PROVIDER_PROFILE ||--o{ PROVIDER_AVAILABILITY : publishes
+    PROVIDER_PROFILE ||--o{ PROVIDER_SANCTION : receives
+    PROVIDER_PROFILE ||--o{ PROVIDER_TIER_HISTORY : evolves
+
+    SERVICE_CATEGORY ||--o{ SERVICE_ITEM : contains
+    SERVICE_ITEM ||--o{ RATE_CARD_ITEM : priced_in
+    RATE_CARD ||--o{ RATE_CARD_ITEM : defines
+    SERVICE_ITEM ||--o{ TRIAGE_FLOW : described_by
+    SERVICE_ITEM ||--o{ PRICE_QUOTE : quoted_for
+    PRICE_QUOTE ||--o{ PRICE_QUOTE_REVISION : revised_by
+
+    USER ||--o{ ORDER : places
+    ORG_ACCOUNT ||--o{ ORDER : "orders (B2B)"
+    SERVICE_ITEM ||--o{ ORDER : "type of"
+    PRICE_QUOTE ||--o| ORDER : "prices"
+    ORDER ||--o{ ORDER_MEDIA : has
+    ORDER ||--o{ ORDER_ITEM : "billed as"
+    ORDER ||--o{ ORDER_CHECKLIST : "documented by"
+    ORDER ||--o{ ORDER_TIMELINE : traces
+    ORDER ||--o{ ORDER_EVENT : emits
+    ORDER ||--o{ ORDER_TRIAGE_ANSWER : "answered by"
+    ORDER ||--o| BOOKING : "scheduled as"
+    BOOKING ||--o{ JOB_WORKLOG : logs
+    ORDER ||--o{ RECURRING_PLAN : "may repeat"
+
+    ORDER ||--o{ DISPATCH_REQUEST : triggers
+    DISPATCH_REQUEST ||--o{ DISPATCH_WAVE : escalates
+    DISPATCH_REQUEST ||--o{ JOB_OFFER : offers
+    PROVIDER_PROFILE ||--o{ JOB_OFFER : receives
+    ORDER ||--o| ASSIGNMENT : assigned_by
+    PROVIDER_PROFILE ||--o{ ASSIGNMENT : fulfills
+    JOB_OFFER ||--o{ ASSIGNMENT_REJECTION : rejected
+    DISPATCH_REQUEST ||--o{ PROVIDER_SCORE_SNAPSHOT : scored
+    ORDER ||--o| EMERGENCY_REQUEST : "urgent as"
+
+    ORDER ||--o{ PAYMENT_INTENT : "paid by"
+    PAYMENT_INTENT ||--o{ PAYMENT_TXN : "executed via"
+    PAYMENT_INTENT ||--o{ REFUND : "refunded by"
+    ORDER ||--o| ESCROW_HOLD : "held for"
+    ESCROW_HOLD ||--o{ ESCROW_RELEASE : releases
+    ORDER ||--o{ MILESTONE : "split into"
+    MILESTONE ||--o{ ESCROW_RELEASE : "unlocks"
+    LEDGER_ACCOUNT ||--o{ LEDGER_ENTRY : contains
+    PAYMENT_INTENT ||--o{ LEDGER_ENTRY : "booked as"
+    PAYOUT_BATCH ||--o{ PAYOUT_ITEM : includes
+    PROVIDER_PROFILE ||--o{ PAYOUT_ITEM : "paid via"
+    WALLET ||--o{ WALLET_TRANSACTION : records
+    ORDER ||--o| INVOICE : "invoiced by"
+    INVOICE ||--o| TAX_INVOICE : "reported to tax"
+    ORDER ||--o| BNPL_CONTRACT : "financed by"
+    RECONCILIATION_RUN ||--o{ RECONCILIATION_ITEM : "checks"
+
+    ORDER ||--o| REVIEW : "reviewed by"
+    REVIEW ||--o{ REVIEW_DIMENSION : "scored on"
+    REVIEW ||--o{ REVIEW_APPEAL : appealed
+    ORDER ||--o| WARRANTY : "warranted by"
+    ORDER ||--o{ CLAIM : "claimed on"
+    CLAIM ||--o{ CLAIM_ASSESSMENT : assessed
+    ORDER ||--o{ DISPUTE : disputed
+    DISPUTE ||--o{ DISPUTE_MESSAGE : discusses
+    DISPUTE ||--o| DISPUTE_RESOLUTION : resolved_by
+    ORDER ||--o{ QUALITY_CHECK : checked
+    ORDER ||--o{ REWORK_CASE : reworked
+    INSURANCE_POLICY ||--o{ INSURANCE_COVERAGE : covers
+
+    USER ||--o{ RISK_SIGNAL : "signals for"
+    USER ||--o{ RISK_SCORE : scored
+    RISK_SCORE ||--o{ RISK_CASE : "reviewed as"
+    RISK_CASE ||--o| COLLUSION_ALERT : flagged
+    ENTITY_LINK }o--|| USER : links
+
+    ORDER ||--o{ CONVERSATION : "chats in"
+    CONVERSATION ||--o{ MESSAGE : contains
+    MESSAGE ||--o{ MESSAGE_ATTACHMENT : attaches
+    ORDER ||--o{ MASKED_CALL : "called for"
+    MASKED_CALL ||--o| CALL_TRANSCRIPT : transcribed
+    ORDER ||--o{ VIDEO_SESSION : "video-inspected"
+    USER ||--o{ SUPPORT_TICKET : opens
+    SUPPORT_TICKET ||--o{ TICKET_EVENT : logs
+    SUPPORT_TICKET ||--o| KNOWLEDGE_ARTICLE : "resolved by"
+    USER ||--o{ NOTIFICATION_LOG : notified
+    CAMPAIGN ||--o{ NOTIFICATION_LOG : "drives"
+
+    AI_INFERENCE ||--o{ AI_LABEL : labeled
+    ORDER ||--o{ AI_INFERENCE : "inferred for"
+    USER ||--o{ CONSENT_RECORD : consents
+    USER ||--o{ AUDIT_LOG : "acted (as actor)"

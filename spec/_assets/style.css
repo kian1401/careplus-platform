@@ -1,0 +1,130 @@
+:root{
+  --bg:#f6f7f9; --fg:#16181d; --muted:#5c6472; --line:#e2e5ea; --card:#ffffff;
+  --brand:#0f7a6c; --brand2:#0b5d52; --accent:#c2410c; --blue:#1d4ed8;
+  --warn:#b45309; --ok:#15803d; --danger:#b91c1c;
+  --radius:14px; --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--fg);
+  font-family:"Vazirmatn","IRANSans","Segoe UI",Tahoma,"Noto Naskh Arabic",system-ui,-apple-system,sans-serif;
+  line-height:1.95;font-size:15.5px;direction:rtl;
+}
+a{color:var(--brand2);text-decoration:none}
+a:hover{text-decoration:underline}
+.layout{display:flex;gap:26px;max-width:1400px;margin:0 auto;padding:22px 20px 80px}
+aside.toc{
+  position:sticky;top:18px;align-self:flex-start;width:300px;flex:0 0 300px;
+  max-height:calc(100vh - 36px);overflow:auto;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 14px 18px;box-shadow:var(--shadow)
+}
+aside.toc h4{margin:6px 4px 10px;font-size:14px;color:var(--muted);letter-spacing:.02em}
+aside.toc a{display:block;padding:6px 9px;border-radius:9px;color:#2b3140;font-size:13.5px;line-height:1.6}
+aside.toc a:hover{background:#eef4f3;text-decoration:none}
+aside.toc a.sub{padding-inline-start:22px;color:#4b5563;font-size:12.8px}
+main{flex:1 1 auto;min-width:0}
+header.doc{
+  background:linear-gradient(135deg,#0f7a6c,#0b3f4d 75%);color:#fff;border-radius:var(--radius);
+  padding:26px 26px 22px;box-shadow:var(--shadow);margin-bottom:22px
+}
+header.doc h1{margin:0 0 6px;font-size:26px;line-height:1.6}
+header.doc p{margin:4px 0 0;color:#d7ece8;font-size:14px}
+header.doc .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+header.doc .meta span{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);
+  padding:3px 10px;border-radius:999px;font-size:12.5px}
+section{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:22px 24px;margin:0 0 20px;box-shadow:var(--shadow)}
+h2{margin:0 0 12px;font-size:21px;line-height:1.7;padding-bottom:10px;border-bottom:2px solid #eef4f3}
+h2 .num{display:inline-block;background:var(--brand);color:#fff;border-radius:8px;
+  padding:0 9px;margin-inline-end:8px;font-size:15px;vertical-align:middle}
+h3{margin:22px 0 8px;font-size:17px;color:#0b3f4d}
+h4{margin:16px 0 6px;font-size:15px;color:#243b53}
+p{margin:8px 0}
+.lead{font-size:16px;color:#333a48}
+ul,ol{margin:8px 0;padding-inline-start:22px}
+li{margin:4px 0}
+small,.muted{color:var(--muted)}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin:14px 0}
+.grid.two{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.card{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fcfdfd}
+.card h4{margin:0 0 6px;font-size:15px}
+.card p{margin:4px 0;font-size:14px}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#f7fbfa;text-align:center}
+.kpi b{display:block;font-size:22px;color:var(--brand2);line-height:1.5}
+.kpi span{font-size:12.5px;color:var(--muted)}
+table.tbl{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;background:#fff}
+table.tbl th,table.tbl td{border:1px solid var(--line);padding:8px 10px;text-align:right;vertical-align:top}
+table.tbl thead th{background:#eef4f3;color:#0b3f4d;font-weight:700;font-size:13.5px}
+table.tbl tbody tr:nth-child(even){background:#fafbfc}
+table.tbl td code{font-size:12.5px}
+.badge{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.b-new{background:#e0f2f1;color:#0b5d52;border:1px solid #b7e0db}
+.b-ach{background:#f1f3f5;color:#4b5563;border:1px solid #dfe3e8}
+.b-mvp{background:#e8f0ff;color:#1d4ed8;border:1px solid #c9dbff}
+.b-v1{background:#fff4e6;color:#b45309;border:1px solid #ffd9a8}
+.b-v2{background:#f3e8ff;color:#6b21a8;border:1px solid #e0c8ff}
+.b-p0{background:#ffe4e6;color:#b91c1c;border:1px solid #ffc7cc}
+.callout{border-inline-start:4px solid var(--brand);background:#f2f9f8;border-radius:10px;padding:12px 14px;margin:14px 0}
+.callout.warn{border-color:var(--warn);background:#fff8ed}
+.callout.ok{border-color:var(--ok);background:#f1fbf3}
+.callout.danger{border-color:var(--danger);background:#fef3f3}
+.callout b{color:#0b3f4d}
+pre.code{background:#0f1b2a;color:#e6edf3;border-radius:12px;padding:14px 16px;overflow:auto;
+  direction:ltr;text-align:left;font-size:12.8px;line-height:1.7;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+pre.code .c{color:#7d8da1}
+pre.ascii{background:#fbfcfd;border:1px solid var(--line);border-radius:12px;padding:14px;overflow:auto;
+  direction:rtl;font-size:12.8px;line-height:1.8;font-family:ui-monospace,Menlo,Consolas,monospace;white-space:pre}
+code{background:#f1f3f5;border:1px solid #e6e9ee;border-radius:6px;padding:0 5px;font-size:13px;
+  font-family:ui-monospace,Menlo,Consolas,monospace;direction:ltr;display:inline-block}
+details{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:10px 0;background:#fcfdfd}
+details>summary{cursor:pointer;font-weight:700;color:#0b3f4d}
+details[open]>summary{margin-bottom:6px}
+.flow{background:#fbfcfd;border:1px solid var(--line);border-radius:12px;padding:12px;margin:14px 0;overflow:auto}
+.flow svg{display:block;margin:auto;max-width:100%;height:auto}
+.pillrow{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.pill{background:#eef4f3;border:1px solid #d8e8e5;color:#0b5d52;border-radius:999px;padding:2px 10px;font-size:12.5px}
+.pill.gray{background:#f1f3f5;border-color:#e2e5ea;color:#4b5563}
+footer.doc{color:var(--muted);font-size:13px;text-align:center;padding:18px 10px 0}
+hr.sep{border:0;border-top:1px dashed var(--line);margin:18px 0}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:1000px){
+  .layout{flex-direction:column}
+  aside.toc{position:static;width:auto;flex:1 1 auto;max-height:none}
+  .two-col{grid-template-columns:1fr}
+}
+/* ---------- جلد و فهرست مخصوص چاپ (فقط در PDF) ---------- */
+.print-only{display:none}
+@media print{
+  body{background:#fff;font-size:10.5pt;color:#111}
+  .layout{display:block;padding:0;max-width:none}
+  .print-only{display:block}
+  /* جلد */
+  .print-cover{break-after:page;text-align:right;padding:0 0 6mm;border-bottom:3px solid #0b5f52}
+  .print-cover .pc-kicker{letter-spacing:.06em;color:#0b7a68;font-weight:700;font-size:10pt;margin-bottom:6mm}
+  .print-cover h1{font-size:23pt;line-height:1.55;margin:0 0 4mm;color:#0b2f38}
+  .print-cover .pc-sub{font-size:12pt;color:#375561;margin:0 0 8mm}
+  .print-cover .pc-meta{display:grid;grid-template-columns:1fr 1fr;gap:3mm 10mm;font-size:10pt;color:#2b3d47}
+  .print-cover .pc-meta b{color:#0b5f52}
+  .print-cover .pc-note{margin-top:8mm;font-size:9.5pt;color:#5b6b76;border:1px solid #d7e2e0;
+      border-radius:10px;padding:4mm 5mm;background:#f6faf9}
+  /* فهرست در صفحه مستقل */
+  aside.toc{display:block !important;position:static;width:auto;max-height:none;border:0;
+      box-shadow:none;padding:0;margin:0 0 6mm;break-after:page;columns:2;column-gap:12mm}
+  aside.toc h4{font-size:13pt;color:#0b5f52;margin:0 0 4mm;border-bottom:1px solid #d7e2e0;padding-bottom:2mm;column-span:all}
+  aside.toc a{color:#1c2b33;font-size:10pt;padding:2px 4px;break-inside:avoid}
+  aside.toc a.sub{font-size:9.3pt;color:#4a5a63}
+  /* بدنه */
+  section{break-inside:auto;box-shadow:none;border-color:#cfdad8;margin-bottom:8mm}
+  header.doc{background:#0b3f4d !important;-webkit-print-color-adjust:exact;break-after:auto}
+  h2{break-after:avoid} h3{break-after:avoid} h4{break-after:avoid}
+  .callout,.card,.kpi,.grid,.two-col,.flow{break-inside:avoid}
+  table.tbl{break-inside:auto}
+  table.tbl thead{display:table-header-group}
+  table.tbl tr{break-inside:avoid}
+  pre,pre.ascii,pre.code{break-inside:avoid;white-space:pre-wrap;font-size:9pt}
+  svg{max-width:100%;height:auto}
+  a{color:#0b5f52;text-decoration:none}
+  .badge{border-width:1px}
+}
