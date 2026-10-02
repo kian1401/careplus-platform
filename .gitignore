@@ -30,3 +30,6 @@ out/
 Thumbs.db
 .idea/
 .vscode/
+
+# آدرس عمومی جاری (خودکار به‌روزرسانی می‌شود)
+PUBLIC-URL.txt
