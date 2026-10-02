@@ -1081,7 +1081,9 @@ def ai_quality_forecast(order_id: str,
 
 
 @ai.get("/assistant/{order_id}")
-def ai_assistant(order_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+def ai_assistant(order_id: str,
+                 user: User = Depends(require("CUSTOMER", "PROVIDER", "OPS", "ADMIN")),
+                 db: Session = Depends(get_db)):
     """تجربه روان: اقدام بعدی با یک ضربه در هر وضعیت سفارش (حداقل تصمیم، حداکثر اطمینان)."""
     from .intelligence import ExperienceService
     order = get_order_or_404(db, order_id)

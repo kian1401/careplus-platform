@@ -183,7 +183,8 @@ let OPS_TOKEN = '';
 
 async function api(path, opts){
   opts = opts || {};
-  if (OPS_TOKEN && (path.includes('/admin/') || path.includes('/ops-'))) {
+  // کلید اپراتور فقط در محیط دمو در دسترس است (مسیر /v1/demo/ops-token در prod مسدود می‌شود)
+  if (OPS_TOKEN && (path.includes('/admin/') || path.includes('/ops-') || path.includes('/ai/'))) {
     opts.headers = Object.assign({}, opts.headers, {'x-ops-token': OPS_TOKEN});
   }
   const res = await fetch(path, opts);
