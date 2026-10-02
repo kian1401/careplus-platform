@@ -115,6 +115,15 @@ class WalletTopup(BaseModel):
     amount: int = Field(gt=0, le=500_000_000)
 
 
+class IntakeRequest(BaseModel):
+    text: str = Field(examples=["آب از زیر سینک می‌آید و کابینت خیس شده"])
+    media: list[dict[str, Any]] = []
+    category_hint: str | None = None
+    lat: float = 35.7448
+    lng: float = 51.4261
+    urgency: str = "SAME_DAY"
+
+
 class FlagUpdate(BaseModel):
     rollout_percent: int | None = None
     kill_switch: bool | None = None
@@ -184,6 +193,7 @@ payments = APIRouter(tags=["Payments"])
 trust = APIRouter(tags=["Trust"])
 ops = APIRouter(prefix="/admin", tags=["Admin/Ops"])
 demo = APIRouter(prefix="/demo", tags=["Demo"])
+ai = APIRouter(prefix="/ai", tags=["AI Layer"])
 
 
 # ----------------------------------------------------------------------- auth
@@ -1016,3 +1026,106 @@ def demo_ops_token():
 def demo_state(db: Session = Depends(get_db)):
     from .scenario import snapshot
     return snapshot(db)
+
+
+# ====================================================================== AI layer
+# چهار ستون موفقیت پروژه: تطبیق هوشمند، سفارش استاندارد با AI، کنترل کیفیت پیش‌بینانه، تجربه روان.
+@ai.post("/intake")
+def ai_intake(payload: IntakeRequest, db: Session = Depends(get_db)):
+    """تحلیل متن/رسانه مشتری → دامنه استاندارد، اقلام، مهارت/تجهیز لازم، بازه قیمت و پرسش‌های تعیین‌کننده."""
+    from .intelligence import StandardizationService
+    return StandardizationService(db).analyze(text=payload.text, media=payload.media,
+                                              category_hint=payload.category_hint, lat=payload.lat,
+                                              lng=payload.lng, urgency=payload.urgency)
+
+
+@ai.get("/standards")
+def ai_standards(slug: str | None = None):
+    """کاتالوگ استاندارد خدمت (شفافیت کامل برای مشتری، متخصص و پیمانکار)."""
+    from .intelligence import STANDARD_CATALOG
+    if slug:
+        std = STANDARD_CATALOG.get(slug)
+        if not std:
+            raise HTTPException(404, {"code": "STANDARD_NOT_FOUND", "message_fa": "استاندارد خدمت یافت نشد."})
+        return {"slug": slug, **std}
+    return {"count": len(STANDARD_CATALOG),
+            "items": [{"slug": k, "code": v["code"], "title_fa": v["title_fa"],
+                       "warranty_days": v["warranty_days"],
+                       "duration_band_minutes": [v["duration_min"], v["duration_max"]]}
+                      for k, v in STANDARD_CATALOG.items()]}
+
+
+@ai.get("/match/preview/{order_id}")
+def ai_match_preview(order_id: str, top: int = Query(5, le=20),
+                     user: User = Depends(require("CUSTOMER", "PROVIDER", "OPS", "ADMIN")),
+                     db: Session = Depends(get_db)):
+    """رتبه‌بندی مرحله ۲: روی امتیاز ۹مؤلفه‌ای می‌نشیند و ویژگی‌های هوشمند را اضافه می‌کند (بدون تغییر موتور اصلی)."""
+    from .intelligence import MatchingIntelligence
+    order = get_order_or_404(db, order_id)
+    return MatchingIntelligence(db).rerank(order, top_n=top)
+
+
+@ai.get("/quality/forecast/{order_id}")
+def ai_quality_forecast(order_id: str,
+                        user: User = Depends(require("CUSTOMER", "PROVIDER", "OPS", "ADMIN")),
+                        db: Session = Depends(get_db)):
+    """کنترل کیفیت پیش‌بینانه: احتمال بازکار/اختلاف/تأخیر + عوامل مؤثر + مداخله‌های پیشنهادی با اثر مورد انتظار."""
+    from .intelligence import PredictiveQualityService
+    order = get_order_or_404(db, order_id)
+    out = PredictiveQualityService(db).forecast(order)
+    order.risk_band = out["risk_band"]
+    timeline(db, order.id, "QUALITY_FORECAST", payload={"risk": out["risk_score"],
+                                                        "band": out["risk_band"],
+                                                        "interventions": [i["trigger"] for i in out["interventions"]]})
+    return out
+
+
+@ai.get("/assistant/{order_id}")
+def ai_assistant(order_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    """تجربه روان: اقدام بعدی با یک ضربه در هر وضعیت سفارش (حداقل تصمیم، حداکثر اطمینان)."""
+    from .intelligence import ExperienceService
+    order = get_order_or_404(db, order_id)
+    return ExperienceService(db).next_actions(order)
+
+
+@ai.get("/ux/friction-report")
+def ai_ux_friction(user: User = Depends(require("OPS", "ADMIN")), db: Session = Depends(get_db)):
+    """گزارش گلوگاه‌های تجربه کاربری بر پایه داده سفارش‌های موجود."""
+    from .intelligence import ExperienceService
+    return ExperienceService(db).friction_report()
+
+
+@ai.get("/scorecards")
+def ai_scorecards():
+    """کارت مدل‌ها و حاکمیت: نسخه، ویژگی‌ها، برنامه تولید، انصاف و محدودیت‌ها (شفافیت برای ممیزی)."""
+    from .intelligence import PredictiveQualityService, MatchingIntelligence, STANDARD_CATALOG, AI_VERSION
+    return {
+        "ai_version": AI_VERSION,
+        "models": [
+            {"name_fa": "استانداردسازی سفارش (Intake Standardizer)", "phase": "MVP",
+             "type": "قاعده‌محور + واژه‌نامه دامنه", "output_fa": "دامنه استاندارد، اقلام، مهارت/تجهیز، بازه قیمت، پرسش‌ها",
+             "catalog_size": len(STANDARD_CATALOG),
+             "production_plan_fa": "جایگزینی تشخیص دسته/شدت با مدل چندوجهی (متن+تصویر) و کالیبراسیون بازه قیمت با داده واقعی"},
+            {"name_fa": "رتبه‌بندی مرحله ۲ تطبیق (Re-ranker)", "phase": "MVP",
+             "type": "ترکیب خطی وزن‌دار روی ویژگی‌های عملکردی",
+             "weights": MatchingIntelligence.AI_WEIGHTS,
+             "features_fa": ["تطابق معنایی مهارت (گراف مهارت)", "ریسک عدم‌حضور", "انصاف قیمت", "کیفیت ۹۰ روز اخیر"],
+             "production_plan_fa": "Learning-to-Rank (GBDT/LambdaMART) با بازخورد پذیرش/رد/اتمام/امتیاز؛ آزمون A/B با حفظ انصاف"},
+            {"name_fa": "کنترل کیفیت پیش‌بینانه (Predictive QC)", "phase": "MVP",
+             "type": "کارت امتیاز شفاف (Scorecard)",
+             "features": [{"key": k, "weight": w, "label_fa": lbl}
+                          for k, w, lbl in PredictiveQualityService.FEATURES],
+             "production_plan_fa": "GBDT کالیبره‌شده (AUC ≥ ۰.۷۸، Brier ≤ ۰.۱۰) + پایش drift ماهانه + موتور مداخله A/B"},
+            {"name_fa": "اقدام بعدی و روان‌سازی تجربه (Next-Best-Action)", "phase": "MVP",
+             "type": "ماشین وضعیت + قواعد اثربخشی",
+             "metrics_fa": {"تکمیل سفارش": "< ۶۰ ثانیه", "رهاکردن فرم": "< ۱۵٪", "تماس وضعیت سفارش": "−۵۰٪"},
+             "production_plan_fa": "سیاست یادگیری تقویتی سبک (Contextual Bandit) برای انتخاب اقدام با بیشترین اثر بر تکمیل سفارش"},
+        ],
+        "governance_fa": {
+            "explainability": "هر خروجی همراه متن «چرا» و سهم هر ویژگی است (قابل نمایش به مشتری، متخصص و اپراتور).",
+            "fairness": "ممیزی خودکار: هیچ ویژگی محافظت‌شده یا جانشین آن (کد پستی کم‌درآمد، نام، جنسیت) در رتبه‌بندی به کار نمی‌رود.",
+            "human_in_the_loop": "تصمیم‌های مالی (بلوکه‌کردن گارانتی، بازرسی ویدئویی اجباری) نیازمند تأیید انسان است.",
+            "rollback": "هر مدل نسخه‌دار با پرچم فعال/غیرفعال و امکان بازگشت فوری به نسخه قبلی (feature flag).",
+            "data": "داده آموزشی فقط از سفارش‌های تکمیل‌شده و با حذف شناسه‌های مستقیم هویت؛ نگهداشت ۱۸ ماه برای ویژگی‌ها.",
+        },
+    }

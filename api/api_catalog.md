@@ -1,6 +1,7 @@
 # فهرست APIها — سرویسا (Care+)
 
-نسخه: ۱.۰ | پایه: `/v1` | قرارداد ماشین‌خوان: [`openapi-core.yaml`](./openapi-core.yaml) (۶۰ مسیر، ۶۲ عملیات)
+نسخه: ۱.۱ | پایه: `/v1` | قرارداد ماشین‌خوان: [`openapi-core.yaml`](./openapi-core.yaml) (۶۰ مسیر، ۶۲ عملیات)
+لایه هوشمندی (بخش AI سند): ۸ عملیات اجرایی در MVP — `mvp/app/intelligence.py` + مسیرهای `/v1/ai/*`.
 قواعد عمومی: JWT Bearer، هدر `Idempotency-Key` روی همه نوشتن‌ها، صفحه‌بندی Cursor، خطای ساخت‌یافته با `code` معنایی، وب‌هوک با امضای HMAC-SHA256.
 
 ---
@@ -107,7 +108,58 @@
 | POST | `/crm/segments` · `/crm/campaigns` | بخش‌بندی و کمپین |
 | GET | `/knowledge/articles` | پایه دانش |
 
-## ۸) تحلیل و ادمین
+## ۸) لایه هوشمندی (AI Layer) — اجراشده در MVP
+| متد | مسیر | توضیح | وضعیت |
+|---|---|---|---|
+| POST | `/ai/intake` | استانداردسازی درخواست مشتری: نگاشت متن/رسانه به کد استاندارد خدمت، دامنه اجباری، اقلام برآوردی، مهارت/تجهیز لازم، بازه قیمت و حداکثر ۳ پرسش تعیین‌کننده | ✅ MVP |
+| GET | `/ai/standards` | کاتالوگ استاندارد خدمت (شفافیت برای مشتری، متخصص و پیمانکار)؛ با `?slug=` یک خدمت | ✅ MVP |
+| GET | `/ai/match/preview/{order_id}` | مرحله ۲ تطبیق: بازچینش کاندیدهای مرحله ۱ با ویژگی‌های رفتاری (تطابق معنایی، ریسک عدم‌حضور، انصاف قیمت، کیفیت ۹۰ روزه) + متن «چرا» | ✅ MVP |
+| GET | `/ai/quality/forecast/{order_id}` | کنترل کیفیت پیش‌بینانه: امتیاز ریسک، باند (LOW/MEDIUM/HIGH)، احتمال بازکار/اختلاف/تأخیر/ارجاع، عوامل مؤثر و مداخله‌های پیشنهادی با اثر مورد انتظار | ✅ MVP |
+| GET | `/ai/assistant/{order_id}` | تجربه روان: اقدام‌های بعدی یک‌ضربه‌ای به‌تفکیک وضعیت سفارش (پرداخت، تعیین بازه، عکس، رهگیری، تأیید، امتیاز) + «چرا» | ✅ MVP |
+| GET | `/ai/ux/friction-report` | گزارش گلوگاه‌های تجربه کاربری بر پایه داده سفارش‌های موجود + توصیه‌های اجرایی (نیازمند نقش OPS/ADMIN) | ✅ MVP |
+| GET | `/ai/scorecards` | کارت مدل‌ها و حاکمیت: نسخه، ویژگی‌ها و وزن‌ها، برنامه تولید (V1/V2)، معیار پذیرش، انصاف، بازگشت‌پذیری، داده | ✅ MVP |
+| GET | `/health` · `/ready` | سلامت سرویس و آمادگی داده + **شناسه بیلد** (`build.git_sha`, `ai_version`) برای رهگیری نسخه مستقر | ✅ MVP |
+
+### قرارداد خروجی نمونه (استانداردسازی)
+```json
+POST /v1/ai/intake
+{ "text": "آب از زیر سینک می‌آید و کابینت خیس شده، نشت قطره‌ای است" }
+
+200 OK
+{
+  "matched": true, "standard_code": "STD-PLB-014",
+  "standard_title_fa": "کنترل و رفع نشت زیر سینک / کابینت",
+  "confidence": 0.62, "severity": 2,
+  "scope_standard": ["قطع آب و تخلیه فشار خط", "…"],
+  "materials_estimate": [{"title_fa": "واشر/شیلنگ", "qty": 1, "unit_price": 180000}],
+  "materials_total": 380000,
+  "price_band": {"low": 1644570, "high": 1766340, "currency": "IRR"},
+  "duration_band_minutes": [60, 110], "warranty_days": 30,
+  "skills_required": ["plumbing.basic"], "equipment_required": ["wrench"],
+  "determinants": ["نشت قطره‌ای یا جریان‌دار", "آب‌خوردگی کابینت"],
+  "clarifying_questions": [
+    {"code": "flow_rate", "question_fa": "نشت قطره‌ای است یا جریان‌دار؟", "impact_fa": "±۲۵٪ مبلغ نهایی"}
+  ]
+}
+```
+
+### قرارداد خروجی نمونه (کنترل کیفیت پیش‌بینانه)
+```json
+GET /v1/ai/quality/forecast/{order_id}
+200 OK
+{
+  "risk_score": 0.3875, "risk_band": "MEDIUM",
+  "probabilities": {"rework": 0.11, "dispute": 0.16, "late_finish": 0.09, "escalation_to_support": 0.12},
+  "drivers": [{"key": "first_time_pair", "value": 1, "weight": 0.13, "contribution": 0.13,
+               "label_fa": "نخستین همکاری مشتری–متخصص"}],
+  "interventions": [{"trigger": "first_time_pair", "action_fa": "پیام آشناسازی + چک‌لیست استاندارد اجباری",
+                     "expected_effect_fa": "−۹٪ نارضایتی", "phase": "MVP"}],
+  "model_card": {"version": "careplus-ai-1.0.0", "features_count": 9,
+                 "human_in_the_loop_fa": "تصمیم‌های مالی/محدودکننده با انسان است."}
+}
+```
+
+## ۹) تحلیل و ادمین
 | متد | مسیر | توضیح |
 |---|---|---|
 | GET | `/admin/analytics/overview` · `/admin/analytics/funnel` | داشبورد و قیف |
@@ -117,7 +169,7 @@
 
 ---
 
-## رویدادهای Kafka
+## رویدادهای Kafka (افزوده‌های لایه هوشمندی)
 `identity.user.*` · `provider.lifecycle.*` · `order.lifecycle.*` · `dispatch.*` · `payment.*` · `trust.*` · `risk.*` · `comm.*`
 
 قواعد: نام‌گذاری `<domain>.<entity>.<event>`، فیلد `schema_version`، سازگاری رو به عقب، و `correlation_id` برای ردیابی سرتاسری.

@@ -58,6 +58,17 @@
   .kv:last-child{border:0}
   .muted{color:var(--muted)}
   .foot{color:var(--muted);font-size:12px;text-align:center;padding:10px 0 30px}
+  textarea{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+           border-radius:10px;padding:9px;font:inherit;font-size:13px;min-height:62px;resize:vertical}
+  .ai-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+  .ai-box{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .ai-box h3{margin:0 0 6px;font-size:13px;color:#bfe6df}
+  .pill{display:inline-block;background:#123b33;border:1px solid var(--brand);color:#8fe3d3;
+        border-radius:999px;padding:1px 9px;font-size:11px;margin:2px 2px 2px 0}
+  .pill.warn{background:#3d2c10;border-color:var(--amber);color:var(--amber)}
+  .pill.bad{background:#3d141c;border-color:var(--rose);color:var(--rose)}
+  .bar{height:7px;background:#0d1b22;border-radius:6px;overflow:hidden;margin-top:3px}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--amber))}
   .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--brand);border-top-color:transparent;
         border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px}
   @keyframes sp{to{transform:rotate(360deg)}}
@@ -128,8 +139,27 @@
     <div id="events"></div>
   </div>
 
+  <div class="panel" id="aiPanel">
+    <h2>۵) لایه هوشمندی — سفارش استاندارد، کنترل کیفیت پیش‌بینانه، تجربه روان</h2>
+    <div class="row" style="margin-bottom:8px">
+      <textarea id="intakeText" placeholder="مثال: آب از زیر سینک می‌آید و کابینت خیس شده، نشت قطره‌ای است">آب از زیر سینک می‌آید و کابینت خیس شده، نشت قطره‌ای است و بوی نم گرفته</textarea>
+    </div>
+    <div class="row" style="margin-bottom:10px">
+      <button class="primary" onclick="analyzeIntake()">🧠 تحلیل هوشمند درخواست (استانداردسازی)</button>
+      <button onclick="showJson('/v1/ai/standards')">کاتالوگ استاندارد خدمات</button>
+      <button onclick="showJson('/v1/ai/scorecards')">کارت مدل‌ها و حاکمیت AI</button>
+      <button onclick="showJson('/v1/ai/ux/friction-report')">گزارش گلوگاه تجربه</button>
+      <span class="muted" id="aiHint">پس از اجرای سناریو، پیش‌بینی کیفیت و اقدام بعدی همین سفارش نمایش داده می‌شود.</span>
+    </div>
+    <div class="ai-grid">
+      <div class="ai-box"><h3>سفارش استاندارد (دامنه، اقلام، بازه قیمت)</h3><div id="aiIntake">—</div></div>
+      <div class="ai-box"><h3>کنترل کیفیت پیش‌بینانه (ریسک و مداخله‌ها)</h3><div id="aiRisk">—</div></div>
+      <div class="ai-box"><h3>اقدام بعدی مشتری (تجربه روان)</h3><div id="aiNext">—</div></div>
+    </div>
+  </div>
+
   <div class="panel">
-    <h2>۵) تعامل سریع با API</h2>
+    <h2>۶) تعامل سریع با API</h2>
     <div class="row">
       <button onclick="showJson('/v1/catalog/services')">کاتالوگ خدمات</button>
       <button onclick="showJson('/v1/catalog/zones/zone-tehran-3/surge')">وضعیت Surge منطقه ۳</button>
@@ -182,8 +212,69 @@ async function run(tactic){
   document.getElementById('runner').innerHTML = '<span class="spin"></span> در حال اجرای سناریو…';
   const {ok, data} = await api(`/v1/demo/scenario?tactic=${tactic}&offline_providers=${offline}&surge=${surge}`, {method:'POST'});
   document.getElementById('runner').textContent = ok ? 'اجرا شد ✓' : 'خطا در اجرا';
-  if(ok){ renderSteps(data.steps); renderState(data.snapshot); }
+  if(ok){ renderSteps(data.steps); renderState(data.snapshot); renderAI(data.order_id); }
   else { document.getElementById('jsonOut').textContent = JSON.stringify(data, null, 2); }
+}
+
+async function analyzeIntake(){
+  const text = document.getElementById('intakeText').value || '';
+  document.getElementById('aiHint').innerHTML = '<span class="spin"></span> در حال تحلیل…';
+  const {ok, data} = await api('/v1/ai/intake', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text: text, urgency:'SAME_DAY',
+        media:[{kind:'IMAGE', ai_tags: text.includes('سینک') ? ['water_leak','under_sink'] : []}]})});
+  document.getElementById('aiHint').textContent = ok ? 'تحلیل انجام شد ✓' : 'خطا در تحلیل';
+  const box = document.getElementById('aiIntake');
+  if(!ok){ box.textContent = JSON.stringify(data).slice(0,200); return; }
+  if(!data.matched){ box.innerHTML = `<div class="muted">${esc(data.message_fa)}</div>` +
+      data.clarifying_questions.map(q=>`<div class="kv"><span>${esc(q.question_fa)}</span><span class="muted">${esc(q.impact_fa)}</span></div>`).join(''); return; }
+  box.innerHTML = `
+    <div class="row" style="margin-bottom:6px">
+      <span class="pill">${esc(data.standard_code)}</span>
+      <span class="pill">اطمینان ${nf.format((data.confidence*100).toFixed(0))}٪</span>
+      <span class="pill warn">شدت ${nf.format(data.severity)} از ۵</span>
+      <span class="pill">گارانتی ${nf.format(data.warranty_days)} روز</span>
+    </div>
+    <div style="font-size:12.5px"><b>${esc(data.standard_title_fa)}</b></div>
+    <ul style="margin:6px 0;padding-inline-start:18px;font-size:12px">${data.scope_standard.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+    <div class="kv"><span>اقلام برآوردی</span><span>${money(data.materials_total)}</span></div>
+    <div class="kv"><span>بازه قیمت</span><span>${money(data.price_band.low)} – ${money(data.price_band.high)}</span></div>
+    <div class="kv"><span>زمان استاندارد</span><span>${nf.format(data.duration_band_minutes[0])} تا ${nf.format(data.duration_band_minutes[1])} دقیقه</span></div>
+    <div class="kv"><span>مهارت/تجهیز لازم</span><span class="mono">${esc((data.skills_required||[]).join(', '))} | ${esc((data.equipment_required||[]).join(', '))}</span></div>
+    <div style="margin-top:6px"><b>پرسش‌های تعیین‌کننده (حداکثر ۳):</b></div>
+    ${data.clarifying_questions.map(q=>`<div class="kv"><span>${esc(q.question_fa)}</span><span class="muted">${esc(q.impact_fa)}</span></div>`).join('')}`;
+}
+
+async function renderAI(orderId){
+  if(!orderId) return;
+  const risk = await api(`/v1/ai/quality/forecast/${orderId}`);
+  const next = await api(`/v1/ai/assistant/${orderId}`);
+  const match = await api(`/v1/ai/match/preview/${orderId}?top=3`);
+  const rb = document.getElementById('aiRisk');
+  if(!risk.ok){ rb.textContent = '—'; return; }
+  const d = risk.data;
+  const bandCls = d.risk_band === 'HIGH' ? 'bad' : (d.risk_band === 'MEDIUM' ? 'warn' : '');
+  rb.innerHTML = `
+    <div class="row" style="margin-bottom:6px">
+      <span class="pill ${bandCls}">ریسک ${esc(d.risk_band)} — ${nf.format((d.risk_score*100).toFixed(0))}٪</span>
+      <span class="pill">بازکار ${nf.format((d.probabilities.rework*100).toFixed(1))}٪</span>
+      <span class="pill">اختلاف ${nf.format((d.probabilities.dispute*100).toFixed(1))}٪</span>
+    </div>
+    ${d.drivers.map(x=>`<div style="font-size:12px">${esc(x.label_fa)}
+        <span class="muted">(${nf.format((x.contribution*100).toFixed(0))}٪ وزن)</span>
+        <div class="bar"><i style="width:${(x.value*100).toFixed(0)}%"></i></div></div>`).join('')}
+    <div style="margin-top:7px"><b>مداخله‌های پیشنهادی:</b></div>
+    ${d.interventions.map(i=>`<div class="kv"><span>${esc(i.action_fa)}</span><span class="muted">${esc(i.expected_effect_fa)}</span></div>`).join('')}
+    ${match.ok ? `<div style="margin-top:7px"><b>رتبه‌بندی مرحله ۲ (AI):</b></div>` +
+      match.data.items.map(m=>`<div class="kv"><span>${nf.format(m.ai_rank)}. ${esc(m.provider_name)}</span>
+        <span class="muted">AI ${nf.format(m.ai_score.toFixed(3))} · پایه ${nf.format(m.stage1_score.toFixed(3))} ${m.rank_change? '· تغییر رتبه ' + nf.format(m.rank_change):''}</span></div>`).join('') : ''}`;
+
+  const nb = document.getElementById('aiNext');
+  nb.innerHTML = (!next.ok) ? '—' : next.data.next_best_actions.map(a=>`
+    <div style="margin-bottom:7px">
+      <div><span class="pill">${esc(a.code)}</span> <b>${esc(a.title_fa)}</b> ${a.one_tap?'<span class="pill warn">یک ضربه</span>':''}</div>
+      <div class="muted" style="font-size:12px">${esc(a.why_fa)}</div>
+      ${a.slots ? '<div style="font-size:12px">' + a.slots.map(s=>`<span class="pill">${esc(s.label_fa)} · ${esc(s.effect_fa)}</span>`).join('') + '</div>' : ''}
+    </div>`).join('');
 }
 
 async function reset(){
@@ -257,7 +348,8 @@ async function showJson(path){
 async function boot(){
   await loadOpsToken();
   ready();
-  run('accept');   // اجرای خودکار سناریوی موفق در بارگذاری اول
+  run('accept');        // اجرای خودکار سناریوی موفق
+  analyzeIntake();     // تحلیل هوشمند نمونه در بارگذاری اول
   setInterval(ready, 15000);
 }
 boot();

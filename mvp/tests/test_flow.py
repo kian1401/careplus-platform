@@ -57,11 +57,21 @@ def client():
 
 
 # ---------------------------------------------------------------- helpers
-def _login(c: TestClient, phone: str) -> str:
-    """ورود با OTP (با کش توکن؛ محدودیت نرخ درخواست کد را رعایت می‌کند)."""
-    if phone in TOKENS:
-        return TOKENS[phone]
-    r = c.post("/v1/auth/otp/request", json={"phone": phone})
+def _login(c: TestClient, phone: str, force: bool = False) -> str:
+    """ورود با OTP (با کش توکن). توکن کش‌شده پیش از استفاده اعتبارسنجی می‌شود،
+    چون `POST /v1/demo/reset` کاربران را بازمی‌سازد و توکن‌های قبلی بی‌اعتبار می‌شوند."""
+    if phone in TOKENS and not force:
+        me = c.get("/v1/auth/me", headers={"Authorization": f"Bearer {TOKENS[phone]}"})
+        if me.status_code == 200:
+            return TOKENS[phone]
+        TOKENS.pop(phone, None)
+    import time as _time
+    for attempt in range(4):
+        r = c.post("/v1/auth/otp/request", json={"phone": phone})
+        if r.status_code == 429:                      # محدودیت نرخ ⇒ اندکی صبر و تلاش دوباره
+            _time.sleep(1.5)
+            continue
+        break
     assert r.status_code == 200, r.text
     r = c.post("/v1/auth/otp/verify", json={"phone": phone, "code": OTP})
     assert r.status_code == 200, r.text
@@ -313,3 +323,112 @@ def test_demo_reset_and_state(client):
 def test_ops_token_endpoint_available_outside_prod(client):
     data = client.get("/v1/demo/ops-token").json()
     assert data["x_ops_token"] == settings.approve_token
+
+
+# =============================================== ۷) لایه هوشمندی (AI Layer)
+def test_ai_intake_standardizes_vague_request(client):
+    r = client.post("/v1/ai/intake", json={
+        "text": "آب از زیر سینک می‌آید و کابینت خیس شده، نشت قطره‌ای است",
+        "media": [{"kind": "IMAGE", "ai_tags": ["water_leak", "under_sink"]}]})
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert d["matched"] is True
+    assert d["standard_code"].startswith("STD-")
+    assert len(d["scope_standard"]) >= 4, "دامنه استاندارد باید عملیات اجباری داشته باشد"
+    assert d["materials_estimate"] and d["materials_total"] > 0
+    assert d["price_band"]["low"] < d["price_band"]["high"]
+    assert 1 <= len(d["clarifying_questions"]) <= 3, "حداقل تصمیم: حداکثر ۳ پرسش تعیین‌کننده"
+    assert all(q["impact_fa"] for q in d["clarifying_questions"]), "هر پرسش باید اثرش را بگوید"
+    assert d["skills_required"] and d["equipment_required"]
+    CTX["intake"] = d
+
+
+def test_ai_intake_unknown_text_asks_instead_of_guessing(client):
+    d = client.post("/v1/ai/intake", json={"text": "سلام، یک مشکل دارم"}).json()
+    assert d["matched"] is False
+    assert d["clarifying_questions"], "دسته نامشخص ⇒ پرسش راهنما، نه حدس"
+
+
+def test_ai_match_preview_keeps_stage1_and_adds_features(client):
+    ctx = _paid_order(client, "ai-match-1")
+    oid = ctx["order_id"]
+    client.post(f"/v1/orders/{oid}/submit-for-dispatch", headers=_auth(ctx["customer_token"]))
+    d = client.get(f"/v1/ai/match/preview/{oid}?top=5", headers=OPS_HEADERS).json()
+    assert d["items"], "رتبه‌بندی مرحله ۲ خالی است"
+    assert abs(sum(d["weights"].values()) - 1.0) < 1e-9, "وزن‌های لایه ۲ باید نرمال باشند"
+    for row in d["items"]:
+        f = row["ai_features"]
+        assert set(f) == {"semantic_fit", "no_show_risk", "price_fairness", "recent_quality"}
+        assert all(0 <= v <= 1 for v in f.values()), f
+        assert row["stage1_score"] <= 1.0 and 0 < row["ai_score"] <= 1.0
+        assert row["ai_rank"] >= 1 and row["ai_explain_fa"]
+    scores = [r["ai_score"] for r in d["items"]]
+    assert scores == sorted(scores, reverse=True), "خروجی لایه ۲ باید نزولی مرتب باشد"
+    assert "stage1_preserved_fa" in d
+    CTX["ai_match"] = d
+
+
+def test_ai_predictive_quality_forecast_and_interventions(client):
+    ctx = _paid_order(client, "ai-quality-1")
+    d = client.get(f"/v1/ai/quality/forecast/{ctx['order_id']}", headers=OPS_HEADERS).json()
+    assert d["risk_band"] in ("LOW", "MEDIUM", "HIGH")
+    assert 0 <= d["risk_score"] <= 1
+    probs = d["probabilities"]
+    assert set(probs) == {"rework", "dispute", "late_finish", "escalation_to_support"}
+    assert all(0 <= v <= 1 for v in probs.values())
+    assert 1 <= len(d["drivers"]) <= 4 and 1 <= len(d["interventions"]) <= 3
+    for i in d["interventions"]:
+        assert i["action_fa"] and i["expected_effect_fa"] and i["phase"] in ("MVP", "V1")
+    assert d["model_card"]["features_count"] == 9
+    assert "human_in_the_loop_fa" in d["model_card"]
+    CTX["forecast"] = d
+
+
+def test_ai_assistant_next_best_actions_per_status(client):
+    token = _login(client, DEMO_PHONE_CUSTOMER)
+    wallet = client.get("/v1/wallets/me", headers=_auth(token)).json()
+    if wallet.get("balance", wallet.get("balance_cached", 0)) < 5_000_000:
+        client.post("/v1/wallets/me/topup", json={"amount": 10_000_000}, headers=_auth(token))
+    order = _create_order(client, token, key="ai-ux-1")
+    oid = _oid(order)
+
+    # وضعیت ۱: پرداخت‌نشده ⇒ اقدام اصلی باید پرداخت باشد
+    d = client.get(f"/v1/ai/assistant/{oid}", headers=_auth(token)).json()
+    codes = [a["code"] for a in d["next_best_actions"]]
+    assert "pay" in codes, f"در وضعیت پرداخت‌نشده، اقدام اصلی باید پرداخت باشد: {codes}"
+    assert len(d["next_best_actions"]) <= 3
+    assert d["friction_kpi_fa"]["order_completion_target"].startswith("<")
+
+    # وضعیت ۲: پس از پرداخت ⇒ اقدام‌ها باید عوض شوند (تعیین بازه/عکس/دامنه)
+    paid = client.post(f"/v1/orders/{oid}/pay?method=WALLET", headers=_auth(token))
+    assert paid.status_code == 200, paid.text
+    d2 = client.get(f"/v1/ai/assistant/{oid}", headers=_auth(token)).json()
+    codes2 = [a["code"] for a in d2["next_best_actions"]]
+    assert codes2 != codes, "اقدام بعدی باید با تغییر وضعیت تغییر کند"
+    assert "schedule" in codes2, codes2
+    assert any("slots" in a for a in d2["next_best_actions"]), "پیشنهاد بازه زمانی باید ارائه شود"
+
+    # وضعیت ۳: در صف تخصیص ⇒ رهگیری زنده و گسترش شعاع
+    client.post(f"/v1/orders/{oid}/submit-for-dispatch", headers=_auth(token))
+    d3 = client.get(f"/v1/ai/assistant/{oid}", headers=_auth(token)).json()
+    codes3 = [a["code"] for a in d3["next_best_actions"]]
+    assert "live" in codes3 or "track" in codes3, codes3
+
+
+def test_ai_scorecards_and_governance(client):
+    d = client.get("/v1/ai/scorecards").json()
+    assert len(d["models"]) == 4
+    assert d["governance_fa"]["fairness"] and d["governance_fa"]["rollback"]
+    names = " ".join(m["name_fa"] for m in d["models"])
+    for needle in ("استانداردسازی", "رتبه‌بندی", "کیفیت", "اقدام بعدی"):
+        assert needle in names
+    std = client.get("/v1/ai/standards").json()
+    assert std["count"] >= 7
+    one = client.get("/v1/ai/standards?slug=plumbing.leak.sink").json()
+    assert one["scope"] and one["materials"]
+
+
+def test_ai_ux_friction_report_requires_ops(client):
+    assert client.get("/v1/ai/ux/friction-report").status_code == 401
+    d = client.get("/v1/ai/ux/friction-report", headers=OPS_HEADERS).json()
+    assert d["recommendations_fa"] and "media_absent_share" in d

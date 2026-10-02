@@ -1,0 +1,39 @@
+# ---------------------------------------------------------------------------
+# Blueprint استقرار «سرویسا / Care+» روی Render
+# این فایل، سرویس دموی MVP را به‌صورت کاملاً بازتولیدپذیر تعریف می‌کند.
+# دو راه استفاده:
+#   ۱) Render Dashboard → New + → Blueprint → انتخاب همین مخزن (render.yaml خودکار خوانده می‌شود)
+#   ۲) Render API → POST /v1/services با همان پارامترهای زیر
+# ---------------------------------------------------------------------------
+services:
+  - type: web
+    name: careplus-mvp
+    runtime: python
+    plan: free                       # برای دموی بررسی؛ برای پایلوت واقعی: starter یا بالاتر
+    region: frankfurt                # نزدیک‌ترین منطقه به کاربران ایران/اروپا
+    rootDir: mvp
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true                 # با هر push روی شاخه main، دوباره استقرار می‌شود
+    envVars:
+      - key: CP_ENV                  # dev | staging | prod — مقدار demo عمداً غیر prod است
+        value: demo                   # تا کنسول دمو و کلید عملیات اپراتور فعال باشد
+      - key: CP_SECRET_KEY
+        generateValue: true          # Render مقدار تصادفی امن می‌سازد
+      - key: CP_DATABASE_URL
+        value: sqlite:////tmp/careplus.sqlite
+      - key: CP_ESCROW_HOLD_HOURS
+        value: "48"
+      - key: PYTHON_VERSION
+        value: 3.13.0
+
+# نکات استقرار:
+#  • دیسک این پلن موقت است؛ با هر استقرار، داده دمو بازنشانی می‌شود (برای بررسی، مطلوب است).
+#  • برای داده پایدار: افزودن یک دیسک دائمی و تغییر CP_DATABASE_URL به مسیر همان دیسک.
+#  • مسیر /v1/demo/ops-token در CP_ENV=prod مسدود می‌شود؛ در دمو آزاد است.
+#  • مسیرهای اصلی بررسی:
+#       GET  /                 ← کنسول دمو (سناریو + پنل هوشمندی)
+#       GET  /health  /ready   ← سلامت سرویس و داده
+#       GET  /docs             ← مستندات OpenAPI
+#       GET  /v1/ai/scorecards ← کارت مدل‌های هوشمندی

@@ -1,0 +1,9 @@
+# محیط محلی، داده دمو و کش‌ها نباید به تصویر بروند
+var/
+*.sqlite
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.env
+.git/
