@@ -1,11 +1,15 @@
-# آدرس‌های وب «سرویسا / Care+» — تأییدشده با آزمون HTTP 200
-# تاریخ: ۲۰۲۶-۱۰-۰۳
+# آدرس‌های وب پروژه «سرویسا / Care+»
+# آخرین به‌روزرسانی: ۲۰۲۶-۱۰-۰۳ ۱۴:۱۶ UTC
 #
-# ۱) صفحهٔ اول سایت (بستهٔ بازبین: سند جامع، PDFها، وایرفریم، داده، API، RFP، گزارش تحلیل):
-https://julie-stewart-thomson-lodging.trycloudflare.com
-# ۲) کنسول دمو (اپ تعاملی: سناریو ۹ گامی + پنل لایه هوشمندی):
-https://exit-abilities-perhaps-mathematical.trycloudflare.com
+# ── ۱) سایت دائمی (این را به بازبین بدهید؛ به هیچ سرور موقتی وابسته نیست) ──
+https://raw.githack.com/kian1401/careplus-platform/main/index.html
 #
-# روی صفحهٔ اول، نوار «دموی تعاملی زنده» همین آدرس کنسول را می‌خواند و لینک می‌دهد (از فایل live.json).
-# نکته: این آدرس‌ها موقت‌اند (تونل Cloudflare بدون حساب) و با بازنشانی محیط توسعه باطل می‌شوند.
-#        برای آدرس دائمی: GitHub Pages (Settings → Pages → main → / (root)) یا Render (Blueprint).
+# ── ۲) دموی زندهٔ امروز (موقت؛ با خاموش‌شدن محیط توسعه باطل می‌شود) ──
+# صفحهٔ اول سایت (نسخهٔ زنده):
+https://hughes-prisoners-counters-keep.trycloudflare.com
+# کنسول دمو (اپ تعاملی: سناریو ۹ گامی + پنل لایه هوشمندی):
+https://graduates-crest-reef-heading.trycloudflare.com
+#
+# برای ساخت دوبارهٔ دموی زنده (روی هر ماشین، یک دستور):
+#   bash scripts/revive.sh
+# برای آدرس کاملاً دائمی اپ تعاملی: استقرار Blueprint روی Render (DEPLOY.md).
