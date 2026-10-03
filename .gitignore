@@ -30,3 +30,6 @@ out/
 Thumbs.db
 .idea/
 .vscode/
+
+# آدرس‌های زندهٔ موقت (خودکار تولید می‌شوند)
+live.json

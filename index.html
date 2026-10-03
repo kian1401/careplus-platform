@@ -56,6 +56,12 @@
 <body>
 <div class="wrap">
 
+  <div id="liveBanner" class="ok" style="display:none">
+    <b>دموی تعاملی زنده:</b>
+    <a id="liveAppLink" href="#" rel="noopener">باز کردن کنسول دمو ←</a>
+    <span class="muted" id="liveNote"></span>
+  </div>
+
   <header class="hero">
     <h1>سرویسا (Care+) <small>بستهٔ کامل طراحی، مدل داده، API، نمونهٔ اولیه و MVP اجرایی — جانشین هوشمندتر پلتفرم «آچاره»</small></h1>
     <div class="pills">
@@ -144,5 +150,21 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
     · ساخته‌شده به‌صورت خودبسنده (بدون CDN و منبع خارجی).
   </footer>
 </div>
+<script>
+/* آدرس دموی زنده از فایل کنار همین صفحه خوانده می‌شود (live.json).
+   اگر فایل نبود یا در دسترس نبود، نوار زنده نمایش داده نمی‌شود. */
+(function(){
+  fetch('live.json', {cache:'no-store'})
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if(!d || !d.app_url) return;
+      document.getElementById('liveAppLink').href = d.app_url;
+      document.getElementById('liveNote').textContent =
+        ' (نسخهٔ زندهٔ کنسول؛ فقط تا زمانی که نشست محیط توسعه فعال باشد در دسترس است. برای آدرس دائمی: بخش «شروع سریع بازبین» پایین‌تر)';
+      document.getElementById('liveBanner').style.display = 'block';
+    })
+    .catch(function(){});
+})();
+</script>
 </body>
 </html>
