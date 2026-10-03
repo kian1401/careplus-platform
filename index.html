@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>سرویسا (Care+) — بسته کامل طراحی و MVP پلتفرم خدمات آنلاین</title>
+<meta name="description" content="سند جامع، مدل داده، فهرست API، وایرفریم، برآورد RFP و MVP اجرایی با لایه هوشمندی — نسخه بازبین">
+<style>
+  @font-face{font-family:'Vazirmatn';src:url('assets/fonts/Vazirmatn-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+  @font-face{font-family:'Vazirmatn';src:url('assets/fonts/Vazirmatn-Bold.ttf') format('truetype');font-weight:700;font-display:swap}
+  @font-face{font-family:'Vazirmatn';src:url('assets/fonts/Vazirmatn-Medium.ttf') format('truetype');font-weight:500;font-display:swap}
+  :root{--bg:#070f14;--panel:#0d1a22;--panel2:#0f2029;--line:#183543;--ink:#e7f2f5;--muted:#9db9c4;
+        --brand:#12c2a0;--amber:#ffb545;--violet:#a78bfa;--rose:#ff6b81}
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#050d12,#08161d 40%,#070f14);color:var(--ink);
+       font-family:'Vazirmatn',system-ui,Segoe UI,Tahoma,sans-serif;line-height:1.85}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 60px}
+  header.hero{background:radial-gradient(1200px 400px at 80% -10%,rgba(18,194,160,.22),transparent),
+              radial-gradient(800px 300px at 10% 0,rgba(167,139,250,.14),transparent),var(--panel);
+              border:1px solid var(--line);border-radius:20px;padding:26px 26px 20px}
+  h1{margin:0 0 6px;font-size:27px;font-weight:700}
+  h1 small{font-weight:400;color:var(--muted);font-size:15px;display:block;margin-top:6px}
+  .pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .pill{background:#0b2a2a;border:1px solid var(--brand);color:#8fe3d3;border-radius:999px;
+        padding:3px 12px;font-size:12.5px}
+  .pill.a{border-color:var(--amber);color:var(--amber);background:#2c2410}
+  .pill.v{border-color:var(--violet);color:#c6b4ff;background:#1d1733}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+  .card h2{margin:0 0 8px;font-size:16.5px;color:#bfe6df}
+  .card h2 span{color:var(--muted);font-weight:400;font-size:13px}
+  a{color:#7fe0cd;text-decoration:none}
+  a:hover{text-decoration:underline}
+  ul{margin:8px 0;padding-inline-start:18px}
+  li{margin:5px 0;font-size:14px}
+  code{background:#0a1b24;border:1px solid var(--line);border-radius:6px;padding:1px 6px;
+       font-family:ui-monospace,Consolas,monospace;font-size:12.5px;direction:ltr;display:inline-block}
+  pre{background:#08161d;border:1px solid var(--line);border-radius:12px;padding:12px 14px;overflow:auto;
+      direction:ltr;text-align:left;font-size:12.5px}
+  .muted{color:var(--muted);font-size:13px}
+  .warn{background:#2a1c08;border:1px solid var(--amber);border-radius:12px;padding:10px 14px;
+        font-size:13.5px;color:#ffd79a;margin-top:14px}
+  .ok{background:#08261f;border:1px solid var(--brand);border-radius:12px;padding:10px 14px;
+      font-size:13.5px;color:#a9ecd9;margin-top:14px}
+  .shots{display:grid;grid-template-columns:1fr;gap:14px;margin-top:16px}
+  .shots img{width:100%;border:1px solid var(--line);border-radius:14px;background:#000}
+  .big{display:inline-block;background:linear-gradient(180deg,#16d2ad,#0fa88a);color:#04231d;
+       font-weight:700;border-radius:12px;padding:10px 20px;margin:6px 0}
+  .big:hover{text-decoration:none;filter:brightness(1.07)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px}
+  th,td{border:1px solid var(--line);padding:6px 9px;text-align:right}
+  th{background:#0b1f28;color:#bfe6df;font-weight:500}
+  footer{margin-top:26px;color:var(--muted);font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1>سرویسا (Care+) <small>بستهٔ کامل طراحی، مدل داده، API، نمونهٔ اولیه و MVP اجرایی — جانشین هوشمندتر پلتفرم «آچاره»</small></h1>
+    <div class="pills">
+      <span class="pill">۶ ماژول + لایه هوشمندی AI</span>
+      <span class="pill">۲۲ آزمون سبز</span>
+      <span class="pill">۷۸ عملیات API</span>
+      <span class="pill">۷۶ جدول در سند</span>
+      <span class="pill">۵۰ وایرفریم</span>
+      <span class="pill a">چهار محور موفقیت: تطبیق · استانداردسازی · کیفیت پیش‌بینانه · تجربهٔ روان</span>
+    </div>
+    <div class="ok"><b>این صفحه یک بستهٔ استاتیک روی GitHub Pages است</b> — بدون سرور، بدون وابستگی به محیط توسعه؛
+      همهٔ اسناد و تصاویر از همین‌جا باز می‌شوند. برای <b>دموی تعاملی</b>، بخش «شروع سریع» را ببینید.</div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h2>۱) شروع سریع بازبین <span>دموی تعاملی</span></h2>
+      <p class="muted">کنسول دمو: سناریوی ۹ گامی سفارش → Escrow → تخصیص موجی → تسویه، به‌همراه پنل هوشمندی
+      (استانداردسازی، رتبه‌بندی مرحله ۲، کیفیت پیش‌بینانه، اقدام بعدی).</p>
+      <ul>
+        <li>روی Render (آدرس ثابت): <a href="https://render.com/deploy?repo=https://github.com/kian1401/careplus-platform" rel="noopener">استقرار یک‌کلیکی Blueprint ←</a>
+            <span class="muted">⇒ پس از بیلد: <code>https://careplus-mvp.onrender.com</code></span></li>
+        <li>اجرای محلی با دو دستور:
+          <pre>git clone https://github.com/kian1401/careplus-platform.git
+cd careplus-platform/mvp
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+# مرورگر: http://localhost:8000</pre></li>
+      </ul>
+      <p class="muted">توضیح: لینک‌های «تونل موقت» قبلی با خواب‌رفتن محیط توسعه از کار می‌افتند؛ به همین دلیل
+      مسیر پایدار = Render یا اجرای محلی.</p>
+    </div>
+
+    <div class="card">
+      <h2>۲) اسناد اصلی <span>مطالعه و ارسال</span></h2>
+      <ul>
+        <li><a href="spec/index.html">سند جامع (۱۷ بخش، ۷۶ جدول، ۷ شکل)</a> — کامل و خودبسنده</li>
+        <li><a href="pdf/care-plus-spec.pdf">PDF سند جامع (۸۲ صفحه)</a></li>
+        <li><a href="pdf/care-plus-dispatch-deep-dive.pdf">PDF تحلیل عمیق موتور تخصیص (۱۱ صفحه)</a></li>
+        <li><a href="analysis/dispatch-deep-dive.html">گزارش تحلیلی موتور تخصیص (HTML با نمودارها)</a></li>
+        <li><a href="prototype/index.html">نمونهٔ اولیه و وایرفریم‌ها (۵۰ صفحه)</a></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>۳) فنی و واگذاری <span>برای تیم توسعه</span></h2>
+      <ul>
+        <li><a href="db/schema.sql">اسکیمای کامل پایگاه داده (PostgreSQL 16 + PostGIS)</a></li>
+        <li><a href="db/data_dictionary.csv">واژه‌نامه داده (CSV، ۱۱۳ جدول)</a></li>
+        <li><a href="api/api_catalog.md">فهرست API — ۷۸ عملیات + لایه هوشمندی</a></li>
+        <li><a href="api/openapi-core.yaml">قرارداد OpenAPI</a></li>
+        <li><a href="rfp/estimate.xlsx">برآورد زمان و هزینه (RFP، ۵ برگه)</a></li>
+        <li><a href="README.md">راهنمای کل بسته</a> · <a href="DEPLOY.md">راهنمای استقرار</a></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>۴) چهار اهرم موفقیت <span>و جایگاهشان در بسته</span></h2>
+      <table>
+        <tr><th>اهرم</th><th>در سند</th><th>در کد MVP</th></tr>
+        <tr><td>هوشمندسازی تطبیق</td><td>بخش AI.۲</td><td><code>/v1/ai/match/preview</code></td></tr>
+        <tr><td>استانداردسازی و سفارش با AI</td><td>بخش AI.۳</td><td><code>/v1/ai/intake</code> · <code>/v1/ai/standards</code></td></tr>
+        <tr><td>کنترل کیفیت پیش‌بینانه</td><td>بخش AI.۴</td><td><code>/v1/ai/quality/forecast</code></td></tr>
+        <tr><td>تجربهٔ کاربری روان</td><td>بخش AI.۵</td><td><code>/v1/ai/assistant</code> · <code>/v1/ai/ux/friction-report</code></td></tr>
+      </table>
+      <p class="muted">حاکمیت مدل و کارت مدل‌ها: <code>GET /v1/ai/scorecards</code> — شفافیت، انصاف، مرز تصمیم انسانی.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <h2>۵) تصاویر کنسول دمو (لایه هوشمندی) <span>تأیید بصری</span></h2>
+    <div class="shots">
+      <img src="analysis/console-ai-panel.png" alt="پنل هوشمندی کنسول دمو: استانداردسازی، کنترل کیفیت پیش‌بینانه، اقدام بعدی" loading="lazy">
+      <img src="analysis/console-ai-top.png" alt="کنسول دمو: اجرای سناریو و روایت گام‌به‌گام" loading="lazy">
+    </div>
+  </div>
+
+  <div class="warn">
+    <b>یادداشت برای بازبین:</b> دموی تعاملی زنده، روی سرور اجرا می‌شود و آدرس آن یا روی Render است یا در اجرای محلی؛
+    صفحهٔ حاضر (GitHub Pages) فقط اسناد، کد و تصاویر را بدون نیاز به سرور ارائه می‌دهد.
+    آزمون‌ها: <code>cd mvp &amp;&amp; python3 -m pytest tests -q</code> ⇒ ۲۲ آزمون سبز.
+  </div>
+
+  <footer>
+    سرویسا / Care+ — نسخهٔ ۱.۱ · مخزن: <a href="https://github.com/kian1401/careplus-platform" rel="noopener">github.com/kian1401/careplus-platform</a>
+    · ساخته‌شده به‌صورت خودبسنده (بدون CDN و منبع خارجی).
+  </footer>
+</div>
+</body>
+</html>

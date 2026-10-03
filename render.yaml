@@ -38,3 +38,10 @@ services:
 #       GET  /health  /ready   ← سلامت سرویس و داده
 #       GET  /docs             ← مستندات OpenAPI
 #       GET  /v1/ai/scorecards ← کارت مدل‌های هوشمندی
+
+  # سایت اسناد (استاتیک): سند جامع، PDFها، وایرفریم، اسکیمای داده، گزارش تحلیل و صفحهٔ اصلی بسته.
+  # با همان یک‌بار اجرای Blueprint ساخته می‌شود و آدرس دائمی دارد (بدون خواب‌رفتن پلن free).
+  - type: static
+    name: careplus-docs
+    plan: free
+    staticPublishPath: .
